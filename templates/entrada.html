@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2>🚪 Registrar Entrada</h2>
+
+        <!-- 🔍 BUSCA INTELIGENTE -->
+        <input 
+            type="text" 
+            id="busca" 
+            placeholder="Digite CPF ou nome..." 
+            style="margin-bottom: 20px; width:100%; padding:10px;"
+        >
+
+        <a class="link" href="/">⬅ Voltar</a>
+
+        <!-- RESULTADOS -->
+        <div id="lista"></div>
+    </div>
+</div>
+
+<script>
+const input = document.getElementById("busca");
+const lista = document.getElementById("lista");
+
+input.addEventListener("keyup", function() {
+    const termo = input.value;
+
+    fetch(`/buscar_ajax?q=${termo}`)
+        .then(res => res.json())
+        .then(data => {
+
+            lista.innerHTML = "";
+
+            if (data.length === 0) {
+                lista.innerHTML = "<p>Nenhum visitante encontrado</p>";
+                return;
+            }
+
+            data.forEach(v => {
+                lista.innerHTML += `
+                    <div class="visitor-card">
+                        <b>Nome:</b> ${v.nome} <br>
+                        <b>CPF:</b> ${v.cpf} <br><br>
+
+                        <button class="btn" onclick="registrarEntrada(${v.id})">
+                            🚪 Registrar Entrada
+                        </button>
+                    </div>
+                `;
+            });
+
+        });
+});
+
+function registrarEntrada(id) {
+    fetch("/entrada_ajax", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `id=${id}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("Entrada registrada com sucesso!");
+        lista.innerHTML = "";
+        input.value = "";
+    });
+}
+</script>
+
+</body>
+</html>

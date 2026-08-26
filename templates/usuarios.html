@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuários do Sistema</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-wrap">
+
+        <div class="topo-pagina">
+            <div>
+                <h1>Usuários do Sistema</h1>
+                <div class="subtitulo-pagina">Gerencie os acessos e perfis de usuários do sistema</div>
+            </div>
+
+            <div class="acoes-topo">
+                <a class="btn-topo btn-voltar" href="{{ url_for('main.index') }}">Voltar</a>
+                <a class="btn-topo btn-sair" href="{{ url_for('auth.logout') }}">Sair</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for cat, msg in messages %}
+                    <div class="msg-padrao">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card-padrao">
+            <h2>Novo usuário</h2>
+
+            <form method="POST" class="form-grid">
+                <div class="campo">
+                    <label for="nome">Nome</label>
+                    <input class="input-padrao" type="text" id="nome" name="nome" required>
+                </div>
+
+                <div class="campo">
+                    <label for="usuario">Usuário</label>
+                    <input class="input-padrao" type="text" id="usuario" name="usuario" required>
+                </div>
+
+                <div class="campo">
+                    <label for="senha">Senha</label>
+                    <input class="input-padrao" type="password" id="senha" name="senha" required>
+                </div>
+
+                <div class="campo">
+                    <label for="tipo">Tipo</label>
+                    <select class="select-padrao" id="tipo" name="tipo">
+                        <option value="funcionario">Funcionário</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <button type="submit" class="btn-principal">Cadastrar usuário</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-padrao">
+            <h2>Lista de usuários</h2>
+
+            <div class="tabela-wrap">
+                <table class="tabela-padrao">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Usuário</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td>{{ u["id"] }}</td>
+                            <td>{{ u["nome"] }}</td>
+                            <td>{{ u["usuario"] }}</td>
+                            <td>
+                                <span class="badge-tipo {% if u['tipo'] == 'admin' %}tipo-admin{% else %}tipo-funcionario{% endif %}">
+                                    {{ u["tipo"] }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge {% if u['ativo'] == 1 %}status-ativo{% else %}status-inativo{% endif %}">
+                                    {% if u["ativo"] == 1 %}Ativo{% else %}Inativo{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="acoes-linha">
+                                    <a class="link-btn" href="{{ url_for('admin.editar_usuario', id=u['id']) }}">Editar</a>
+                                    <a class="link-btn" href="{{ url_for('admin.alterar_senha_usuario', id=u['id']) }}">Senha</a>
+
+                                    {% if u["ativo"] == 1 %}
+                                        {% if session.get("usuario_id") != u["id"] %}
+                                            <a class="link-btn" href="{{ url_for('admin.inativar_usuario_rota', id=u['id']) }}">Inativar</a>
+                                        {% endif %}
+                                    {% else %}
+                                        <a class="link-btn" href="{{ url_for('admin.ativar_usuario_rota', id=u['id']) }}">Ativar</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

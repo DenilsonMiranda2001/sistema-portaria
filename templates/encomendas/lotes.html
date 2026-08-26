@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "encomendas/_macros.html" import status_badge, subnav %}
+{% block title %}Lotes de Encomendas{% endblock %}
+{% block content %}
+{{ subnav('lotes') }}
+<div class="enc-header">
+    <div><h2>Lotes de encomendas</h2><p>Triagens registradas pela portaria.</p></div>
+    <a class="btn btn-submit" href="{{ url_for('encomendas.novo_lote') }}">+ Novo lote</a>
+</div>
+<div class="card enc-tabela-wrap">
+<table class="tabela-padrao">
+    <thead><tr><th>Lote / chegada</th><th>Transportadora</th><th>Entregador</th><th>Total</th><th>Pendentes</th><th>Retidas</th><th>Retiradas</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for lote in lotes %}
+    <tr>
+        <td><a class="link-tabela" href="{{ url_for('encomendas.lote_detalhe', lote_id=lote.id) }}">#{{ lote.id }}</a><br><small>{{ lote.data_chegada.strftime('%d/%m/%Y %H:%M') }}</small></td>
+        <td>{{ lote.transportadora }}</td><td>{{ lote.nome_entregador or '—' }}</td>
+        <td>{{ lote.total }}</td><td>{{ lote.pendentes }}</td><td>{{ lote.retidas }}</td><td>{{ lote.retiradas }}</td>
+        <td>{{ status_badge(lote.status) }}</td>
+    </tr>
+    {% else %}<tr><td colspan="8">Nenhum lote cadastrado.</td></tr>{% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

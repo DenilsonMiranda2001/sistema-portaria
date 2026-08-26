@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% block title %}Histórico do Visitante{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>👁️ Histórico de Visitas</h2>
+
+    <a class="link link-voltar" href="/visitantes">⬅ Voltar</a>
+
+    <div class="visitor-card visitor-header">
+        <div class="visitor-photo-wrap">
+            {% if visitante.foto %}
+                <img
+                    src="{{ url_for('static', filename='fotos/' + visitante.foto) }}"
+                    alt="Foto de {{ visitante.nome }}"
+                    class="visitor-photo"
+                >
+            {% else %}
+                <div class="visitor-photo placeholder">
+                    <span>Sem foto</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="visitor-main">
+            <div class="card-visitante">
+                <div class="info-grid">
+                    <div class="info-item destaque">
+                        <span class="label-ui">Nome</span>
+                        <span class="valor-ui nome">{{ visitante.nome|upper }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label-ui">CPF</span>
+                        <span class="valor-ui">{{ visitante.cpf }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label-ui">Tipo de visita</span>
+                        <span class="valor-ui">{{ visitante.tipo or '-' }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label-ui">Placa</span>
+                        <span class="valor-ui">{{ visitante.placa or '-' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="titulo-secao">📋 Visitas Registradas</h3>
+
+    {% if visitas %}
+        <div class="historico-lista">
+            {% for v in visitas %}
+                <div class="visitor-card visita-card">
+                    <div class="card-visitante">
+                        <div class="info-grid">
+                            <div class="info-item destaque">
+                                <span class="label-ui">Destino</span>
+                                <span class="valor-ui">{{ v.endereco or '-' }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="label-ui">Entrada</span>
+                                <span class="valor-ui">{{ v.data_entrada or '-' }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="label-ui">Autorizado por</span>
+                                <span class="valor-ui">{{ v.autorizado_por or '-' }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="label-ui">Saída</span>
+                                <span class="valor-ui">{{ v.data_saida or '-' }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="label-ui">Saída registrada por</span>
+                                <span class="valor-ui">{{ v.saida_registrada_por or '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="estado-vazio">
+            Nenhuma visita registrada para este visitante.
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.link-voltar {
+    display: inline-flex;
+    margin-bottom: 14px;
+    font-weight: 700;
+}
+
+.titulo-secao {
+    margin: 10px 0 15px;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+/* CARD PRINCIPAL */
+.visitor-card {
+    display: flex;
+    gap: 18px;
+    align-items: stretch;
+    flex-wrap: wrap;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 22px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.06),
+        0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.visitor-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: linear-gradient(180deg, #2563eb, #38bdf8);
+    border-radius: 20px 0 0 20px;
+}
+
+.visitor-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 18px 42px rgba(15, 23, 42, 0.10),
+        0 4px 14px rgba(15, 23, 42, 0.06);
+    border-color: rgba(37, 99, 235, 0.18);
+}
+
+.visitor-header {
+    align-items: flex-start;
+}
+
+/* FOTO */
+.visitor-photo-wrap {
+    min-width: 110px;
+    display: flex;
+    justify-content: center;
+}
+
+.visitor-photo {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 18px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    background: #fff;
+}
+
+.visitor-photo.placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 18px;
+    border: 1px dashed rgba(100, 116, 139, 0.35);
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* CONTEÚDO */
+.visitor-main {
+    flex: 1;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.card-visitante {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(15, 23, 42, 0.05);
+    border-radius: 18px;
+    padding: 14px;
+    backdrop-filter: blur(6px);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.info-item {
+    background: rgba(248, 250, 252, 0.95);
+    border: 1px solid rgba(15, 23, 42, 0.05);
+    border-radius: 14px;
+    padding: 12px 14px;
+    transition: 0.2s ease;
+}
+
+.info-item:hover {
+    background: #ffffff;
+    border-color: rgba(37, 99, 235, 0.12);
+}
+
+.info-item.destaque {
+    background: linear-gradient(180deg, #eff6ff 0%, #f8fbff 100%);
+    border: 1px solid rgba(59, 130, 246, 0.16);
+}
+
+.label-ui {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.valor-ui {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.valor-ui.nome {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 0.02em;
+}
+
+/* HISTÓRICO */
+.historico-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.visita-card {
+    margin-bottom: 16px;
+}
+
+/* ESTADO VAZIO */
+.estado-vazio {
+    border-radius: 16px;
+    padding: 18px;
+    font-weight: 600;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px dashed #cbd5e1;
+    color: #64748b;
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+    .visitor-card {
+        padding: 14px;
+        gap: 14px;
+    }
+
+    .visitor-photo-wrap {
+        min-width: auto;
+    }
+
+    .visitor-photo,
+    .visitor-photo.placeholder {
+        width: 92px;
+        height: 92px;
+    }
+
+    .titulo-secao {
+        font-size: 16px;
+    }
+}
+</style>
+{% endblock %}

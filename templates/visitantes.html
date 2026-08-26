@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% block title %}Visitantes Cadastrados{% endblock %}
+
+{% block content %}
+
+<div class="card-padrao">
+    <div class="header-secao">
+        <h2>👤 Visitantes Cadastrados</h2>
+        <p class="texto-ajuda">
+            Busque por nome, CPF ou placa para localizar um cadastro rapidamente.
+        </p>
+    </div>
+
+    <div class="busca-box">
+        <input
+            type="text"
+            id="busca"
+            class="input-padrao busca-input"
+            placeholder="Digite nome, CPF ou placa..."
+            autocomplete="off"
+        >
+    </div>
+
+    <div class="mensagem-box">
+        <a class="link-voltar" href="/">⬅ Voltar</a>
+    </div>
+
+    <div id="lista" class="lista-resultados">
+        {% if visitantes %}
+            {% for v in visitantes %}
+                <div
+                    class="visitor-card {% if loop.index0 == 0 %}selecionado{% endif %}"
+                    data-index="{{ loop.index0 }}"
+                    onclick="selecionarVisitante({ loopindex0 })"
+                >
+                    <div class="visitor-photo-wrap">
+                        {% if v.foto %}
+                            <img
+                                src="{{ url_for('static', filename='fotos/' + v.foto) }}"
+                                class="visitor-photo"
+                                alt="Foto de {{ v.nome }}"
+                            >
+                        {% else %}
+                            <div class="visitor-photo placeholder">Sem foto</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="visitor-main">
+                        <div class="card-visitante">
+                            <div class="info-grid">
+                                <div class="info-item destaque">
+                                    <span class="label-ui">Nome</span>
+                                    <span class="valor-ui nome">{{ v.nome|upper }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="label-ui">CPF</span>
+                                    <span class="valor-ui">{{ v.cpf }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="label-ui">Observação</span>
+                                    <span class="valor-ui">{{ v.observacao if v.observacao else '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="extras-grid visitantes-grid-ajustada">
+                            <div class="extra-card">
+                                <span class="label-ui">Tipo de visita</span>
+                                <div class="badge-ui badge-tipo">
+                                    🏷 {{ (v.tipo or 'Sem tipo')|upper }}
+                                </div>
+                            </div>
+
+                            <div class="extra-card">
+                                <span class="label-ui">Veículo cadastrado</span>
+                                <div class="badge-ui badge-veiculo">
+                                    🚗
+                                    {% if v.marca or v.modelo or v.placa %}
+                                        {{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} - {{ v.placa }}{% endif %}
+                                    {% else %}
+                                        SEM VEÍCULO
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-actions card-actions-visitantes">
+                            <a class="btn-principal btn-sm" href="/historico/{{ v.id }}" onclick="event.stopPropagation()">👁️ Histórico</a>
+                            <a class="btn-principal btn-sm" href="/editar/{{ v.id }}" onclick="event.stopPropagation()">📝 Editar</a>
+                            <a
+                                class="btn-remover btn-sm"
+                                href="/remover/{{ v.id }}"
+                                onclick="event.stopPropagation(); return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')"
+                            >
+                                🗑️ Remover
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="estado-vazio">
+                Nenhum visitante cadastrado.
+            </div>
+        {% endif %}
+    </div>
+
+    {% if total_paginas and total_paginas > 1 %}
+    <div id="paginacao" class="paginacao-wrapper">
+
+        <div class="paginacao-info">
+            Página <strong>{{ pagina }}</strong> de <strong>{{ total_paginas }}</strong>
+        </div>
+
+        <div class="paginacao-botoes">
+
+            {% if pagina > 1 %}
+                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=1) }}">⏮</a>
+                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=pagina-1) }}">⬅</a>
+            {% endif %}
+
+            {% if pagina > 3 %}
+                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=1) }}">1</a>
+                {% if pagina > 4 %}
+                    <span class="btn-paginacao reticencias">...</span>
+                {% endif %}
+            {% endif %}
+
+            {% for p in range(pagina - 2, pagina + 3) %}
+                {% if p >= 1 and p <= total_paginas %}
+                    {% if p == pagina %}
+                        <span class="btn-paginacao ativo">{{ p }}</span>
+                    {% else %}
+                        <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=p) }}">{{ p }}</a>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if pagina < total_paginas - 2 %}
+                {% if pagina < total_paginas - 3 %}
+                    <span class="btn-paginacao reticencias">...</span>
+                {% endif %}
+                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=total_paginas) }}">{{ total_paginas }}</a>
+            {% endif %}
+
+            {% if pagina < total_paginas %}
+                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=pagina+1) }}">➡</a>
+                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=total_paginas) }}">⏭</a>
+            {% endif %}
+
+        </div>
+
+        <div class="paginacao-info">
+            Mostrando
+            <strong>{{ (pagina-1)*20 + 1 }}</strong>
+            até
+            <strong>{{ (pagina-1)*20 + visitantes|length }}</strong>
+            de
+            <strong>{{ total_registros }}</strong>
+            registros
+        </div>
+
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.paginacao {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.btn-paginacao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.06);
+    color: #e8ecf1;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.btn-paginacao:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+}
+
+.btn-paginacao.ativo {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    border-color: transparent;
+    pointer-events: none;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+}
+</style>
+
+<script>
+const inputBusca = document.getElementById("busca");
+const lista = document.getElementById("lista");
+const paginacao = document.getElementById("paginacao");
+
+let visitantesAtuais = [];
+let indiceSelecionado = 0;
+let debounceTimer = null;
+
+function montarTextoVeiculo(v) {
+    if (!(v.marca || v.modelo || v.placa)) {
+        return "SEM VEÍCULO";
+    }
+
+    let partes = [];
+    if (v.marca) partes.push(v.marca);
+    if (v.modelo) partes.push(v.modelo);
+
+    let texto = partes.join(" ").trim();
+
+    if (v.placa) {
+        texto += (texto ? " - " : "") + v.placa;
+    }
+
+    return texto || "SEM VEÍCULO";
+}
+
+function selecionarVisitante(index) {
+    indiceSelecionado = index;
+    renderizarSelecionado();
+}
+
+function renderizarSelecionado() {
+    const cards = document.querySelectorAll("#lista .visitor-card");
+    cards.forEach((card, i) => {
+        if (i === indiceSelecionado) {
+            card.classList.add("selecionado");
+        } else {
+            card.classList.remove("selecionado");
+        }
+    });
+}
+
+function renderizarListaBusca(data) {
+    visitantesAtuais = data;
+    lista.innerHTML = "";
+
+    if (paginacao) {
+        paginacao.style.display = "none";
+    }
+
+    if (!data || data.length === 0) {
+        lista.innerHTML = `<div class="estado-vazio">Nenhum resultado encontrado.</div>`;
+        return;
+    }
+
+    if (indiceSelecionado < 0) indiceSelecionado = 0;
+    if (indiceSelecionado > data.length - 1) indiceSelecionado = data.length - 1;
+
+    data.forEach((v, index) => {
+        const selecionado = index === indiceSelecionado;
+
+        const fotoHtml = v.foto
+            ? `<img src="/static/fotos/${v.foto}" alt="Foto de ${v.nome}" class="visitor-photo">`
+            : `<div class="visitor-photo placeholder">Sem foto</div>`;
+
+        lista.innerHTML += `
+            <div
+                class="visitor-card ${selecionado ? "selecionado" : ""}"
+                data-index="${index}"
+                onclick="selecionarVisitante(${index})"
+            >
+                <div class="visitor-photo-wrap">
+                    ${fotoHtml}
+                </div>
+
+                <div class="visitor-main">
+                    <div class="card-visitante">
+                        <div class="info-grid">
+                            <div class="info-item destaque">
+                                <span class="label-ui">Nome</span>
+                                <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="label-ui">CPF</span>
+                                <span class="valor-ui">${v.cpf || "-"}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="label-ui">Observação</span>
+                                <span class="valor-ui">${v.observacao || "-"}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="extras-grid visitantes-grid-ajustada">
+                        <div class="extra-card">
+                            <span class="label-ui">Tipo de visita</span>
+                            <div class="badge-ui badge-tipo">
+                                🏷 ${((v.tipo || "Sem tipo")).toUpperCase()}
+                            </div>
+                        </div>
+
+                        <div class="extra-card">
+                            <span class="label-ui">Veículo cadastrado</span>
+                            <div class="badge-ui badge-veiculo">
+                                🚗 ${montarTextoVeiculo(v)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-actions card-actions-visitantes">
+                        <a class="btn-secundario btn-sm" href="/historico/${v.id}" onclick="event.stopPropagation()">👁️ Histórico</a>
+                        <a class="btn-principal btn-sm" href="/editar/${v.id}" onclick="event.stopPropagation()">📝 Editar</a>
+                        <a class="btn-remover btn-sm" href="/remover/${v.id}"
+                           onclick="event.stopPropagation(); return confirm('Remover ${v.nome}? Esta ação não pode ser desfeita.')">
+                           🗑️ Remover
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    renderizarSelecionado();
+}
+
+function restaurarListagemNormal() {
+    window.location.href = "/visitantes";
+}
+
+if (inputBusca) {
+    renderizarSelecionado();
+
+    inputBusca.addEventListener("input", function () {
+        const termo = inputBusca.value.trim();
+
+        clearTimeout(debounceTimer);
+
+        if (termo.length === 0) {
+            restaurarListagemNormal();
+            return;
+        }
+
+        if (termo.length < 2) {
+            lista.innerHTML = `<div class="estado-vazio">Digite pelo menos 2 caracteres para buscar.</div>`;
+            if (paginacao) {
+                paginacao.style.display = "none";
+            }
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`/buscar_ajax?q=${encodeURIComponent(termo)}`)
+                .then(async (res) => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error("Erro ao buscar visitantes.");
+                    }
+                    return data;
+                })
+                .then((data) => {
+                    indiceSelecionado = 0;
+                    renderizarListaBusca(data);
+                })
+                .catch((erro) => {
+                    lista.innerHTML = `<div class="estado-erro">${erro.message}</div>`;
+                    console.error("Erro na busca:", erro);
+                });
+        }, 300);
+    });
+
+    inputBusca.addEventListener("keydown", function(event) {
+        if (visitantesAtuais.length === 0) return;
+
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            indiceSelecionado = Math.min(indiceSelecionado + 1, visitantesAtuais.length - 1);
+            renderizarSelecionado();
+            return;
+        }
+
+        if (event.key === "ArrowUp") {
+            event.preventDefault();
+            indiceSelecionado = Math.max(indiceSelecionado - 1, 0);
+            renderizarSelecionado();
+            return;
+        }
+    });
+}
+</script>
+
+{% endblock %}

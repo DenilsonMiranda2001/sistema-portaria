@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Usuário</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-wrap-sm">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for cat, msg in messages %}
+                    <div class="msg-padrao">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card-padrao">
+            <h2>Editar Usuário</h2>
+
+            <form method="POST" class="form-coluna">
+                <div class="campo">
+                    <label>Nome</label>
+                    <input class="input-padrao" type="text" name="nome" value="{{ user['nome'] }}" required>
+                </div>
+
+                <div class="campo">
+                    <label>Usuário</label>
+                    <input class="input-padrao" type="text" name="usuario" value="{{ user['usuario'] }}" required>
+                </div>
+
+                <div class="campo">
+                    <label>Tipo</label>
+                    <select class="select-padrao" name="tipo">
+                        <option value="funcionario" {% if user['tipo'] == 'funcionario' %}selected{% endif %}>Funcionário</option>
+                        <option value="admin" {% if user['tipo'] == 'admin' %}selected{% endif %}>Admin</option>
+                        
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-principal">Salvar alterações</button>
+            </form>
+
+            <div class="acoes-topo" style="margin-top:16px;">
+                <a class="btn-topo btn-voltar" href="{{ url_for('admin.usuarios') }}">Voltar</a>
+                <a class="btn-topo btn-voltar" href="{{ url_for('main.index') }}">Início</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

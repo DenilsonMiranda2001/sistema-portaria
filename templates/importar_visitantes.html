@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Importar Visitantes{% endblock %}
+
+{% block content %}
+<div class="container-pagina">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div>
+                <h2 style="margin: 0;">📥 Importar Visitantes</h2>
+                <p style="margin: 8px 0 0; color: #666;">
+                    Envie um arquivo CSV para cadastrar visitantes em lote no sistema.
+                </p>
+            </div>
+
+            <a href="{{ url_for('visitantes.visitantes') }}" class="btn">← Voltar</a>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3 style="margin-top: 0;">Arquivo esperado</h3>
+        <p style="color: #555; margin-bottom: 15px;">
+            O arquivo CSV deve conter exatamente estas colunas:
+        </p>
+
+        <div style="
+            background: #f8f9fa;
+            border: 1px solid #e3e6ea;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 14px;
+            color: #333;
+            overflow-x: auto;
+        ">
+            nome, cpf, endereco, tipo, placa, modelo, marca, observacao
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" style="margin-top: 25px;">
+            <label for="arquivo_csv" style="display: block; font-weight: 600; margin-bottom: 8px;">
+                Selecione o arquivo CSV
+            </label>
+
+            <input
+                type="file"
+                name="arquivo_csv"
+                id="arquivo_csv"
+                accept=".csv"
+                required
+                style="
+                    width: 100%;
+                    padding: 12px;
+                    border: 1px solid #dcdfe4;
+                    border-radius: 12px;
+                    background: #fff;
+                    margin-bottom: 18px;
+                "
+            >
+
+            <button type="submit" class="btn">Importar arquivo</button>
+        </form>
+    </div>
+
+    {% if importados is not none %}
+    <div class="card" style="margin-top: 20px;">
+        <h3 style="margin-top: 0;">✅ Resultado da importação</h3>
+
+        <div class="painel-resumo" style="margin-top: 20px;">
+            <div class="card-mini">
+                <h3>📦 Importados</h3>
+                <p class="valor-destaque">{{ importados }}</p>
+            </div>
+
+            <div class="card-mini">
+                <h3>⚠️ Duplicados</h3>
+                <p class="valor-destaque">{{ duplicados }}</p>
+            </div>
+
+            <div class="card-mini">
+                <h3>❌ Erros</h3>
+                <p class="valor-destaque">{{ erros }}</p>
+            </div>
+        </div>
+
+        {% if detalhes_erros %}
+        <div style="margin-top: 25px;">
+            <h4 style="margin-bottom: 12px;">Detalhes dos erros</h4>
+
+            <div style="
+                background: #fff8f8;
+                border: 1px solid #f1caca;
+                border-radius: 14px;
+                padding: 16px;
+                max-height: 300px;
+                overflow-y: auto;
+            ">
+                <ul style="margin: 0; padding-left: 20px; color: #444; line-height: 1.7;">
+                    {% for erro in detalhes_erros %}
+                        <li>{{ erro }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

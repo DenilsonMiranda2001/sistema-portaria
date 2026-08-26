@@ -1,0 +1,67 @@
+{% macro status_badge(status) -%}
+    {% set nomes = {
+        'recebida': 'Recebida', 'aguardando_resposta': 'Aguardando resposta',
+        'morador_em_casa': 'Morador em casa', 'retida_portaria': 'Retida',
+        'entregue_na_porta': 'Entregue na porta', 'retirada': 'Retirada',
+        'cancelada': 'Cancelada', 'aberto': 'Aberto', 'em_triagem': 'Em triagem',
+        'concluido': 'Concluído', 'cancelado': 'Cancelado'
+    } %}
+    <span class="enc-badge enc-status-{{ status }}">{{ nomes.get(status, status) }}</span>
+{%- endmacro %}
+
+{% macro subnav(ativo) -%}
+<nav class="enc-subnav" aria-label="Navegação de encomendas">
+    <a class="{{ 'ativo' if ativo == 'painel' }}" href="{{ url_for('encomendas.painel') }}">Painel</a>
+    <a class="{{ 'ativo' if ativo == 'novo' }}" href="{{ url_for('encomendas.novo_lote') }}">Novo lote</a>
+    <a class="{{ 'ativo' if ativo == 'lotes' }}" href="{{ url_for('encomendas.lotes') }}">Lotes</a>
+    <a class="{{ 'ativo' if ativo == 'retidas' }}" href="{{ url_for('encomendas.retidas') }}">Retidas</a>
+    <a class="{{ 'ativo' if ativo == 'historico' }}" href="{{ url_for('encomendas.historico') }}">Histórico</a>
+</nav>
+{%- endmacro %}
+
+{% macro acoes(encomenda, proximo='painel') -%}
+<div class="enc-acoes">
+    {% if encomenda.whatsapp_url %}
+        <a class="btn enc-btn enc-btn-whatsapp" href="{{ encomenda.whatsapp_url }}"
+           target="_blank" rel="noopener noreferrer">Enviar aviso WhatsApp</a>
+    {% else %}
+        <span class="enc-sem-whatsapp">Morador sem WhatsApp cadastrado</span>
+    {% endif %}
+
+    {% if encomenda.status not in ('retirada', 'entregue_na_porta', 'cancelada') %}
+        <form method="post" action="{{ url_for('encomendas.status_encomenda', encomenda_id=encomenda.id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="status" value="morador_em_casa">
+            <input type="hidden" name="proximo" value="{{ proximo }}">
+            <button class="btn enc-btn" type="submit">Morador em casa</button>
+        </form>
+        <form method="post" action="{{ url_for('encomendas.status_encomenda', encomenda_id=encomenda.id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="status" value="retida_portaria">
+            <input type="hidden" name="proximo" value="{{ proximo }}">
+            <button class="btn enc-btn enc-btn-warning" type="submit">Reter</button>
+        </form>
+        <form method="post" action="{{ url_for('encomendas.status_encomenda', encomenda_id=encomenda.id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="status" value="entregue_na_porta">
+            <input type="hidden" name="proximo" value="{{ proximo }}">
+            <button class="btn enc-btn" type="submit">Entregue na porta</button>
+        </form>
+        <form class="enc-retirada-form" method="post"
+              action="{{ url_for('encomendas.status_encomenda', encomenda_id=encomenda.id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="status" value="retirada">
+            <input type="hidden" name="proximo" value="{{ proximo }}">
+            <input name="retirado_por" required maxlength="150" placeholder="Quem retirou?">
+            <button class="btn enc-btn enc-btn-success" type="submit">Confirmar retirada</button>
+        </form>
+        <form method="post" action="{{ url_for('encomendas.status_encomenda', encomenda_id=encomenda.id) }}"
+              onsubmit="return confirm('Cancelar esta encomenda?')">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="status" value="cancelada">
+            <input type="hidden" name="proximo" value="{{ proximo }}">
+            <button class="btn enc-btn enc-btn-danger" type="submit">Cancelar</button>
+        </form>
+    {% endif %}
+</div>
+{%- endmacro %}

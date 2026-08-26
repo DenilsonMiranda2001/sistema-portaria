@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "encomendas/_macros.html" import status_badge, subnav %}
+{% block title %}Histórico de Encomendas{% endblock %}
+{% block content %}
+{{ subnav('historico') }}
+<div class="enc-header"><div><h2>Histórico de encomendas</h2><p>Registros finalizados permanecem disponíveis para consulta.</p></div></div>
+<form class="card enc-busca" method="get">
+    <input name="q" value="{{ termo }}" placeholder="Unidade, morador, código ou rastreio">
+    <button class="btn enc-btn enc-btn-primary">Buscar</button>
+</form>
+<div class="card enc-tabela-wrap">
+<table class="tabela-padrao">
+    <thead><tr><th>Data</th><th>Lote</th><th>Transportadora</th><th>Unidade / morador</th><th>Status final</th><th>Retirado por</th><th>Data da retirada</th></tr></thead>
+    <tbody>{% for encomenda in encomendas %}
+    <tr>
+        <td>{{ encomenda.data_chegada.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td><a class="link-tabela" href="{{ url_for('encomendas.lote_detalhe', lote_id=encomenda.lote_id) }}">#{{ encomenda.lote_id }}</a></td>
+        <td>{{ encomenda.transportadora }}</td>
+        <td><b>{{ encomenda.unidade }}</b><br><small>{{ encomenda.nome_morador or '—' }}</small></td>
+        <td>{{ status_badge(encomenda.status) }}</td><td>{{ encomenda.retirado_por or '—' }}</td>
+        <td>{{ encomenda.data_retirada.strftime('%d/%m/%Y %H:%M') if encomenda.data_retirada else '—' }}</td>
+    </tr>
+    {% else %}<tr><td colspan="7">Nenhum registro encontrado.</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+{% endblock %}

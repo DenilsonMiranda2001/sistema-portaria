@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% block title %}Visitantes Ativos{% endblock %}
+
+{% block content %}
+
+<div class="card-padrao">
+    <div class="header-secao">
+        <h2>🚨 Visitantes Ativos</h2>
+        <p class="texto-ajuda">
+            Busque por nome, CPF ou placa para localizar rapidamente quem está no condomínio.
+        </p>
+    </div>
+
+    <div class="busca-box">
+        <input
+            type="text"
+            id="buscaAtivo"
+            class="input-padrao busca-input"
+            placeholder="Digite nome, CPF ou placa para registrar a saída..."
+            autocomplete="off"
+            autofocus
+        >
+    </div>
+
+    <div id="mensagemAtivo" class="mensagem-box"></div>
+
+    <a class="link-voltar" href="/">⬅ Voltar</a>
+
+
+    <div id="listaAtivos" class="lista-resultados">
+        {% if visitantes %}
+            {% for v in visitantes %}
+                <div class="visitor-card {% if loop.index0 == 0 %}selecionado{% endif %}" data-index="{{ loop.index0 }}">
+
+                    <div class="visitor-photo-wrap">
+                        {% if v.foto %}
+                            <img src="{{ url_for('static', filename='fotos/' + v.foto) }}" class="visitor-photo">
+                        {% else %}
+                            <div class="visitor-photo placeholder">Sem foto</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="visitor-main">
+
+                        <div class="card-visitante">
+                            <div class="info-grid">
+                                <div class="info-item destaque">
+                                    <span class="label-ui">Nome</span>
+                                    <span class="valor-ui nome">{{ v.nome|upper }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="label-ui">CPF</span>
+                                    <span class="valor-ui">{{ v.cpf }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="label-ui">Destino</span>
+                                    <span class="valor-ui">{{ v.endereco or '-' }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="label-ui">Morador / Unidade</span>
+                                    <span class="valor-ui">
+                                        {% if v.morador_nome %}
+                                            {{ v.morador_nome }}
+                                            {% if v.unidade_codigo %}
+                                                <span class="badge-unidade">{{ v.unidade_codigo }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="texto-muted">—</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="label-ui">Observação</span>
+                                    <span class="valor-ui">{{ v.observacao if v.observacao else '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="extras-grid">
+
+                            <div class="extra-card">
+                                <span class="label-ui">Tipo de visita</span>
+                                <div class="badge-ui badge-tipo">
+                                    🏷 {{ (v.tipo or 'Sem tipo')|upper }}
+                                </div>
+                            </div>
+
+                            <div class="extra-card">
+                                <span class="label-ui">Veículo desta entrada</span>
+                                <div class="badge-ui badge-veiculo">
+                                    🚗
+                                    {% if v.marca or v.modelo or v.placa %}
+                                        {{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} - {{ v.placa }}{% endif %}
+                                    {% else %}
+                                        SEM VEÍCULO
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="extra-card">
+                                <span class="label-ui">Horário de entrada</span>
+                                <div class="badge-ui badge-entrada">
+                                    ⏰ {{ v.data_entrada }}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="card-actions">
+                            <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}"
+                                  onsubmit="return confirm('Registrar saída de {{ v.nome }}?')">
+                                <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="estado-vazio">
+                Nenhum visitante no momento.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+const inputAtivo = document.getElementById("buscaAtivo");
+const listaAtivos = document.getElementById("listaAtivos");
+const mensagemAtivo = document.getElementById("mensagemAtivo");
+
+let ativosAtuais = [];
+let indiceSelecionadoAtivo = 0;
+
+// ==============================
+// MENSAGEM
+// ==============================
+function mostrarMensagemAtivo(texto, cor = "red") {
+    mensagemAtivo.innerHTML = `<p style="color:${cor}; font-weight:bold;">${texto}</p>`;
+}
+
+function limparMensagemAtivo() {
+    mensagemAtivo.innerHTML = "";
+}
+
+// ==============================
+// MONTA TEXTO DO VEÍCULO
+// ==============================
+function montarTextoVeiculo(v) {
+    if (!(v.marca || v.modelo || v.placa)) {
+        return "Sem veículo";
+    }
+
+    let partes = [];
+    if (v.marca) partes.push(v.marca);
+    if (v.modelo) partes.push(v.modelo);
+
+    let texto = partes.join(" ").trim();
+
+    if (v.placa) {
+        texto += (texto ? " - " : "") + v.placa;
+    }
+
+    return texto || "Sem veículo";
+}
+
+// ==============================
+// FORMATA DATA/HORA
+// ==============================
+function formatarEntrada(dataEntrada) {
+    if (!dataEntrada) return "-";
+    return dataEntrada;
+}
+
+// ==============================
+// RENDERIZAR LISTA DE ATIVOS
+// ==============================
+function renderizarAtivos(data) {
+    ativosAtuais = data;
+    listaAtivos.innerHTML = "";
+
+    if (!data || data.length === 0) {
+        listaAtivos.innerHTML = "<p>Nenhum visitante ativo encontrado.</p>";
+        return;
+    }
+
+    if (indiceSelecionadoAtivo < 0) indiceSelecionadoAtivo = 0;
+    if (indiceSelecionadoAtivo > data.length - 1) indiceSelecionadoAtivo = data.length - 1;
+
+    data.forEach((v, index) => {
+        const selecionado = index === indiceSelecionadoAtivo;
+
+        const estiloCard = selecionado
+            ? "display:flex; gap:15px; align-items:flex-start; flex-wrap:wrap; border:2px solid #007bff; background:#f4f9ff; cursor:pointer;"
+            : "display:flex; gap:15px; align-items:flex-start; flex-wrap:wrap; cursor:pointer;";
+
+        const fotoHtml = v.foto
+            ? `<img src="/static/fotos/${v.foto}"
+                    alt="Foto de ${v.nome}"
+                    style="width:90px; height:90px; object-fit:cover; border-radius:10px; border:1px solid #ddd;">`
+            : `<div style="
+                    width:90px;
+                    height:90px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    border-radius:10px;
+                    border:1px solid #ddd;
+                    background:#f8f9fa;
+                    color:#777;
+                    font-size:13px;
+                    text-align:center;
+                    padding:8px;
+                ">
+                    Sem foto
+               </div>`;
+
+        listaAtivos.innerHTML += `
+        <div
+            class="visitor-card ${selecionado ? "selecionado" : ""}"
+            data-index="${index}"
+            onclick="selecionarAtivo(${index})"
+        >
+            <div class="visitor-photo-wrap">
+                ${fotoHtml}
+            </div>
+
+            <div class="visitor-main">
+
+                <div class="card-visitante">
+                    <div class="info-grid">
+                        <div class="info-item destaque">
+                            <span class="label-ui">Nome</span>
+                            <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
+                        </div>
+
+                        <div class="info-item">
+                            <span class="label-ui">CPF</span>
+                            <span class="valor-ui">${v.cpf || "-"}</span>
+                        </div>
+
+                        <div class="info-item">
+                            <span class="label-ui">Destino</span>
+                            <span class="valor-ui">${v.endereco || "-"}</span>
+                        </div>
+
+                        <div class="info-item">
+                            <span class="label-ui">Observação</span>
+                            <span class="valor-ui">${v.observacao || "-"}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="extras-grid">
+
+                    <div class="extra-card">
+                        <span class="label-ui">Tipo</span>
+                        <div class="badge-ui badge-tipo">
+                            🏷 ${(v.tipo || "SEM TIPO").toUpperCase()}
+                        </div>
+                    </div>
+
+                    <div class="extra-card">
+                        <span class="label-ui">Veículo</span>
+                        <div class="badge-ui badge-veiculo">
+                            🚗 ${montarTextoVeiculo(v)}
+                        </div>
+                    </div>
+
+                    <div class="extra-card">
+                        <span class="label-ui">Entrada</span>
+                        <div class="badge-ui badge-entrada">
+                            ⏰ ${formatarEntrada(v.data_entrada)}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-actions">
+                    <form method="POST" action="/saida/${v.id}"
+                          onsubmit="event.stopPropagation(); return confirm('Registrar saída de ${(v.nome||'').replace(/'/g,'')}?')">
+                        <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    `;
+    });
+}
+
+// ==============================
+// SELECIONAR ITEM
+// ==============================
+function selecionarAtivo(index) {
+    indiceSelecionadoAtivo = index;
+    renderizarAtivos(ativosAtuais);
+}
+
+// ==============================
+// BUSCA INTELIGENTE
+// ==============================
+inputAtivo.addEventListener("input", function () {
+    const termo = inputAtivo.value.trim();
+    limparMensagemAtivo();
+
+    if (termo.length === 0) {
+        window.location.href = "/ativos";
+        return;
+    }
+
+    fetch(`/buscar_ativos_ajax?q=${encodeURIComponent(termo)}`)
+        .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error("Erro ao buscar visitantes ativos.");
+            }
+            return data;
+        })
+        .then((data) => {
+            indiceSelecionadoAtivo = 0;
+            renderizarAtivos(data);
+        })
+        .catch((erro) => {
+            listaAtivos.innerHTML = `<p style="color:red;">${erro.message}</p>`;
+            console.error("Erro na busca:", erro);
+        });
+});
+
+// ==============================
+// TECLADO NA BUSCA
+// ==============================
+inputAtivo.addEventListener("keydown", function(event) {
+    if (ativosAtuais.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+        event.preventDefault();
+        indiceSelecionadoAtivo = Math.min(indiceSelecionadoAtivo + 1, ativosAtuais.length - 1);
+        renderizarAtivos(ativosAtuais);
+        return;
+    }
+
+    if (event.key === "ArrowUp") {
+        event.preventDefault();
+        indiceSelecionadoAtivo = Math.max(indiceSelecionadoAtivo - 1, 0);
+        renderizarAtivos(ativosAtuais);
+        return;
+    }
+
+    if (event.key === "Enter") {
+        event.preventDefault();
+
+        const ativoSelecionado = ativosAtuais[indiceSelecionadoAtivo];
+        if (!ativoSelecionado) return;
+
+        const confirmar = confirm(`Registrar saída de ${ativoSelecionado.nome}?`);
+        if (confirmar) {
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = `/saida/${ativoSelecionado.id}`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+});
+</script>
+{% endblock %}

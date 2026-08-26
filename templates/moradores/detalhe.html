@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Morador — {{ morador.nome }}{% endblock %}
+
+{% block content %}
+<div class="card-padrao">
+    <div class="header-secao header-secao-flex">
+        <div>
+            <h2>🏠 {{ morador.nome }}</h2>
+            {% if morador.unidade_codigo %}
+                <p class="texto-ajuda">
+                    Unidade: <span class="badge-unidade">{{ morador.unidade_codigo }}</span>
+                    {% if morador.unidade_descricao %} — {{ morador.unidade_descricao }}{% endif %}
+                </p>
+            {% endif %}
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a class="btn-secundario" href="{{ url_for('moradores.editar', id=morador.id) }}">✏️ Editar</a>
+            <a class="link-voltar" href="{{ url_for('moradores.listar') }}">⬅ Voltar</a>
+        </div>
+    </div>
+
+    <div class="grid-blocos">
+        <div class="card-bloco">
+            <h3>👤 Dados pessoais</h3>
+            <table class="tabela-detalhes">
+                <tr><th>Nome</th><td>{{ morador.nome }}</td></tr>
+                <tr><th>CPF</th><td>{{ morador.cpf or '—' }}</td></tr>
+                <tr><th>Telefone</th><td>{{ morador.telefone or '—' }}</td></tr>
+                <tr><th>E-mail</th><td>{{ morador.email or '—' }}</td></tr>
+                <tr>
+                    <th>Status</th>
+                    <td>
+                        {% if morador.ativo %}
+                            <span class="badge-status badge-ativo">Ativo</span>
+                        {% else %}
+                            <span class="badge-status badge-inativo">Inativo</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr><th>Cadastrado em</th>
+                    <td>{{ morador.criado_em.strftime('%d/%m/%Y às %H:%M') if morador.criado_em else '—' }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card-bloco">
+            <h3>🏡 Unidade</h3>
+            {% if morador.unidade_codigo %}
+                <div class="badge-unidade-grande">{{ morador.unidade_codigo }}</div>
+                {% if morador.unidade_descricao %}
+                    <p style="margin-top:8px; color:var(--cor-texto-secundario);">{{ morador.unidade_descricao }}</p>
+                {% endif %}
+            {% else %}
+                <p class="texto-muted">Nenhuma unidade associada.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if morador.observacao %}
+    <div class="card-bloco" style="margin-top:16px;">
+        <h3>📝 Observações</h3>
+        <p>{{ morador.observacao }}</p>
+    </div>
+    {% endif %}
+
+    <div class="acao-formulario" style="margin-top:24px;">
+        {% if morador.ativo %}
+        <form method="POST" action="{{ url_for('moradores.inativar', id=morador.id) }}"
+              onsubmit="return confirm('Inativar este morador?')">
+            <button class="btn-remover" type="submit">⛔ Inativar morador</button>
+        </form>
+        {% else %}
+        <form method="POST" action="{{ url_for('moradores.ativar', id=morador.id) }}">
+            <button class="btn-principal" type="submit">✅ Reativar morador</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

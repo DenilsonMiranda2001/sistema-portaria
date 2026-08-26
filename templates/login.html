@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso ao Sistema | Portaria Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-brand">
+            <div class="brand-content">
+                <span class="brand-badge">PORTARIA INTELIGENTE</span>
+                <h1>Portaria Control</h1>
+                <p class="brand-subtitle">
+                    Controle moderno de acessos para portarias, condomínios e operações internas.
+                </p>
+
+                <div class="brand-features">
+                    <div class="brand-feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Controle de entrada e saída</span>
+                    </div>
+                    <div class="brand-feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Cadastro de visitantes e moradores</span>
+                    </div>
+                    <div class="brand-feature">
+                        <span class="feature-icon">✓</span>
+                        <span>Segurança e rastreabilidade operacional</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="login-panel">
+            <div class="login-header">
+                <h2>Bem-vindo de volta</h2>
+                <p>Acesse sua conta para continuar no sistema.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="login-alerts">
+                        {% for cat, msg in messages %}
+                            <div class="login-alert {{ cat }}">{{ msg }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="usuario">Usuário</label>
+                    <input
+                        id="usuario"
+                        class="login-input"
+                        type="text"
+                        name="usuario"
+                        placeholder="Digite seu usuário"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input
+                        id="senha"
+                        class="login-input"
+                        type="password"
+                        name="senha"
+                        placeholder="Digite sua senha"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="login-button">Acessar sistema</button>
+            </form>
+
+            <div class="login-footer">
+                <span>Ambiente seguro · Uso restrito a usuários autorizados</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

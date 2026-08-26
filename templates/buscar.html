@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<html>
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2>🔎 Buscar por CPF</h2>
+
+        <a class="link" href="/">⬅ Voltar</a>
+
+        <form method="POST">
+            <input class="input" type="text" name="cpf" placeholder="Digite o CPF">
+            <button class="btn" type="submit">Buscar</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

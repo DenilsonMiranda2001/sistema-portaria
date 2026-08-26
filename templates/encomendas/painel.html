@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "encomendas/_macros.html" import status_badge, subnav, acoes %}
+{% block title %}Painel de Encomendas{% endblock %}
+{% block content %}
+{{ subnav('painel') }}
+<div class="enc-header">
+    <div><h2>Gestão de encomendas</h2><p>Visão operacional da portaria.</p></div>
+    <a class="btn btn-submit" href="{{ url_for('encomendas.novo_lote') }}">+ Novo lote</a>
+</div>
+
+<section class="enc-resumo">
+    <a href="{{ url_for('encomendas.painel', filtro='hoje') }}"><span>Recebidas hoje</span><strong>{{ resumo.recebidas_hoje }}</strong></a>
+    <a href="{{ url_for('encomendas.painel', filtro='pendentes') }}"><span>Aguardando resposta</span><strong>{{ resumo.aguardando }}</strong></a>
+    <a href="{{ url_for('encomendas.retidas') }}"><span>Retidas na portaria</span><strong>{{ resumo.retidas }}</strong></a>
+    <a href="{{ url_for('encomendas.painel', filtro='retiradas') }}"><span>Retiradas hoje</span><strong>{{ resumo.retiradas_hoje }}</strong></a>
+    <a href="{{ url_for('encomendas.painel', filtro='historico') }}"><span>Entregues na porta hoje</span><strong>{{ resumo.entregues_porta }}</strong></a>
+</section>
+
+<form class="enc-filtros card" method="get">
+    <input name="q" value="{{ termo }}" placeholder="Unidade, morador, código ou rastreio">
+    <select name="filtro">
+        <option value="">Todas</option>
+        <option value="hoje" {{ 'selected' if filtro == 'hoje' }}>Hoje</option>
+        <option value="pendentes" {{ 'selected' if filtro == 'pendentes' }}>Pendentes</option>
+        <option value="retidas" {{ 'selected' if filtro == 'retidas' }}>Retidas</option>
+        <option value="retiradas" {{ 'selected' if filtro == 'retiradas' }}>Retiradas</option>
+        <option value="historico" {{ 'selected' if filtro == 'historico' }}>Histórico</option>
+    </select>
+    <select name="lote_id">
+        <option value="">Todos os lotes</option>
+        {% for lote in lotes %}<option value="{{ lote.id }}" {{ 'selected' if lote_id == lote.id }}>Lote #{{ lote.id }} — {{ lote.transportadora }}</option>{% endfor %}
+    </select>
+    <select name="transportadora">
+        <option value="">Todas as transportadoras</option>
+        {% for item in transportadoras %}<option {{ 'selected' if transportadora == item }}>{{ item }}</option>{% endfor %}
+    </select>
+    <button class="btn enc-btn enc-btn-primary" type="submit">Filtrar</button>
+</form>
+
+<div class="enc-lista">
+{% for encomenda in encomendas %}
+    <article class="card enc-item">
+        <div class="enc-item-topo">
+            <div><strong>Unidade {{ encomenda.unidade }}</strong><span>{{ encomenda.nome_morador or 'Morador não informado' }}</span></div>
+            {{ status_badge(encomenda.status) }}
+        </div>
+        <div class="enc-meta">
+            <span><b>{{ encomenda.codigo_retirada }}</b></span>
+            <span>{{ encomenda.transportadora }} · Lote #{{ encomenda.lote_id }}</span>
+            <span>{{ encomenda.data_chegada.strftime('%d/%m/%Y %H:%M') }}</span>
+            {% if encomenda.codigo_rastreio %}<span>Rastreio: {{ encomenda.codigo_rastreio }}</span>{% endif %}
+        </div>
+        {{ acoes(encomenda, 'painel') }}
+    </article>
+{% else %}
+    <div class="card enc-vazio">Nenhuma encomenda encontrada para os filtros informados.</div>
+{% endfor %}
+</div>
+{% endblock %}

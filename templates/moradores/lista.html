@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Moradores{% endblock %}
+
+{% block content %}
+<div class="card-padrao">
+    <div class="header-secao header-secao-flex">
+        <div>
+            <h2>🏠 Moradores</h2>
+            <p class="texto-ajuda">Gerencie os moradores do condomínio.</p>
+        </div>
+        <a class="btn-principal" href="{{ url_for('moradores.novo') }}">➕ Novo morador</a>
+    </div>
+
+    <!-- Busca -->
+    <form method="GET" class="busca-box" style="gap:8px; display:flex;">
+        <input class="input-padrao busca-input" type="text" name="q"
+               value="{{ termo or '' }}" placeholder="Buscar por nome, CPF ou unidade..." autofocus>
+        <button class="btn-principal" type="submit">Buscar</button>
+        {% if termo %}
+            <a class="btn-secundario" href="{{ url_for('moradores.listar') }}">Limpar</a>
+        {% endif %}
+    </form>
+
+    {% if moradores %}
+    <table class="tabela-padrao">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th>Unidade</th>
+                <th>Status</th>
+                <th>Cadastrado em</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in moradores %}
+            <tr class="{{ '' if m.ativo else 'linha-inativa' }}">
+                <td>
+                    <a href="{{ url_for('moradores.detalhe', id=m.id) }}" class="link-tabela">
+                        {{ m.nome }}
+                    </a>
+                </td>
+                <td>{{ m.cpf or '—' }}</td>
+                <td>{{ m.telefone or '—' }}</td>
+                <td>
+                    {% if m.unidade_codigo %}
+                        <span class="badge-unidade">{{ m.unidade_codigo }}</span>
+                        {% if m.unidade_descricao %}
+                            <small class="texto-muted">{{ m.unidade_descricao }}</small>
+                        {% endif %}
+                    {% else %}
+                        <span class="texto-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if m.ativo %}
+                        <span class="badge-status badge-ativo">Ativo</span>
+                    {% else %}
+                        <span class="badge-status badge-inativo">Inativo</span>
+                    {% endif %}
+                </td>
+                <td>{{ m.criado_em.strftime('%d/%m/%Y') if m.criado_em else '—' }}</td>
+                <td class="acoes-tabela">
+                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.editar', id=m.id) }}">✏️ Editar</a>
+                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.detalhe', id=m.id) }}">👁 Ver</a>
+
+                    {% if m.ativo %}
+                    <form method="POST" action="{{ url_for('moradores.inativar', id=m.id) }}"
+                          style="display:inline;"
+                          onsubmit="return confirm('Inativar {{ m.nome }}?')">
+                        <button class="btn-remover btn-sm" type="submit">⛔ Inativar</button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('moradores.ativar', id=m.id) }}" style="display:inline;">
+                        <button class="btn-principal btn-sm" type="submit">✅ Ativar</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p class="texto-ajuda" style="margin-top:12px;">
+        {{ moradores|length }} morador(es) encontrado(s).
+    </p>
+
+    {% else %}
+    <div class="estado-vazio">
+        <div>Nenhum morador encontrado.</div>
+        <a class="btn-principal btn-sm" href="{{ url_for('moradores.novo') }}">➕ Cadastrar primeiro morador</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,594 @@
+{% extends 'base.html' %}
+{% block title %}Editar Cadastro{% endblock %}
+
+{% block content %}
+<div class="card-padrao">
+    <div class="header-secao header-secao-flex">
+        <div>
+            <h2>📝 Editar Visitante</h2>
+            <p class="texto-ajuda">
+                Atualize os dados do visitante mantendo o mesmo padrão do sistema.
+            </p>
+        </div>
+
+        <a class="link-voltar" href="/visitantes">⬅ Voltar</a>
+    </div>
+
+    {% if visitante %}
+    <form method="POST" enctype="multipart/form-data" autocomplete="off" class="form-cadastro-visitante">
+
+        <div class="card-bloco">
+            <h3>👤 Dados do visitante</h3>
+
+            <div class="grid-formulario">
+                <input class="input-padrao" type="text" name="nome" id="nome"
+                value="{{ visitante.nome or '' }}"
+                placeholder="Nome completo" required>
+
+            <input class="input-padrao" type="text" name="cpf" id="cpf"
+                value="{{ visitante.cpf or cpf_pre or '' }}" placeholder="CPF" required>
+
+            <div class="campo-full" style="display: flex; flex-direction: column; gap: 6px;">
+                <input class="input-padrao" type="text" name="endereco" id="endereco"
+                    value="{{ visitante.endereco or '' }}"
+                    placeholder="Ex: 070220 ou QUADRA 07, CONJUNTO 02, CASA 20"
+                    autocomplete="off">
+
+                    <small id="sugestao-endereco" style="color: #666; font-size: 13px;"></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-blocos">
+            <div class="card-bloco">
+                <h3>🏷 Tipo de visita</h3>
+
+                <div class="campo-autocomplete">
+                    <input class="input-padrao" type="text" name="tipo" id="tipo"
+                           value="{{ visitante.tipo or '' }}"
+                           placeholder="Tipo de visita">
+                    <div id="sugestoes_tipo" class="caixa-sugestoes"></div>
+                </div>
+            </div>
+
+            <div class="card-bloco">
+                <h3>📝 Observação</h3>
+
+                <textarea
+                    class="input-padrao textarea-cadastro"
+                    name="observacao"
+                    id="observacao"
+                    placeholder="Observações do visitante"
+                    rows="4"
+                >{{ visitante.observacao or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="card-bloco">
+            <h3>🚗 Veículo</h3>
+
+            <div class="grid-formulario">
+                <input class="input-padrao" type="text" name="placa" id="placa"
+                       value="{{ visitante.placa or '' }}" placeholder="Placa">
+
+                <div class="campo-autocomplete">
+                    <input class="input-padrao" type="text" name="modelo" id="modelo"
+                           value="{{ visitante.modelo or '' }}" placeholder="Modelo">
+                    <div id="sugestoes_modelo" class="caixa-sugestoes"></div>
+                </div>
+
+                <div class="campo-autocomplete">
+                    <input class="input-padrao" type="text" name="marca" id="marca"
+                           value="{{ visitante.marca or '' }}" placeholder="Marca">
+                    <div id="sugestoes_marca" class="caixa-sugestoes"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-bloco">
+        <h3>📷 Foto do visitante</h3>
+
+        <div class="foto-atual-box">
+            {% if visitante.foto %}
+                <div class="preview-box preview-box-visivel">
+                    <p class="preview-label">Foto atual</p>
+                    <img
+                        src="{{ url_for('static', filename='fotos/' + visitante.foto) }}"
+                        alt="Foto do visitante"
+                        class="foto-atual-img"
+                        data-foto-visitante="{{ visitante.id }}"
+                    >
+
+                    <div style="margin-top:10px;">
+                        <button
+                            type="button"
+                            class="btn-secundario btn-sm"
+                            onclick="abrirModalFotoEditar()"
+                        >
+                            ✏️ Atualizar foto
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="sem-foto-box">
+                    Sem foto atual
+
+                    <div style="margin-top:10px;">
+                        <button
+                            type="button"
+                            class="btn-secundario btn-sm"
+                            onclick="abrirModalFotoEditar()"
+                        >
+                            📷 Adicionar foto
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="divisor">
+            ───── ou usar método manual ─────
+        </div>
+
+        <p class="preview-label preview-label-topo">📸 Tirar nova foto (manual)</p>
+
+        <div class="camera-actions">
+            <button type="button" class="btn-principal btn-sm" id="btnAbrirCamera">📷 Abrir câmera</button>
+            <button type="button" class="btn-secundario btn-sm" id="btnCapturar" style="display:none;">📸 Capturar</button>
+            <button type="button" class="btn-remover btn-sm" id="btnFecharCamera" style="display:none;">❌ Fechar</button>
+            <button type="button" class="btn-principal btn-sm" id="btnNovaFoto" style="display:none;">🔄 Tirar novamente</button>
+        </div>
+
+        <div class="foto-grid">
+            <div id="camera-container" class="camera-box">
+                <video id="video" autoplay playsinline></video>
+            </div>
+
+            <div id="preview-container" class="preview-box">
+                <p class="preview-label">Nova foto</p>
+                <img id="preview-foto" src="" alt="Prévia da nova foto">
+            </div>
+        </div>
+
+        <canvas id="canvas" style="display:none;"></canvas>
+        <input type="hidden" name="foto_webcam" id="foto_webcam">
+
+        <div class="divisor">
+            ───── ou enviar imagem ─────
+        </div>
+
+        <input class="input-padrao" type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*">
+    </div>
+
+        <div class="acao-formulario">
+            <button class="btn-principal btn-sm" type="submit">💾 Salvar Alterações</button>
+        </div>
+    </form>
+    {% else %}
+        <div class="estado-erro">Visitante não encontrado.</div>
+    {% endif %}
+
+    
+</div>
+
+<script>
+const TIPOS_VISITA = [
+    "Visitante",
+    "Familiar",
+    "Amigo(a)",
+    "Entregador",
+    "Motorista de aplicativo",
+    "Prestador de serviço",
+    "Diarista",
+    "Babá",
+    "Encomenda",
+    "Corretor",
+    "Técnico / Manutenção", "UBER", "MERCADO LIVRE", "SHOPPE", "AMAZON", "JADLOG", "COMPRA DE INTERNET", "IFOOD", "FUNCIONÁRIO/A DO CONDOMINIO"
+];
+
+const MARCAS = [
+    "Volkswagen","Fiat","Chevrolet","Ford","Toyota","Honda","Hyundai",
+    "Renault","Nissan","Jeep","Peugeot","Citroën","Mitsubishi","Kia",
+    "BMW","Mercedes-Benz","Audi","Volvo","Land Rover","Jaguar",
+    "Chery","BYD","GWM","RAM","Subaru","Suzuki","Mini","Porsche",
+    "Ferrari","Lamborghini","Maserati","Tesla"
+];
+
+const MODELOS = [
+"Gol","Voyage","Saveiro","Fox","Polo","Virtus","Golf",
+"T-Cross","Nivus","Taos","Tiguan","Amarok","Jetta","Passat",
+"Uno","Mobi","Argo","Cronos","Toro","Strada","Palio","Siena",
+"Punto","Fiorino","Fastback","Pulse","Idea","Linea",
+"Onix","Onix Plus","Prisma","Celta","Corsa","Tracker","Spin",
+"Cruze","S10","Montana","Trailblazer","Equinox","Captiva",
+"Ka","Fiesta","Focus","Fusion","EcoSport","Ranger","Territory",
+"Edge","Bronco Sport",
+"Corolla","Corolla Cross","Hilux","Yaris","Etios","SW4",
+"RAV4","Prius","Camry",
+"Civic","City","Fit","HR-V","WR-V","Accord","CR-V","ZR-V",
+"HB20","HB20S","HB20X","Creta","Tucson","Santa Fe",
+"Azera","ix35","Elantra","Venue",
+"Kwid","Sandero","Logan","Duster","Captur","Oroch",
+"Fluence","Megane","Koleos",
+"March","Versa","Sentra","Kicks","Frontier","Altima","X-Trail",
+"Renegade","Compass","Commander","Wrangler","Gladiator",
+"208","2008","3008","408","Partner","308",
+"C3","C4","C4 Cactus","Aircross","Berlingo","C5 Aircross",
+"L200","Pajero","ASX","Outlander","Eclipse Cross",
+"Cerato","Sportage","Sorento","Picanto","Seltos","Carnival",
+"320i","X1","X3","X5",
+"A200","C180","C200","GLA","GLC",
+"A3","A4","Q3","Q5",
+"XC40","XC60",
+"Range Rover Evoque","Discovery Sport",
+"Tiggo 2","Tiggo 5X","Tiggo 7","Arrizo 5",
+"Dolphin","Yuan Plus","Han","Song Plus",
+"Haval H6","Jolion","Ora 03"
+];
+
+// ================= AUTOCOMPLETE =================
+function criarAutocomplete(inputId, sugestoesId, listaDados) {
+    const input = document.getElementById(inputId);
+    const box = document.getElementById(sugestoesId);
+
+    let resultados = [];
+    let indiceSelecionado = -1;
+
+    function normalizar(texto) {
+        return texto
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function destacar(texto, termo) {
+        if (!termo) return texto;
+
+        const textoNormal = normalizar(texto);
+        const termoNormal = normalizar(termo);
+        const pos = textoNormal.indexOf(termoNormal);
+
+        if (pos === -1) return texto;
+
+        const inicio = texto.slice(0, pos);
+        const meio = texto.slice(pos, pos + termo.length);
+        const fim = texto.slice(pos + termo.length);
+
+        return `${inicio}<strong>${meio}</strong>${fim}`;
+    }
+
+    function fecharSugestoes() {
+        box.style.display = "none";
+        box.innerHTML = "";
+        indiceSelecionado = -1;
+    }
+
+    function renderizar() {
+        box.innerHTML = "";
+
+        if (resultados.length === 0) {
+            fecharSugestoes();
+            return;
+        }
+
+        resultados.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = "item-sugestao" + (index === indiceSelecionado ? " selecionado" : "");
+            div.innerHTML = destacar(item, input.value.trim());
+
+            div.addEventListener("mousedown", function(e) {
+                e.preventDefault();
+                input.value = item;
+                fecharSugestoes();
+            });
+
+            box.appendChild(div);
+        });
+
+        box.style.display = "block";
+    }
+
+    input.addEventListener("input", function() {
+        const termo = input.value.trim();
+
+        if (!termo) {
+            fecharSugestoes();
+            return;
+        }
+
+        resultados = listaDados
+            .filter(item => normalizar(item).includes(normalizar(termo)))
+            .slice(0, 8);
+
+        indiceSelecionado = resultados.length > 0 ? 0 : -1;
+        renderizar();
+    });
+
+    input.addEventListener("keydown", function(e) {
+        if (box.style.display !== "block" || resultados.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            indiceSelecionado = Math.min(indiceSelecionado + 1, resultados.length - 1);
+            renderizar();
+            return;
+        }
+
+        if (e.key === "ArrowUp") {
+            e.preventDefault();
+            indiceSelecionado = Math.max(indiceSelecionado - 1, 0);
+            renderizar();
+            return;
+        }
+
+        if (e.key === "Enter") {
+            e.preventDefault();
+            if (indiceSelecionado >= 0) {
+                input.value = resultados[indiceSelecionado];
+                fecharSugestoes();
+            }
+            return;
+        }
+
+        if (e.key === "Escape") {
+            fecharSugestoes();
+        }
+    });
+
+    input.addEventListener("focus", function() {
+        if (input.value.trim()) {
+            const termo = input.value.trim();
+
+            resultados = listaDados
+                .filter(item => normalizar(item).includes(normalizar(termo)))
+                .slice(0, 8);
+
+            indiceSelecionado = resultados.length > 0 ? 0 : -1;
+            renderizar();
+        }
+    });
+
+    document.addEventListener("click", function(e) {
+        if (e.target !== input && !box.contains(e.target)) {
+            fecharSugestoes();
+        }
+    });
+}
+
+criarAutocomplete("tipo", "sugestoes_tipo", TIPOS_VISITA);
+criarAutocomplete("marca", "sugestoes_marca", MARCAS);
+criarAutocomplete("modelo", "sugestoes_modelo", MODELOS);
+
+// ================= PLACA MAIÚSCULA =================
+document.getElementById("placa").addEventListener("input", function() {
+    this.value = this.value.toUpperCase();
+});
+
+// ================= UPLOAD FOTO =================
+const campoFoto = document.getElementById("foto");
+
+if (campoFoto) {
+    campoFoto.addEventListener("change", function(event) {
+        const arquivo = event.target.files[0];
+        const previewContainer = document.getElementById("preview-container");
+        const previewFoto = document.getElementById("preview-foto");
+        const fotoWebcam = document.getElementById("foto_webcam");
+
+        if (!arquivo) {
+            previewContainer.style.display = "none";
+            previewFoto.src = "";
+            return;
+        }
+
+        const tiposPermitidos = ["image/jpeg", "image/png", "image/webp"];
+
+        if (!tiposPermitidos.includes(arquivo.type)) {
+            alert("Selecione uma imagem JPG, PNG ou WEBP.");
+            event.target.value = "";
+            previewContainer.style.display = "none";
+            previewFoto.src = "";
+            return;
+        }
+
+        fotoWebcam.value = "";
+
+        const leitor = new FileReader();
+        leitor.onload = function(e) {
+            previewFoto.src = e.target.result;
+            previewContainer.style.display = "block";
+        };
+        leitor.readAsDataURL(arquivo);
+    });
+}
+
+// ================= WEBCAM =================
+const btnAbrirCamera = document.getElementById("btnAbrirCamera");
+const btnCapturar = document.getElementById("btnCapturar");
+const btnFecharCamera = document.getElementById("btnFecharCamera");
+const btnNovaFoto = document.getElementById("btnNovaFoto");
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const cameraContainer = document.getElementById("camera-container");
+const previewContainer = document.getElementById("preview-container");
+const previewFoto = document.getElementById("preview-foto");
+const fotoWebcam = document.getElementById("foto_webcam");
+const inputFoto = document.getElementById("foto");
+
+let streamCamera = null;
+
+async function abrirCamera() {
+    try {
+        streamCamera = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: "user"
+            },
+            audio: false
+        });
+
+        video.srcObject = streamCamera;
+        cameraContainer.style.display = "block";
+        btnCapturar.style.display = "inline-flex";
+        btnFecharCamera.style.display = "inline-flex";
+        btnAbrirCamera.style.display = "none";
+        btnNovaFoto.style.display = "none";
+    } catch (erro) {
+        console.error("Erro ao abrir câmera:", erro);
+        alert("Não foi possível acessar a câmera. Verifique a permissão do navegador.");
+    }
+}
+
+function fecharCamera() {
+    if (streamCamera) {
+        streamCamera.getTracks().forEach(track => track.stop());
+        streamCamera = null;
+    }
+
+    video.srcObject = null;
+    cameraContainer.style.display = "none";
+    btnCapturar.style.display = "none";
+    btnFecharCamera.style.display = "none";
+    btnAbrirCamera.style.display = "inline-flex";
+}
+
+function capturarFoto() {
+    if (!video.srcObject) return;
+
+    const largura = video.videoWidth || 640;
+    const altura = video.videoHeight || 480;
+
+    canvas.width = largura;
+    canvas.height = altura;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, largura, altura);
+
+    const imagemBase64 = canvas.toDataURL("image/jpeg", 0.92);
+
+    previewFoto.src = imagemBase64;
+    previewContainer.style.display = "block";
+    fotoWebcam.value = imagemBase64;
+
+    inputFoto.value = "";
+    btnNovaFoto.style.display = "inline-flex";
+
+    fecharCamera();
+}
+
+function forcarMaiusculo(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("input", function () {
+        this.value = this.value.toUpperCase();
+    });
+}
+
+["nome", "endereco", "tipo", "placa", "marca", "modelo", "observacao"]
+    .forEach(forcarMaiusculo);
+
+// ================= MODAL PREMIUM NO EDITAR =================
+
+btnAbrirCamera.addEventListener("click", function() {
+    abrirModalFotoEditar();
+});
+
+btnNovaFoto.addEventListener("click", function() {
+    fotoWebcam.value = "";
+    previewFoto.src = "";
+    previewContainer.style.display = "none";
+    abrirModalFotoEditar();
+});
+
+function abrirModalFotoEditar() {
+    visitanteFotoAtual = null; // não salva direto no banco
+    fotoCapturadaBase64 = null;
+
+    const modal = document.getElementById("modalFoto");
+    modal.style.display = "flex";
+
+    document.getElementById("etapa_camera").style.display = "flex";
+    document.getElementById("etapa_preview").style.display = "none";
+    document.getElementById("btnCapturarFoto").style.display = "inline-flex";
+    document.getElementById("btnSalvarFoto").style.display = "none";
+    document.getElementById("btnVoltarCamera").style.display = "none";
+
+    navigator.mediaDevices.getUserMedia({
+        video: {
+            width: { ideal: 720 },
+            height: { ideal: 540 },
+            facingMode: "user"
+        },
+        audio: false
+    })
+    .then(stream => {
+        streamWebcam = stream;
+        const video = document.getElementById("video_webcam");
+        video.srcObject = streamWebcam;
+    })
+    .catch(erro => {
+        alert("Não foi possível acessar a webcam.");
+        console.error(erro);
+        fecharModalFoto();
+    });
+}
+
+// SOBRESCREVE O SALVAR DO MODAL (somente para edição local)
+function registrarSalvarFotoEditar() {
+    window.salvarFotoVisitante = function() {
+        if (!fotoCapturadaBase64) return;
+
+        previewFoto.src = fotoCapturadaBase64;
+        previewContainer.style.display = "block";
+        fotoWebcam.value = fotoCapturadaBase64;
+
+        inputFoto.value = "";
+        btnNovaFoto.style.display = "inline-flex";
+
+        fecharModalFoto();
+    };
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const campoEndereco = document.getElementById("endereco");
+    const sugestaoEndereco = document.getElementById("sugestao-endereco");
+
+    if (!campoEndereco || !sugestaoEndereco) return;
+
+    function formatarEndereco(valor) {
+        const numeros = valor.replace(/\D/g, "");
+
+        if (numeros.length === 6) {
+            const quadra = numeros.slice(0, 2);
+            const conjunto = numeros.slice(2, 4);
+            const casa = numeros.slice(4, 6);
+
+            return `QUADRA ${quadra}, CONJUNTO ${conjunto}, CASA ${casa}`;
+        }
+
+        return "";
+    }
+
+    campoEndereco.addEventListener("input", function () {
+        const formatado = formatarEndereco(campoEndereco.value);
+
+        if (formatado) {
+            sugestaoEndereco.textContent = `Sugestão: ${formatado}`;
+        } else {
+            sugestaoEndereco.textContent = "";
+        }
+    });
+
+    campoEndereco.addEventListener("blur", function () {
+        const formatado = formatarEndereco(campoEndereco.value);
+
+        if (formatado) {
+            campoEndereco.value = formatado;
+            sugestaoEndereco.textContent = "";
+        }
+    });
+     registrarSalvarFotoEditar();
+});
+</script>
+{% endblock %}

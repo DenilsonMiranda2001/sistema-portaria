@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "encomendas/_macros.html" import status_badge, subnav, acoes %}
+{% block title %}Lote #{{ lote.id }}{% endblock %}
+{% block content %}
+{{ subnav('lotes') }}
+<div class="enc-header">
+    <div>
+        <h2>Lote #{{ lote.id }} · {{ lote.transportadora }}</h2>
+        <p>{{ lote.nome_entregador or 'Entregador não informado' }} · {{ lote.data_chegada.strftime('%d/%m/%Y %H:%M') }} · {{ lote.total_encomendas }} pacote(s)</p>
+    </div>
+    <div class="enc-lote-status">{{ status_badge(lote.status) }}
+        {% if lote.status not in ('concluido', 'cancelado') %}
+        <form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="status" value="concluido"><button class="btn enc-btn enc-btn-success">Concluir lote</button>
+        </form>
+        <form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}"
+              onsubmit="return confirm('Cancelar o lote e as encomendas ainda abertas?')">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="status" value="cancelado"><button class="btn enc-btn enc-btn-danger">Cancelar lote</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if lote.status not in ('concluido', 'cancelado') %}
+<section class="card enc-rajada">
+    <h3>Adicionar próxima encomenda</h3>
+    <form method="post" id="form-encomenda" autocomplete="off">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+        <div class="enc-form-grid enc-form-grid-3">
+            <label><span>Buscar morador / unidade</span>
+                <input id="morador_busca" list="moradores_lista" placeholder="Digite o nome ou unidade">
+                <datalist id="moradores_lista">
+                    {% for morador in moradores %}<option data-id="{{ morador.id }}" data-unidade="{{ morador.unidade_codigo or '' }}" data-nome="{{ morador.nome }}" value="{{ morador.unidade_codigo or 'Sem unidade' }} — {{ morador.nome }}"></option>{% endfor %}
+                </datalist>
+                <input type="hidden" name="morador_id" id="morador_id">
+            </label>
+            <label><span>Unidade *</span><input name="unidade" id="unidade" maxlength="50" required></label>
+            <label><span>Morador</span><input name="nome_morador" id="nome_morador" maxlength="150"></label>
+            <label><span>Código de rastreio</span><input name="codigo_rastreio" maxlength="150"></label>
+            <label><span>Descrição curta</span><input name="descricao" maxlength="255" placeholder="Ex.: caixa média"></label>
+            <label><span>Observação</span><input name="observacao"></label>
+        </div>
+        <button class="btn btn-submit enc-salvar-proxima" type="submit">Salvar e adicionar próxima</button>
+    </form>
+</section>
+{% endif %}
+
+<h3 class="enc-secao-titulo">Pacotes deste lote</h3>
+<div class="enc-lista">
+{% for encomenda in encomendas %}
+<article class="card enc-item">
+    <div class="enc-item-topo">
+        <div><strong>Unidade {{ encomenda.unidade }}</strong><span>{{ encomenda.nome_morador or 'Morador não informado' }}</span></div>
+        {{ status_badge(encomenda.status) }}
+    </div>
+    <div class="enc-meta"><span><b>{{ encomenda.codigo_retirada }}</b></span>{% if encomenda.codigo_rastreio %}<span>Rastreio: {{ encomenda.codigo_rastreio }}</span>{% endif %}<span>{{ encomenda.data_chegada.strftime('%H:%M:%S') }}</span></div>
+    {{ acoes(encomenda, 'lote') }}
+</article>
+{% else %}<div class="card enc-vazio">O lote ainda não possui encomendas.</div>{% endfor %}
+</div>
+<script>
+const buscaMorador = document.getElementById('morador_busca');
+if (buscaMorador) {
+    buscaMorador.addEventListener('change', function () {
+        const opcoes = [...document.querySelectorAll('#moradores_lista option')];
+        const item = opcoes.find(opcao => opcao.value === this.value);
+        document.getElementById('morador_id').value = item ? item.dataset.id : '';
+        if (item) {
+            document.getElementById('unidade').value = item.dataset.unidade;
+            document.getElementById('nome_morador').value = item.dataset.nome;
+            document.querySelector('[name="codigo_rastreio"]').focus();
+        }
+    });
+}
+</script>
+{% endblock %}

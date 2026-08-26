@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "encomendas/_macros.html" import subnav %}
+{% block title %}Novo Lote de Encomendas{% endblock %}
+{% block content %}
+{{ subnav('novo') }}
+<div class="enc-header"><div><h2>Novo lote</h2><p>Registre a chegada do entregador e siga para o modo rajada.</p></div></div>
+<form class="card enc-form" method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+    <div class="enc-form-grid">
+        <label><span>Transportadora *</span>
+            <select name="transportadora" required autofocus>
+                <option value="">Selecione</option>
+                {% for item in transportadoras %}<option>{{ item }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Nome do entregador</span><input name="nome_entregador" maxlength="150"></label>
+    </div>
+    <label><span>Observação</span><textarea name="observacao" rows="3"></textarea></label>
+    <div class="enc-form-acoes">
+        <a class="btn enc-btn" href="{{ url_for('encomendas.lotes') }}">Cancelar</a>
+        <button class="btn btn-submit" type="submit">Criar lote e adicionar pacotes</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "encomendas/_macros.html" import status_badge, subnav, acoes %}
+{% block title %}Encomendas Retidas{% endblock %}
+{% block content %}
+{{ subnav('retidas') }}
+<div class="enc-header"><div><h2>Retidas na portaria</h2><p>Confirme a retirada com identificação de quem recebeu.</p></div></div>
+<form class="card enc-busca" method="get">
+    <input name="q" value="{{ termo }}" autofocus placeholder="Buscar por unidade, morador, código de retirada ou rastreio">
+    <button class="btn enc-btn enc-btn-primary">Buscar</button>
+</form>
+<div class="enc-lista">
+{% for encomenda in encomendas %}
+<article class="card enc-item">
+    <div class="enc-item-topo"><div><strong>Unidade {{ encomenda.unidade }}</strong><span>{{ encomenda.nome_morador or 'Morador não informado' }}</span></div>{{ status_badge(encomenda.status) }}</div>
+    <div class="enc-meta"><span><b>{{ encomenda.codigo_retirada }}</b></span><span>{{ encomenda.transportadora }} · Lote #{{ encomenda.lote_id }}</span><span>Desde {{ encomenda.data_chegada.strftime('%d/%m/%Y %H:%M') }}</span></div>
+    {{ acoes(encomenda, 'retidas') }}
+</article>
+{% else %}<div class="card enc-vazio">Nenhuma encomenda retida encontrada.</div>{% endfor %}
+</div>
+{% endblock %}
