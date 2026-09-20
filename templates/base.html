@@ -11,51 +11,37 @@
 
 <body>
 <div class="app-shell">
-
-    <!-- ── NAVBAR ─────────────────────────────────────── -->
-    <header class="navbar-sistema">
-        <div class="navbar-brand">
-            <div class="navbar-brand-icon" aria-hidden="true">PC</div>
-            <div class="navbar-brand-textos">
-                <h1>Portaria Control</h1>
-                <span>Sistema de controle de acesso</span>
+    <aside class="saas-sidebar" id="saasSidebar">
+        <a class="saas-brand" href="{{ url_for('main.index') }}">
+            <span class="saas-brand-mark">P</span>
+            <span class="saas-brand-copy"><strong>Portaria</strong><small>CONTROL</small></span>
+        </a>
+        <div class="saas-context"><span>OPERAÇÃO ATIVA</span><strong>{{ session.get("condominio_nome", "Condomínio") }}</strong></div>
+        <nav class="saas-nav" aria-label="Navegação principal">
+            <span class="saas-nav-label">OPERAÇÃO</span>
+            <a class="{{ 'is-active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}"><b>01</b><span>Visão geral</span></a>
+            <a class="{{ 'is-active' if request.endpoint == 'visitantes.cadastro' else '' }}" href="{{ url_for('visitantes.cadastro') }}"><b>02</b><span>Novo acesso</span></a>
+            <a class="{{ 'is-active' if request.endpoint in ['visitantes.visitantes','visitantes.ativos'] else '' }}" href="{{ url_for('visitantes.visitantes') }}"><b>03</b><span>Visitantes</span></a>
+            <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('moradores') else '' }}" href="{{ url_for('moradores.listar') }}"><b>04</b><span>Moradores</span></a>
+            <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('encomendas') else '' }}" href="{{ url_for('encomendas.painel') }}"><b>05</b><span>Encomendas</span></a>
+            {% if session.get("usuario_tipo") == "admin" %}
+            <span class="saas-nav-label admin-label">GESTÃO</span>
+            <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('admin') else '' }}" href="{{ url_for('admin.usuarios') }}"><b>06</b><span>Equipe e acessos</span></a>
+            <a class="{{ 'is-active' if request.endpoint == 'visitantes.importar_visitantes' else '' }}" href="{{ url_for('visitantes.importar_visitantes') }}"><b>07</b><span>Importar dados</span></a>
+            {% endif %}
+        </nav>
+        <div class="saas-sidebar-footer"><span class="saas-status-dot"></span><div><strong>Sistema operacional</strong><small>Ambiente protegido</small></div></div>
+    </aside>
+    <div class="saas-stage">
+        <header class="saas-topbar">
+            <button class="saas-menu-toggle" type="button" aria-label="Abrir menu" onclick="document.body.classList.toggle('sidebar-open')"><span></span><span></span></button>
+            <div class="saas-topbar-copy"><span>PORTARIA CONTROL</span><strong>{% block workspace_title %}Central operacional{% endblock %}</strong></div>
+            <div class="saas-account">
+                <div class="saas-account-copy"><strong>{{ session.get("usuario_nome", "Usuário") }}</strong><span>{{ 'Administrador' if session.get("usuario_tipo") == 'admin' else 'Operação' }}</span></div>
+                <span class="saas-avatar">{{ session.get("usuario_nome", "U")[:1]|upper }}</span>
+                <form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button type="submit" aria-label="Encerrar sessão">Sair</button></form>
             </div>
-        </div>
-
-        <div class="navbar-direita">
-            <nav class="navbar-acoes">
-                {% if session.get("is_platform_admin") %}
-                    <a class="btn btn-nav btn-nav-ativo" href="{{ url_for('platform_admin.condominios') }}">Administração Geral</a>
-                {% else %}
-                    <a class="btn btn-nav {% if request.endpoint == 'main.index' %}btn-nav-ativo{% endif %}" href="{{ url_for('main.index') }}">Início</a>
-                    <a class="btn btn-nav {% if request.endpoint == 'visitantes.cadastro' %}btn-nav-ativo{% endif %}" href="{{ url_for('visitantes.cadastro') }}">Cadastrar</a>
-                    <a class="btn btn-nav {% if request.endpoint == 'visitantes.visitantes' %}btn-nav-ativo{% endif %}" href="{{ url_for('visitantes.visitantes') }}">Visitantes</a>
-                    <a class="btn btn-nav {% if request.endpoint == 'visitantes.ativos' %}btn-nav-ativo{% endif %}" href="{{ url_for('visitantes.ativos') }}">Ativos</a>
-                    <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('moradores') %}btn-nav-ativo{% endif %}" href="{{ url_for('moradores.listar') }}">Moradores</a>
-                    <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('encomendas') %}btn-nav-ativo{% endif %}" href="{{ url_for('encomendas.painel') }}">Encomendas</a>
-                    {% if session.get("usuario_tipo") == "admin" %}
-                        <a class="btn btn-nav {% if request.endpoint == 'visitantes.importar_visitantes' %}btn-nav-ativo{% endif %}" href="{{ url_for('visitantes.importar_visitantes') }}">Importar CSV</a>
-                        <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('admin') %}btn-nav-ativo{% endif %}" href="{{ url_for('admin.usuarios') }}">Usuários</a>
-                    {% endif %}
-                {% endif %}
-            </nav>
-
-            <div class="navbar-user-area">
-                <div class="usuario-logado-box">
-                    <div class="usuario-avatar" aria-hidden="true">{{ session.get("usuario_nome", "U")[:1]|upper }}</div>
-                    <div class="usuario-info">
-                        <strong>{{ session.get("usuario_nome", "Usuário") }}</strong>
-                        <span>{{ session.get("usuario_tipo", "").capitalize() }}</span>
-                    </div>
-                </div>
-                <form method="post" action="{{ url_for('auth.logout') }}" class="logout-form">
-                    <input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}">
-                    <button class="btn btn-sair" type="submit" aria-label="Encerrar sessão">Sair</button>
-                </form>
-            </div>
-        </div>
-    </header>
-
+        </header>
     <!-- ── CONTEÚDO ────────────────────────────────────── -->
     <main class="container">
 
