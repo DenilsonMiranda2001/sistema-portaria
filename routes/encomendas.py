@@ -45,7 +45,7 @@ def _whatsapp(encomenda):
         f"Código de retirada: {encomenda['codigo_retirada']}\n"
         f"Transportadora: {encomenda['transportadora']}\n"
         f"Data/hora: {data}\n\n"
-        "Responda:\n1 - Estou em casa\n2 - Pode deixar na portaria"
+        "A encomenda foi recebida e está disponível para retirada no ponto de encomendas do condomínio."
     )
     return f"https://wa.me/{telefone}?text={quote(mensagem)}"
 
