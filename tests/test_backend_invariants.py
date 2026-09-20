@@ -58,9 +58,11 @@ def test_login_identity_invariant_migration_exists():
 
 def test_open_visit_uniqueness_is_enforced_at_database_level():
     migration = Path("migrations/0013_operational_integrity_indexes.sql").read_text(encoding="utf-8")
-    assert "HAVING COUNT(*) > 1" in migration
+    verification = Path("migrations/0014_verify_live_access_invariant.sql").read_text(encoding="utf-8")
     assert "uq_visita_aberta_visitante_tenant" in migration
     assert "WHERE data_saida IS NULL" in migration
+    assert "HAVING COUNT(*) > 1" in verification
+    assert "uq_visita_aberta_visitante_tenant" in verification
 
 
 def test_hot_operational_queries_have_tenant_scoped_indexes():
