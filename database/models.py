@@ -737,13 +737,14 @@ def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100):
     try:
         with conn.cursor() as cur:
             query = """
-                INSERT INTO visitantes (nome, cpf, tipo, placa, modelo, marca, foto, observacao)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (cpf) DO NOTHING
+                INSERT INTO visitantes (condominio_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (condominio_id, cpf) WHERE condominio_id IS NOT NULL DO NOTHING
             """
             for i in range(0, len(lista_visitantes), tamanho_lote):
-                cur.executemany(query, lista_visitantes[i:i + tamanho_lote])
-                conn.commit()
+                lote = [(tenant_id, *row) for row in lista_visitantes[i:i + tamanho_lote]]
+                cur.executemany(query, lote)
+            conn.commit()
     except Exception:
         conn.rollback()
         raise
