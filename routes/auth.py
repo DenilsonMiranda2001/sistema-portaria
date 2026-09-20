@@ -26,6 +26,7 @@ def login():
         session["usuario_id"] = user["id"]
         session["usuario_nome"] = user["nome"]
         session["usuario_tipo"] = user["nivel"]
+        session["condominio_id"] = user.get("condominio_id")
         session.permanent = True
 
         flash("Login realizado com sucesso!", "sucesso")
