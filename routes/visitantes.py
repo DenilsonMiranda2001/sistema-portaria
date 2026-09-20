@@ -388,6 +388,7 @@ def buscar_ativos_ajax():
         "observacao": v.get("observacao") or "",
         "morador_nome": v.get("morador_nome") or "",
         "unidade_codigo": v.get("unidade_codigo") or "",
+        "data_entrada": v["data_entrada"].isoformat() if v.get("data_entrada") else "",
     } for v in dados])
 
 
