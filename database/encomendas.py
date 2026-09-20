@@ -57,7 +57,7 @@ def buscar_lote(lote_id):
             cur.execute("""
                 SELECT l.*, COUNT(e.id)::int AS total_encomendas
                 FROM lotes_encomendas l
-                LEFT JOIN encomendas e ON e.lote_id = l.id
+                LEFT JOIN encomendas e ON e.lote_id = l.id AND e.condominio_id = l.condominio_id
                 WHERE l.id = %s AND l.condominio_id = %s
                 GROUP BY l.id
             """, (lote_id, tenant_id))
