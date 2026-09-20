@@ -1,0 +1,43 @@
+from functools import wraps
+from flask import abort, g, redirect, session, url_for
+from database.models import buscar_usuario_por_id
+
+
+def load_identity():
+    user_id = session.get("usuario_id")
+    if not user_id:
+        g.current_user = None
+        g.tenant_id = None
+        return
+    user = buscar_usuario_por_id(user_id)
+    if not user or not user.get("ativo"):
+        session.clear()
+        g.current_user = None
+        g.tenant_id = None
+        return
+    g.current_user = user
+    g.tenant_id = user.get("condominio_id")
+
+
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not getattr(g, "current_user", None):
+            return redirect(url_for("auth.login"))
+        return view(*args, **kwargs)
+    return wrapped
+
+
+def roles_required(*roles):
+    allowed = set(roles)
+    def decorator(view):
+        @wraps(view)
+        def wrapped(*args, **kwargs):
+            user = getattr(g, "current_user", None)
+            if not user:
+                return redirect(url_for("auth.login"))
+            if user.get("nivel") not in allowed:
+                abort(403)
+            return view(*args, **kwargs)
+        return wrapped
+    return decorator
