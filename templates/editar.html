@@ -28,7 +28,7 @@
 <aside class="quick-panel quick-photo">
 <div class="quick-section-title"><span>04</span><strong>Foto</strong></div>
 <div class="photo-stage edit-photo-stage">
-{% if visitante.foto %}<img class="edit-current-photo" src="{{ url_for('static', filename='fotos/' + visitante.foto) }}" alt="Foto atual" data-foto-visitante="{{ visitante.id }}">{% else %}<div class="photo-placeholder"><span>Sem foto</span><small>Adicione uma foto do visitante</small></div>{% endif %}
+{% if visitante.foto %}<img class="edit-current-photo" src="{{ url_for('visitantes.foto', id=visitante.id) }}" alt="Foto atual" data-foto-visitante="{{ visitante.id }}">{% else %}<div class="photo-placeholder"><span>Sem foto</span><small>Adicione uma foto do visitante</small></div>{% endif %}
 <div id="camera-container" class="camera-box"><video id="video" autoplay playsinline></video></div><div id="preview-container" class="preview-box"><img id="preview-foto" src="" alt="Prévia da nova foto"></div>
 </div>
 <canvas id="canvas" style="display:none"></canvas><input type="hidden" name="foto_webcam" id="foto_webcam">
