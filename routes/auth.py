@@ -11,6 +11,7 @@ def login():
         usuario = request.form.get("usuario", "").strip()
         senha = request.form.get("senha", "")
         condominio_slug = request.form.get("condominio", "").strip().lower()
+        condominio_slug = request.form.get("condominio", "").strip().lower()
 
         if not usuario or not senha or not condominio_slug:
             flash("Preencha condomínio, usuário e senha.", "erro")
