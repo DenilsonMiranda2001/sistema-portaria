@@ -1,116 +1,27 @@
 {% extends 'base.html' %}
 {% block title %}Usuários e acessos{% endblock %}
 {% block content %}
-<div class="users-workspace">
-
-
-        <section class="page-heading"><div><span class="page-eyebrow">ADMINISTRAÇÃO</span><h1>Usuários e acessos</h1><p>Gerencie credenciais e perfis da operação com clareza.</p></div></section>
-
-            <div class="acoes-topo">
-                <a class="btn-topo btn-voltar" href="{{ url_for('main.index') }}">Voltar</a>
-                <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn-topo btn-sair" type="submit">Sair</button>
-                </form>
-            </div>
-        </div>
-
-        
-
-        <div class="card-padrao">
-            <h2>Novo usuário</h2>
-
-            <form method="POST" class="form-grid">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="campo">
-                    <label for="nome">Nome</label>
-                    <input class="input-padrao" type="text" id="nome" name="nome" required>
-                </div>
-
-                <div class="campo">
-                    <label for="usuario">Usuário</label>
-                    <input class="input-padrao" type="text" id="usuario" name="usuario" required>
-                </div>
-
-                <div class="campo">
-                    <label for="senha">Senha</label>
-                    <input class="input-padrao" type="password" id="senha" name="senha" minlength="12" autocomplete="new-password" required>
-                </div>
-
-                <div class="campo">
-                    <label for="tipo">Tipo</label>
-                    <select class="select-padrao" id="tipo" name="tipo">
-                        <option value="funcionario">Funcionário</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-
-                <div class="campo">
-                    <button type="submit" class="btn-principal">Cadastrar usuário</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="card-padrao">
-            <h2>Lista de usuários</h2>
-
-            <div class="tabela-wrap">
-                <table class="tabela-padrao">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Usuário</th>
-                            <th>Tipo</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for u in usuarios %}
-                        <tr>
-                            <td>{{ u["id"] }}</td>
-                            <td>{{ u["nome"] }}</td>
-                            <td>{{ u["usuario"] }}</td>
-                            <td>
-                                <span class="badge-tipo {% if u['tipo'] == 'admin' %}tipo-admin{% else %}tipo-funcionario{% endif %}">
-                                    {{ u["tipo"] }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge {% if u['ativo'] %}status-ativo{% else %}status-inativo{% endif %}">
-                                    {% if u["ativo"] %}Ativo{% else %}Inativo{% endif %}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="acoes-linha">
-                                    <a class="link-btn" href="{{ url_for('admin.editar_usuario', id=u['id']) }}">Editar</a>
-                                    <a class="link-btn" href="{{ url_for('admin.alterar_senha_usuario', id=u['id']) }}">Senha</a>
-
-                                    {% if u["ativo"] %}
-                                        {% if session.get("usuario_id") != u["id"] %}
-                                            <form method="post" action="{{ url_for('admin.inativar_usuario_rota', id=u['id']) }}" style="display:inline">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button class="link-btn" type="submit">Inativar</button>
-                                            </form>
-                                        {% endif %}
-                                    {% else %}
-                                        <form method="post" action="{{ url_for('admin.ativar_usuario_rota', id=u['id']) }}" style="display:inline">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button class="link-btn" type="submit">Ativar</button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    
+<div class="users-workspace admin-ops">
+<div class="compact-list-toolbar"><strong>Equipe e acessos</strong><span class="admin-security-note">Administração do condomínio</span></div>
+<div class="admin-kpis">
+<div><span>Usuários</span><strong>{{ usuarios|length }}</strong></div>
+<div><span>Ativos</span><strong>{{ usuarios|selectattr('ativo')|list|length }}</strong></div>
+<div><span>Administradores</span><strong>{{ usuarios|selectattr('tipo','equalto','admin')|list|length }}</strong></div>
+<div><span>Operação</span><strong>{{ usuarios|selectattr('tipo','equalto','funcionario')|list|length }}</strong></div>
 </div>
+<div class="admin-user-grid">
+<section class="card-padrao admin-create-user"><div class="quick-section-title"><span>01</span><strong>Novo acesso</strong></div>
+<form method="POST" class="admin-user-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label><span>Nome</span><input class="input-padrao" name="nome" required></label>
+<label><span>Usuário</span><input class="input-padrao" name="usuario" required></label>
+<label><span>Senha</span><input class="input-padrao" type="password" name="senha" minlength="12" autocomplete="new-password" required></label>
+<label><span>Perfil</span><select class="select-padrao" name="tipo"><option value="funcionario">Operação</option><option value="admin">Administrador</option></select></label>
+<button class="btn-principal" type="submit">Criar acesso</button></form></section>
+<section class="card-padrao admin-user-list"><div class="quick-section-title"><span>02</span><strong>Contas da operação</strong></div>
+<div class="tabela-wrap"><table class="tabela-padrao"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+{% for u in usuarios %}<tr><td><strong>{{ u["nome"] }}</strong></td><td>{{ u["usuario"] }}</td><td>{{ 'Administrador' if u["tipo"] == 'admin' else 'Operação' }}</td><td><span class="status-badge {{ 'status-ativo' if u['ativo'] else 'status-inativo' }}">{{ 'Ativo' if u["ativo"] else 'Inativo' }}</span></td><td><div class="acoes-linha"><a class="link-btn" href="{{ url_for('admin.editar_usuario', id=u['id']) }}">Editar</a><a class="link-btn" href="{{ url_for('admin.alterar_senha_usuario', id=u['id']) }}">Senha</a>{% if u["ativo"] and session.get("usuario_id") != u["id"] %}<form method="post" action="{{ url_for('admin.inativar_usuario_rota', id=u['id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="link-btn" type="submit">Inativar</button></form>{% elif not u["ativo"] %}<form method="post" action="{{ url_for('admin.ativar_usuario_rota', id=u['id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="link-btn" type="submit">Ativar</button></form>{% endif %}</div></td></tr>{% endfor %}
+</tbody></table></div></section>
+</div></div>
 <style>
 .users-workspace{display:grid;gap:18px}.page-heading{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:4px}.page-heading h1{margin:4px 0 6px;font-size:30px;letter-spacing:-.035em}.page-heading p{margin:0;color:var(--text-muted)}.page-eyebrow{font-size:10px;font-weight:900;letter-spacing:.14em;color:#5d7391}.users-workspace .card-padrao{padding:22px}.users-workspace .card-padrao h2{margin-top:0;font-size:18px}.users-workspace .form-grid{align-items:end}.users-workspace .acoes-linha{display:flex;gap:7px;flex-wrap:wrap}.users-workspace .link-btn{border:1px solid var(--border);background:var(--surface);border-radius:8px;padding:7px 9px;text-decoration:none;color:var(--text);font-size:12px;font-weight:700;cursor:pointer}@media(max-width:700px){.page-heading h1{font-size:25px}.users-workspace .card-padrao{padding:16px}}
 </style>
