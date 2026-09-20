@@ -3020,3 +3020,15 @@ body{background:var(--pc-ice)}
 .visitor-directory{margin-top:0!important}.visitor-directory .busca-input{height:42px!important}
 @media(min-width:1100px){.quick-access-grid{min-height:0!important}.quick-photo{align-self:stretch}.quick-submit{min-height:46px!important}}
 @media(max-width:850px){.command-grid-home{grid-template-columns:1fr!important}.command-grid-home .command-search{min-height:360px!important}.quick-fields,.quick-fields.identity-fields,.quick-fields.vehicle-fields{grid-template-columns:1fr!important}.quick-fields .span-2{grid-column:1!important;max-width:none!important}.compact-list-toolbar{align-items:stretch}.compact-list-toolbar .btn-principal{margin-left:auto}}
+
+/* ===== Header refinement: balanced full-width navigation ===== */
+.enterprise-header{padding-left:0!important;padding-right:0!important}
+.enterprise-header-main,.enterprise-nav{width:min(1320px,calc(100% - 64px))!important;margin-left:auto!important;margin-right:auto!important}
+.enterprise-header-main{min-height:68px!important}
+.enterprise-nav{display:grid!important;grid-template-columns:repeat(5,minmax(110px,1fr)) auto auto!important;align-items:end!important;gap:4px!important}
+.enterprise-nav>a{justify-content:center!important;text-align:center!important;padding-left:16px!important;padding-right:16px!important;min-height:44px!important}
+.enterprise-nav-separator{margin-left:10px!important}
+.enterprise-account{background:#f7f9fc!important;border:1px solid #e2e7ee!important;border-radius:12px!important;padding:7px 8px 7px 9px!important;gap:9px!important;box-shadow:0 5px 16px rgba(17,29,48,.04)!important}
+.enterprise-account>div{min-width:112px!important}.enterprise-account>div strong{font-size:11px!important}.enterprise-account>div small{font-size:9px!important;margin-top:2px!important}.enterprise-avatar{width:32px!important;height:32px!important;border-radius:9px!important;background:#e9eff6!important;color:#24405f!important}.enterprise-account form button{height:32px!important;padding:0 11px!important;border-radius:8px!important;background:#fff!important}
+@media(max-width:1000px){.enterprise-header-main,.enterprise-nav{width:calc(100% - 32px)!important}.enterprise-nav{display:flex!important;overflow-x:auto!important;justify-content:flex-start!important}.enterprise-nav>a{min-width:max-content!important}.enterprise-account>div{min-width:0!important}}
+@media(max-width:650px){.enterprise-header-main,.enterprise-nav{width:calc(100% - 24px)!important}.enterprise-account{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}.enterprise-account>div{display:none!important}}
