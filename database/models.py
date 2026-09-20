@@ -126,14 +126,19 @@ def buscar_usuario_por_id(usuario_id):
         liberar(conn)
 
 
-def buscar_usuario(usuario):
+def buscar_usuario(usuario, condominio_slug=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id, condominio_id, nome, usuario, senha, nivel, ativo FROM usuarios WHERE usuario = %s",
-                ((usuario or "").strip(),)
-            )
+            if condominio_slug:
+                cur.execute("""SELECT u.id, u.condominio_id, u.nome, u.usuario, u.senha, u.nivel, u.ativo
+                               FROM usuarios u JOIN condominios c ON c.id=u.condominio_id
+                               WHERE u.usuario=%s AND c.slug=%s AND c.ativo=TRUE""", ((usuario or "").strip(), condominio_slug.strip().lower()))
+            else:
+                cur.execute("""SELECT id, condominio_id, nome, usuario, senha, nivel, ativo
+                               FROM usuarios WHERE usuario=%s ORDER BY id LIMIT 2""", ((usuario or "").strip(),))
+                rows=cur.fetchall()
+                return rows[0] if len(rows)==1 else None
             return cur.fetchone()
     finally:
         liberar(conn)
