@@ -801,7 +801,7 @@ def listar_visitantes_paginado(pagina=1, por_pagina=20):
         liberar(conn)
 
 
-def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao):
+def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -828,7 +828,11 @@ def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, fot
                     (modelo or "").strip().upper(), (marca or "").strip().upper(),
                     (observacao or "").strip().upper(), visitante_id, tenant_id,
                 ))
+            alterou = cur.rowcount > 0
+            if alterou and usuario_id:
+                registrar_auditoria_cursor(cur, "visitante.atualizado", usuario_id=usuario_id, condominio_id=tenant_id, entidade="visitante", entidade_id=visitante_id)
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
@@ -857,13 +861,17 @@ def remover_visitante(visitante_id, usuario_id=None):
         liberar(conn)
 
 
-def atualizar_foto_visitante(visitante_id, nome_arquivo):
+def atualizar_foto_visitante(visitante_id, nome_arquivo, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
             cur.execute("UPDATE visitantes SET foto = %s WHERE id = %s AND condominio_id = %s", (nome_arquivo, visitante_id, tenant_id))
+            alterou = cur.rowcount > 0
+            if alterou and usuario_id:
+                registrar_auditoria_cursor(cur, "visitante.foto_atualizada", usuario_id=usuario_id, condominio_id=tenant_id, entidade="visitante", entidade_id=visitante_id)
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
@@ -903,7 +911,7 @@ def listar_cpfs_visitantes():
         liberar(conn)
 
 
-def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100):
+def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -913,10 +921,15 @@ def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100):
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (condominio_id, cpf) WHERE condominio_id IS NOT NULL DO NOTHING
             """
+            importados = 0
             for i in range(0, len(lista_visitantes), tamanho_lote):
                 lote = [(tenant_id, *row) for row in lista_visitantes[i:i + tamanho_lote]]
                 cur.executemany(query, lote)
+                importados += cur.rowcount
+            if importados and usuario_id:
+                registrar_auditoria_cursor(cur, "visitante.importacao", usuario_id=usuario_id, condominio_id=tenant_id, entidade="visitante", detalhes={"importados": importados})
             conn.commit()
+            return importados
     except Exception:
         conn.rollback()
         raise
