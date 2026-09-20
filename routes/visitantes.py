@@ -151,7 +151,6 @@ def cadastro():
             flash("Não foi possível concluir o cadastro do visitante.", "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
-        registrar_auditoria("visitante.criado_com_entrada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=visitante_id)
         flash("Visitante cadastrado e entrada registrada com sucesso!", "sucesso")
         return redirect(url_for("visitantes.ativos"))
 
