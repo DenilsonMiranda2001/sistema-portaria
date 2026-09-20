@@ -14,6 +14,7 @@ from database.models import (
 )
 from utils.validators import limpar_cpf, validar_cpf
 from utils.audit import registrar_auditoria
+from utils.authz import roles_required
 
 moradores_bp = Blueprint("moradores", __name__, url_prefix="/moradores")
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ def _admin_ou_funcionario():
 
 
 @moradores_bp.route("/")
+@roles_required("admin", "funcionario")
 def listar():
     termo = request.args.get("q", "").strip()
     dados = buscar_moradores(termo) if termo else listar_moradores()
@@ -31,6 +33,7 @@ def listar():
 
 
 @moradores_bp.route("/novo", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def novo():
     unidades = listar_unidades()
 
@@ -74,6 +77,7 @@ def novo():
 
 
 @moradores_bp.route("/<int:id>/editar", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def editar(id):
     morador  = buscar_morador_por_id(id)
     unidades = listar_unidades()
@@ -122,6 +126,7 @@ def editar(id):
 
 
 @moradores_bp.route("/<int:id>")
+@roles_required("admin", "funcionario")
 def detalhe(id):
     morador = buscar_morador_por_id(id)
     if not morador:
@@ -131,6 +136,7 @@ def detalhe(id):
 
 
 @moradores_bp.route("/<int:id>/inativar", methods=["POST"])
+@roles_required("admin")
 def inativar(id):
     morador = buscar_morador_por_id(id)
     if not morador:
@@ -143,6 +149,7 @@ def inativar(id):
 
 
 @moradores_bp.route("/<int:id>/ativar", methods=["POST"])
+@roles_required("admin")
 def ativar(id):
     morador = buscar_morador_por_id(id)
     if not morador:
