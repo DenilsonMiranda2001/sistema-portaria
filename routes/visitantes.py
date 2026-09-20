@@ -7,7 +7,7 @@ from datetime import datetime
 
 from flask import (
     Blueprint, render_template, request, redirect,
-    flash, jsonify, url_for, current_app, session
+    flash, jsonify, url_for, current_app, session, g
 )
 from werkzeug.utils import secure_filename
 
@@ -38,6 +38,7 @@ from utils.validators import (
     EXTENSOES_FOTO_PERMITIDAS,
 )
 from utils.imagem import salvar_foto_webcam
+from utils.storage import save_image
 from utils.endereco import formatar_endereco_condominio
 
 visitantes_bp = Blueprint("visitantes", __name__)
@@ -100,12 +101,21 @@ def cadastro():
             flash(f"CPF já cadastrado para: {existente['nome']}.", "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
-        pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
-        nome_foto, erro_foto = _salvar_foto(
-            request.files.get("foto"),
-            request.form.get("foto_webcam", "").strip(),
-            pasta_fotos,
-        )
+        arquivo_foto = request.files.get("foto")
+        if current_app.config.get("APP_ENV") == "production" and arquivo_foto and arquivo_foto.filename:
+            try:
+                nome_foto = save_image(arquivo_foto, g.tenant_id)
+                erro_foto = None
+            except (ValueError, RuntimeError):
+                logger.exception("Falha ao persistir foto do visitante")
+                nome_foto, erro_foto = None, "Não foi possível armazenar a foto com segurança."
+        else:
+            pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
+            nome_foto, erro_foto = _salvar_foto(
+                arquivo_foto,
+                request.form.get("foto_webcam", "").strip(),
+                pasta_fotos,
+            )
         if erro_foto:
             flash(erro_foto, "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
