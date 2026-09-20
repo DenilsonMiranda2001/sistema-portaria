@@ -8,6 +8,8 @@
 <div><span>Ativos</span><strong>{{ usuarios|selectattr('ativo')|list|length }}</strong></div>
 <div><span>Administradores</span><strong>{{ usuarios|selectattr('tipo','equalto','admin')|list|length }}</strong></div>
 <div><span>Operação</span><strong>{{ usuarios|selectattr('tipo','equalto','funcionario')|list|length }}</strong></div>
+<div><span>Unidades ativas</span><strong>{{ residencial.unidades_ativas }}</strong></div>
+<div class="{{ 'admin-kpi-warning' if residencial.moradores_sem_unidade else '' }}"><span>Moradores sem unidade</span><strong>{{ residencial.moradores_sem_unidade }}</strong></div>
 </div>
 <div class="admin-user-grid">
 <section class="card-padrao admin-create-user"><div class="quick-section-title"><span>01</span><strong>Novo acesso</strong></div>
