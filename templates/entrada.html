@@ -1,80 +1,30 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-
-<body>
-
-<div class="container">
-    <div class="card">
-        <h2>🚪 Registrar Entrada</h2>
-
-        <!-- 🔍 BUSCA INTELIGENTE -->
-        <input 
-            type="text" 
-            id="busca" 
-            placeholder="Digite CPF ou nome..." 
-            style="margin-bottom: 20px; width:100%; padding:10px;"
-        >
-
-        <a class="link" href="/">⬅ Voltar</a>
-
-        <!-- RESULTADOS -->
-        <div id="lista"></div>
-    </div>
+{% extends 'base.html' %}
+{% block title %}Registrar entrada{% endblock %}
+{% block content %}
+<form method="POST" autocomplete="off" class="quick-access-form entry-workstation">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="quick-access-grid entry-access-grid">
+<section class="quick-panel quick-main">
+<div class="quick-section-title"><span>01</span><strong>Visitante</strong></div>
+<div class="quick-fields">
+<label class="span-2"><span>CPF *</span><input class="input-padrao" name="cpf" id="entrada_cpf" inputmode="numeric" required autofocus placeholder="CPF do visitante cadastrado"></label>
 </div>
-
+<div class="quick-divider"></div>
+<div class="quick-section-title"><span>02</span><strong>Destino da visita</strong></div>
+<div class="quick-fields">
+{% if unidades %}<label><span>Unidade</span><select class="input-padrao" name="unidade_id" id="entrada_unidade"><option value="">Selecione</option>{% for u in unidades %}<option value="{{ u.id }}">{{ u.codigo }}{% if u.descricao %} — {{ u.descricao }}{% endif %}</option>{% endfor %}</select></label>{% endif %}
+<label class="span-2"><span>Destino *</span><input class="input-padrao" name="endereco" id="entrada_destino" required placeholder="Ex.: Bloco A · Apto 204"></label>
+</div>
+</section>
+<aside class="quick-panel resident-context-panel">
+<div class="quick-section-title"><span>03</span><strong>Controle de acesso</strong></div>
+<div class="resident-context-copy"><strong>Entrada física</strong><p>Esta operação cria presença ativa em “No condomínio”. Cadastros de visitantes permanecem separados da movimentação de entrada e saída.</p></div>
+</aside>
+</div>
+<footer class="quick-submit"><span><b>Registrar presença.</b> Confirme visitante e destino.</span><div class="quick-submit-actions"><a href="{{ url_for('main.index') }}">Cancelar</a><button class="btn-principal" type="submit">Registrar entrada</button></div></footer>
+</form>
 <script>
-const input = document.getElementById("busca");
-const lista = document.getElementById("lista");
-
-input.addEventListener("keyup", function() {
-    const termo = input.value;
-
-    fetch(`/buscar_ajax?q=${termo}`)
-        .then(res => res.json())
-        .then(data => {
-
-            lista.innerHTML = "";
-
-            if (data.length === 0) {
-                lista.innerHTML = "<p>Nenhum visitante encontrado</p>";
-                return;
-            }
-
-            data.forEach(v => {
-                lista.innerHTML += `
-                    <div class="visitor-card">
-                        <b>Nome:</b> ${v.nome} <br>
-                        <b>CPF:</b> ${v.cpf} <br><br>
-
-                        <button class="btn" onclick="registrarEntrada(${v.id})">
-                            🚪 Registrar Entrada
-                        </button>
-                    </div>
-                `;
-            });
-
-        });
-});
-
-function registrarEntrada(id) {
-    fetch("/entrada_ajax", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `id=${id}`
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert("Entrada registrada com sucesso!");
-        lista.innerHTML = "";
-        input.value = "";
-    });
-}
+const unidade=document.getElementById("entrada_unidade"),destino=document.getElementById("entrada_destino");
+if(unidade&&destino){unidade.addEventListener("change",()=>{const opt=unidade.options[unidade.selectedIndex];if(unidade.value&&!destino.value.trim())destino.value=(opt.textContent||"").split(" — ")[0].trim()})}
 </script>
-
-</body>
-</html>
+{% endblock %}

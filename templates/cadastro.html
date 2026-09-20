@@ -3,160 +3,38 @@
 
 {% block content %}
 
-<div class="card-padrao">
-    <div class="header-secao header-secao-flex">
-        <div>
-            <h2>➕ Cadastro de Visitante</h2>
-            <p class="texto-ajuda">
-                Preencha os dados abaixo para cadastrar um novo visitante no sistema.
-            </p>
-        </div>
-
-        <a class="link-voltar" href="/">⬅ Voltar</a>
+<form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="quick-access-grid">
+  <section class="quick-panel quick-main">
+    <div class="quick-section-title"><span>01</span><strong>Visitante</strong></div>
+    <div class="quick-fields identity-fields">
+      <label class="span-2"><span>Nome completo *</span><input class="input-padrao" type="text" name="nome" id="nome" required autofocus></label>
+      <label><span>CPF *</span><input class="input-padrao" type="text" name="cpf" id="cpf" value="{{ cpf_pre or '' }}" required></label>
+      <label><span>Tipo</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="tipo" id="tipo" placeholder="Visitante, entregador..."><div id="sugestoes_tipo" class="caixa-sugestoes"></div></div></label>
+      <label class="span-2"><span>Endereço</span><input class="input-padrao" type="text" name="endereco" id="endereco" placeholder="Endereço do visitante" autocomplete="off"><small id="sugestao-endereco"></small></label>
     </div>
-
-    <form method="POST" enctype="multipart/form-data" autocomplete="off" class="form-cadastro-visitante">
-
-        <div class="card-bloco">
-            <h3>👤 Dados do visitante</h3>
-
-            <div class="grid-formulario">
-                <input class="input-padrao" type="text" name="nome" id="nome" placeholder="Nome completo" required>
-
-                <input class="input-padrao" type="text" name="cpf" id="cpf"
-                    value="{{ cpf_pre or '' }}" placeholder="CPF" required>
-
-                <div class="campo-full" style="display: flex; flex-direction: column; gap: 6px;">
-                    <input class="input-padrao" type="text" name="endereco" id="endereco"
-                        placeholder="Ex: 070220 ou QUADRA 07, CONJUNTO 02, CASA 20"
-                        autocomplete="off">
-                    <small id="sugestao-endereco" style="color: #666; font-size: 13px;"></small>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-bloco">
-            <h3>🏠 Destino / Morador</h3>
-            <p class="texto-ajuda">Selecione a unidade ou busque o morador que receberá este visitante.</p>
-
-            <div class="grid-formulario">
-                <div class="campo-full">
-                    <label class="label-campo">Buscar morador</label>
-                    <input class="input-padrao" type="text" id="busca_morador"
-                           placeholder="Digite o nome ou unidade do morador..."
-                           autocomplete="off">
-                    <div id="sugestoes_morador" class="caixa-sugestoes"></div>
-                </div>
-
-                <input type="hidden" name="morador_id" id="morador_id">
-                <input type="hidden" name="unidade_id" id="unidade_id">
-
-                <div class="campo-full" id="morador_selecionado_box" style="display:none;">
-                    <div class="badge-morador-selecionado">
-                        <span id="morador_selecionado_nome"></span>
-                        <button type="button" class="btn-limpar-morador" onclick="limparMorador()">✕</button>
-                    </div>
-                </div>
-
-                {% if unidades %}
-                <div class="campo-full">
-                    <label class="label-campo">Ou selecione a unidade diretamente</label>
-                    <select class="input-padrao" name="unidade_id" id="unidade_select">
-                        <option value="">— Nenhuma unidade —</option>
-                        {% for u in unidades %}
-                        <option value="{{ u.id }}">{{ u.codigo }}{% if u.descricao %} — {{ u.descricao }}{% endif %}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="grid-blocos">
-            <div class="card-bloco">
-                <h3>🏷 Tipo de visita</h3>
-
-                <div class="campo-autocomplete">
-                    <input class="input-padrao" type="text" name="tipo" id="tipo"
-                           placeholder="Ex: Visitante, Entregador...">
-                    <div id="sugestoes_tipo" class="caixa-sugestoes"></div>
-                </div>
-            </div>
-
-            <div class="card-bloco">
-                <h3>📝 Observação</h3>
-
-                <textarea
-                    class="input-padrao textarea-cadastro"
-                    name="observacao"
-                    id="observacao"
-                    placeholder="Observações do visitante (opcional)"
-                    rows="4"
-                ></textarea>
-            </div>
-        </div>
-
-        <div class="card-bloco">
-            <h3>🚗 Veículo</h3>
-
-            <div class="grid-formulario">
-                <input class="input-padrao" type="text" name="placa" id="placa" placeholder="Placa">
-
-                <div class="campo-autocomplete">
-                    <input class="input-padrao" type="text" name="modelo" id="modelo" placeholder="Modelo">
-                    <div id="sugestoes_modelo" class="caixa-sugestoes"></div>
-                </div>
-
-                <div class="campo-autocomplete">
-                    <input class="input-padrao" type="text" name="marca" id="marca" placeholder="Marca">
-                    <div id="sugestoes_marca" class="caixa-sugestoes"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-bloco">
-        <h3>📷 Foto do visitante</h3>
-
-        <div class="divisor">
-            ───── ou usar método manual ─────
-        </div>
-
-        <p class="preview-label preview-label-topo">📸 Tirar nova foto</p>
-
-        <div class="camera-actions">
-            <button type="button" class="btn-principal btn-sm" id="btnAbrirCamera">📷 Abrir câmera</button>
-            <button type="button" class="btn-secundario btn-sm" id="btnCapturar" style="display:none;">📸 Capturar</button>
-            <button type="button" class="btn-remover btn-sm" id="btnFecharCamera" style="display:none;">❌ Fechar</button>
-            <button type="button" class="btn-principal btn-sm" id="btnNovaFoto" style="display:none;">🔄 Tirar novamente</button>
-        </div>
-
-        <div class="foto-grid">
-            <div id="camera-container" class="camera-box">
-                <video id="video" autoplay playsinline></video>
-            </div>
-
-            <div id="preview-container" class="preview-box">
-                <p class="preview-label">Nova foto</p>
-                <img id="preview-foto" src="" alt="Prévia da nova foto">
-            </div>
-        </div>
-
-        <canvas id="canvas" style="display:none;"></canvas>
-        <input type="hidden" name="foto_webcam" id="foto_webcam">
-
-        <div class="divisor">
-            ───── ou enviar imagem ─────
-        </div>
-
-        <input class="input-padrao" type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*">
+    <div class="quick-divider"></div>
+    <div class="quick-section-title"><span>02</span><strong>Observação</strong><small>opcional</small></div>
+    <div class="quick-fields"><label class="span-2"><span>Observação</span><input class="input-padrao" name="observacao" id="observacao" placeholder="Informação permanente do cadastro"></label></div>
+    <div class="quick-divider"></div>
+    <div class="quick-section-title"><span>03</span><strong>Veículo</strong><small>opcional</small></div>
+    <div class="quick-fields vehicle-fields">
+      <label><span>Placa</span><input class="input-padrao" type="text" name="placa" id="placa"></label>
+      <label><span>Marca</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="marca" id="marca"><div id="sugestoes_marca" class="caixa-sugestoes"></div></div></label>
+      <label><span>Modelo</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="modelo" id="modelo"><div id="sugestoes_modelo" class="caixa-sugestoes"></div></div></label>
     </div>
-        <div class="acao-formulario">
-            <button class="btn-principal btn-sm" type="submit">
-                💾 Cadastrar visitante
-            </button>
-        </div>
-
-    </form>
+  </section>
+  <aside class="quick-panel quick-photo">
+    <div class="quick-section-title"><span>04</span><strong>Foto</strong></div>
+    <div class="photo-stage"><div id="camera-container" class="camera-box"><video id="video" autoplay playsinline></video></div><div id="preview-container" class="preview-box"><img id="preview-foto" src="" alt="Prévia da foto"></div><div class="photo-placeholder"><span>Foto</span><small>Use a câmera ou envie um arquivo</small></div></div>
+    <canvas id="canvas" style="display:none"></canvas><input type="hidden" name="foto_webcam" id="foto_webcam">
+    <div class="photo-actions"><button type="button" class="btn-principal" id="btnAbrirCamera">Abrir câmera</button><button type="button" class="btn-secundario" id="btnCapturar" style="display:none">Capturar</button><button type="button" class="btn-remover" id="btnFecharCamera" style="display:none">Fechar</button><button type="button" class="btn-secundario" id="btnNovaFoto" style="display:none">Refazer</button></div>
+    <label class="file-compact"><span>ou enviar foto</span><input type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*"></label>
+  </aside>
+</div>
+<footer class="quick-submit"><span><b>Cadastro mestre.</b> A entrada será registrada separadamente quando houver acesso.</span><div class="quick-submit-actions"><a href="{{ url_for('main.index') }}">Cancelar</a><button class="btn-principal" type="submit">Cadastrar visitante</button></div></footer>
+</form>
 </div>
 
 <script>
@@ -395,153 +273,14 @@ if (campoFoto) {
     });
 }
 
-const btnAbrirCamera = document.getElementById("btnAbrirCamera");
-const btnCapturar = document.getElementById("btnCapturar");
-const btnFecharCamera = document.getElementById("btnFecharCamera");
-const btnNovaFoto = document.getElementById("btnNovaFoto");
-const previewContainer = document.getElementById("preview-container");
-const previewFoto = document.getElementById("preview-foto");
-const fotoWebcam = document.getElementById("foto_webcam");
-const inputFoto = document.getElementById("foto");
-
-btnCapturar.style.display = "none";
-btnFecharCamera.style.display = "none";
-
-btnAbrirCamera.addEventListener("click", function() {
-    abrirModalFotoCadastro();
-});
-
-btnNovaFoto.addEventListener("click", function() {
-    fotoWebcam.value = "";
-    previewFoto.src = "";
-    previewContainer.style.display = "none";
-    abrirModalFotoCadastro();
-});
-
-function abrirModalFotoCadastro() {
-    visitanteFotoAtual = null;
-    fotoCapturadaBase64 = null;
-
-    const modal = document.getElementById("modalFoto");
-    modal.style.display = "flex";
-
-    document.getElementById("etapa_camera").style.display = "flex";
-    document.getElementById("etapa_preview").style.display = "none";
-    document.getElementById("btnCapturarFoto").style.display = "inline-flex";
-    document.getElementById("btnSalvarFoto").style.display = "none";
-    document.getElementById("btnVoltarCamera").style.display = "none";
-
-    navigator.mediaDevices.getUserMedia({
-        video: {
-            width: { ideal: 720 },
-            height: { ideal: 540 },
-            facingMode: "user"
-        },
-        audio: false
-    })
-    .then(stream => {
-        streamWebcam = stream;
-        const videoWebcam = document.getElementById("video_webcam");
-        videoWebcam.srcObject = streamWebcam;
-    })
-    .catch(erro => {
-        alert("Não foi possível acessar a webcam.");
-        console.error(erro);
-        fecharModalFoto();
-    });
-}
-
-function registrarSalvarFotoCadastro() {
-    window.salvarFotoVisitante = function() {
-        if (!fotoCapturadaBase64) return;
-
-        previewFoto.src = fotoCapturadaBase64;
-        previewContainer.style.display = "block";
-        fotoWebcam.value = fotoCapturadaBase64;
-
-        inputFoto.value = "";
-        btnNovaFoto.style.display = "inline-flex";
-        btnAbrirCamera.style.display = "inline-flex";
-
-        fecharModalFoto();
-    };
-}
-
-// ── Busca de moradores ────────────────────────────────────────
-(function() {
-    const inputMorador = document.getElementById("busca_morador");
-    const boxSugestoes = document.getElementById("sugestoes_morador");
-    const inputMoradorId = document.getElementById("morador_id");
-    const inputUnidadeId = document.getElementById("unidade_id");
-    const unidadeSelect  = document.getElementById("unidade_select");
-    const selecionadoBox = document.getElementById("morador_selecionado_box");
-    const selecionadoNome = document.getElementById("morador_selecionado_nome");
-
-    if (!inputMorador) return;
-
-    let timeout = null;
-
-    inputMorador.addEventListener("input", function() {
-        clearTimeout(timeout);
-        const termo = this.value.trim();
-        if (termo.length < 2) { boxSugestoes.style.display = "none"; return; }
-
-        timeout = setTimeout(() => {
-            fetch(`/buscar_moradores_ajax?q=${encodeURIComponent(termo)}`)
-                .then(r => r.json())
-                .then(lista => {
-                    boxSugestoes.innerHTML = "";
-                    if (!lista.length) { boxSugestoes.style.display = "none"; return; }
-                    lista.forEach(m => {
-                        const div = document.createElement("div");
-                        div.className = "item-sugestao";
-                        div.textContent = m.nome + (m.unidade_codigo ? ` — ${m.unidade_codigo}` : "");
-                        div.addEventListener("mousedown", e => {
-                            e.preventDefault();
-                            selecionarMorador(m);
-                        });
-                        boxSugestoes.appendChild(div);
-                    });
-                    boxSugestoes.style.display = "block";
-                });
-        }, 300);
-    });
-
-    document.addEventListener("click", e => {
-        if (e.target !== inputMorador) boxSugestoes.style.display = "none";
-    });
-
-    function selecionarMorador(m) {
-        inputMoradorId.value = m.id;
-        if (m.unidade_id && inputUnidadeId) inputUnidadeId.value = m.unidade_id || "";
-        if (unidadeSelect) unidadeSelect.value = "";
-        selecionadoNome.textContent = m.nome + (m.unidade_codigo ? ` — ${m.unidade_codigo}` : "");
-        selecionadoBox.style.display = "block";
-        inputMorador.value = "";
-        boxSugestoes.style.display = "none";
-
-        // preenche o endereço com o código da unidade se vazio
-        const endEl = document.getElementById("endereco");
-        if (endEl && !endEl.value.trim() && m.unidade_codigo) {
-            endEl.value = m.unidade_codigo;
-            endEl.dispatchEvent(new Event("input"));
-        }
-    }
-
-    window.limparMorador = function() {
-        inputMoradorId.value = "";
-        if (inputUnidadeId) inputUnidadeId.value = "";
-        selecionadoBox.style.display = "none";
-        selecionadoNome.textContent = "";
-        inputMorador.value = "";
-    };
-
-    if (unidadeSelect) {
-        unidadeSelect.addEventListener("change", function() {
-            if (inputUnidadeId) inputUnidadeId.value = this.value;
-        });
-    }
-})();
+const btnAbrirCamera=document.getElementById("btnAbrirCamera"),btnCapturar=document.getElementById("btnCapturar"),btnFecharCamera=document.getElementById("btnFecharCamera"),btnNovaFoto=document.getElementById("btnNovaFoto");
+const video=document.getElementById("video"),canvas=document.getElementById("canvas"),cameraContainer=document.getElementById("camera-container"),previewContainer=document.getElementById("preview-container"),previewFoto=document.getElementById("preview-foto"),fotoWebcam=document.getElementById("foto_webcam"),inputFoto=document.getElementById("foto");
+let streamCamera=null;
+async function abrirCamera(){try{streamCamera=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},audio:false});video.srcObject=streamCamera;cameraContainer.style.display="block";btnCapturar.style.display="inline-flex";btnFecharCamera.style.display="inline-flex";btnAbrirCamera.style.display="none"}catch(e){alert("Não foi possível acessar a câmera. Verifique a permissão do navegador.")}}
+function fecharCamera(){if(streamCamera){streamCamera.getTracks().forEach(t=>t.stop());streamCamera=null}video.srcObject=null;cameraContainer.style.display="none";btnCapturar.style.display="none";btnFecharCamera.style.display="none";btnAbrirCamera.style.display="inline-flex"}
+function capturarFoto(){if(!video.srcObject)return;canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);fotoWebcam.value=canvas.toDataURL("image/jpeg",.9);previewFoto.src=fotoWebcam.value;previewContainer.style.display="block";inputFoto.value="";btnNovaFoto.style.display="inline-flex";fecharCamera()}
+btnAbrirCamera.addEventListener("click",abrirCamera);btnCapturar.addEventListener("click",capturarFoto);btnFecharCamera.addEventListener("click",fecharCamera);btnNovaFoto.addEventListener("click",()=>{fotoWebcam.value="";previewFoto.src="";previewContainer.style.display="none";abrirCamera()});
+window.addEventListener("beforeunload",fecharCamera);
 
 document.getElementById("cpf").addEventListener("blur", function() {
     let cpf = this.value;
@@ -553,7 +292,7 @@ document.getElementById("cpf").addEventListener("blur", function() {
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: `cpf=${cpf}`
+        body: new URLSearchParams({cpf: cpf, csrf_token: {{ csrf_token()|tojson }}})
     })
     .then(response => response.json())
     .then(data => {
@@ -610,8 +349,6 @@ document.addEventListener("DOMContentLoaded", function () {
             sugestaoEndereco.textContent = "";
         }
     });
-    registrarSalvarFotoCadastro();
-    
-});
+ });
 </script>
 {% endblock %}

@@ -35,7 +35,7 @@
             nome, cpf, endereco, tipo, placa, modelo, marca, observacao
         </div>
 
-        <form method="POST" enctype="multipart/form-data" style="margin-top: 25px;">
+        <form method="POST" enctype="multipart/form-data" style="margin-top: 25px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label for="arquivo_csv" style="display: block; font-weight: 600; margin-bottom: 8px;">
                 Selecione o arquivo CSV
             </label>

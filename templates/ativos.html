@@ -1,371 +1,100 @@
 {% extends 'base.html' %}
-{% block title %}Visitantes Ativos{% endblock %}
-
+{% block title %}No condomínio{% endblock %}
 {% block content %}
-
-<div class="card-padrao">
-    <div class="header-secao">
-        <h2>🚨 Visitantes Ativos</h2>
-        <p class="texto-ajuda">
-            Busque por nome, CPF ou placa para localizar rapidamente quem está no condomínio.
-        </p>
+<section class="presence-console">
+  <header class="presence-head">
+    <div>
+      <span class="presence-eyebrow"><i></i> MONITORAMENTO AO VIVO</span>
+      <div class="presence-title-row"><h1>No condomínio</h1><span class="presence-count">{{ visitantes|length }}</span></div>
+      <p>Pessoas com acesso aberto neste momento.</p>
     </div>
-
-    <div class="busca-box">
-        <input
-            type="text"
-            id="buscaAtivo"
-            class="input-padrao busca-input"
-            placeholder="Digite nome, CPF ou placa para registrar a saída..."
-            autocomplete="off"
-            autofocus
-        >
+    <div class="presence-head-actions">
+      <a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">Consultar cadastros</a>
+      <a class="btn-principal" href="{{ url_for('main.index') }}">Registrar entrada</a>
     </div>
+  </header>
 
-    <div id="mensagemAtivo" class="mensagem-box"></div>
-
-    <a class="link-voltar" href="/">⬅ Voltar</a>
-
-
-    <div id="listaAtivos" class="lista-resultados">
-        {% if visitantes %}
-            {% for v in visitantes %}
-                <div class="visitor-card {% if loop.index0 == 0 %}selecionado{% endif %}" data-index="{{ loop.index0 }}">
-
-                    <div class="visitor-photo-wrap">
-                        {% if v.foto %}
-                            <img src="{{ url_for('static', filename='fotos/' + v.foto) }}" class="visitor-photo">
-                        {% else %}
-                            <div class="visitor-photo placeholder">Sem foto</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="visitor-main">
-
-                        <div class="card-visitante">
-                            <div class="info-grid">
-                                <div class="info-item destaque">
-                                    <span class="label-ui">Nome</span>
-                                    <span class="valor-ui nome">{{ v.nome|upper }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">CPF</span>
-                                    <span class="valor-ui">{{ v.cpf }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">Destino</span>
-                                    <span class="valor-ui">{{ v.endereco or '-' }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">Morador / Unidade</span>
-                                    <span class="valor-ui">
-                                        {% if v.morador_nome %}
-                                            {{ v.morador_nome }}
-                                            {% if v.unidade_codigo %}
-                                                <span class="badge-unidade">{{ v.unidade_codigo }}</span>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="texto-muted">—</span>
-                                        {% endif %}
-                                    </span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">Observação</span>
-                                    <span class="valor-ui">{{ v.observacao if v.observacao else '-' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="extras-grid">
-
-                            <div class="extra-card">
-                                <span class="label-ui">Tipo de visita</span>
-                                <div class="badge-ui badge-tipo">
-                                    🏷 {{ (v.tipo or 'Sem tipo')|upper }}
-                                </div>
-                            </div>
-
-                            <div class="extra-card">
-                                <span class="label-ui">Veículo desta entrada</span>
-                                <div class="badge-ui badge-veiculo">
-                                    🚗
-                                    {% if v.marca or v.modelo or v.placa %}
-                                        {{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} - {{ v.placa }}{% endif %}
-                                    {% else %}
-                                        SEM VEÍCULO
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <div class="extra-card">
-                                <span class="label-ui">Horário de entrada</span>
-                                <div class="badge-ui badge-entrada">
-                                    ⏰ {{ v.data_entrada }}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="card-actions">
-                            <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}"
-                                  onsubmit="return confirm('Registrar saída de {{ v.nome }}?')">
-                                <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
-                            </form>
-                        </div>
-
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <div class="estado-vazio">
-                Nenhum visitante no momento.
-            </div>
-        {% endif %}
+  <div class="presence-command">
+    <div class="presence-search">
+      <span class="presence-search-icon"></span>
+      <input type="text" id="buscaAtivo" placeholder="Buscar por nome, CPF ou placa" autocomplete="off" autofocus>
+      <span class="presence-shortcut">ENTER · SAÍDA</span>
     </div>
-</div>
+    <div class="presence-summary">
+      <span><b>{{ visitantes|length }}</b> presentes</span>
+      <span><i></i> sincronizado</span>
+    </div>
+  </div>
+
+  <div id="mensagemAtivo" class="mensagem-box"></div>
+  <div id="listaAtivos" class="presence-grid">
+  {% if visitantes %}
+    {% for v in visitantes %}
+    <article class="presence-card {% if loop.index0 == 0 %}is-selected{% endif %}" data-index="{{ loop.index0 }}">
+      <div class="presence-card-top">
+        <div class="presence-photo">
+          {% if v.foto %}<img src="{{ url_for('visitantes.foto', id=v.id) }}" alt="Foto do visitante">
+          {% else %}<span>{{ v.nome[:1]|upper }}</span>{% endif %}
+          <i class="presence-online"></i>
+        </div>
+        <div class="presence-identity">
+          <span class="presence-state">DENTRO AGORA</span>
+          <h2>{{ v.nome|upper }}</h2>
+          <p>{{ v.cpf }}</p>
+        </div>
+        <div class="presence-time"><span>ENTRADA</span><strong>{{ v.data_entrada.strftime('%H:%M') if v.data_entrada and v.data_entrada.strftime is defined else v.data_entrada }}</strong></div>
+      </div>
+      <div class="presence-route">
+        <div><span>Destino</span><strong>{{ v.endereco or 'Não informado' }}</strong></div>
+        <div><span>Morador / unidade</span><strong>{% if v.morador_nome %}{{ v.morador_nome }}{% if v.unidade_codigo %} · {{ v.unidade_codigo }}{% endif %}{% else %}—{% endif %}</strong></div>
+      </div>
+      <div class="presence-meta">
+        <span>{{ (v.tipo or 'Visitante')|upper }}</span>
+        <span>{% if v.marca or v.modelo or v.placa %}{{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} · {{ v.placa }}{% endif %}{% else %}PEDESTRE / SEM VEÍCULO{% endif %}</span>
+      </div>
+      {% if v.observacao %}<div class="presence-note"><span>OBS</span>{{ v.observacao }}</div>{% endif %}
+      <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}" onsubmit="return confirm('Registrar saída deste visitante?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="presence-exit" type="submit"><span>Registrar saída</span><b>→</b></button>
+      </form>
+    </article>
+    {% endfor %}
+  {% else %}
+    <div class="presence-empty"><span class="presence-empty-mark">✓</span><strong>Condomínio sem visitantes ativos</strong><p>Não há acessos abertos neste momento.</p></div>
+  {% endif %}
+  </div>
+</section>
 
 <script>
-const inputAtivo = document.getElementById("buscaAtivo");
-const listaAtivos = document.getElementById("listaAtivos");
-const mensagemAtivo = document.getElementById("mensagemAtivo");
-
-let ativosAtuais = [];
-let indiceSelecionadoAtivo = 0;
-
-// ==============================
-// MENSAGEM
-// ==============================
-function mostrarMensagemAtivo(texto, cor = "red") {
-    mensagemAtivo.innerHTML = `<p style="color:${cor}; font-weight:bold;">${texto}</p>`;
+const inputAtivo=document.getElementById("buscaAtivo"),listaAtivos=document.getElementById("listaAtivos"),mensagemAtivo=document.getElementById("mensagemAtivo"),csrfAtivo={{ csrf_token()|tojson }};
+let ativosAtuais=[],indiceSelecionadoAtivo=0;
+function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n}
+function mostrarErroAtivo(texto){mensagemAtivo.replaceChildren(el("p","active-error",texto))}
+function textoVeiculo(v){return [v.marca,v.modelo].filter(Boolean).join(" ")+(v.placa?(([v.marca,v.modelo].some(Boolean)?" · ":"")+v.placa):"")||"PEDESTRE / SEM VEÍCULO"}
+function horaEntrada(valor){if(!valor)return"—";const d=new Date(valor);return Number.isNaN(d.getTime())?String(valor):d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+function registrarSaida(v){if(!confirm("Registrar saída de "+(v.nome||"visitante")+"?"))return;const form=document.createElement("form");form.method="POST";form.action={{ url_for('visitantes.saida', id=0)|tojson }}.replace("/0","/"+encodeURIComponent(v.id));const token=document.createElement("input");token.type="hidden";token.name="csrf_token";token.value=csrfAtivo;form.appendChild(token);document.body.appendChild(form);form.submit()}
+function renderizarAtivos(data){
+ ativosAtuais=Array.isArray(data)?data:[];listaAtivos.replaceChildren();
+ if(!ativosAtuais.length){const empty=el("div","presence-empty");empty.append(el("span","presence-empty-mark","✓"),el("strong","", "Nenhum acesso ativo encontrado"),el("p","","A busca não encontrou pessoas no condomínio."));listaAtivos.appendChild(empty);return}
+ indiceSelecionadoAtivo=Math.max(0,Math.min(indiceSelecionadoAtivo,ativosAtuais.length-1));
+ ativosAtuais.forEach((v,index)=>{
+  const card=el("article","presence-card"+(index===indiceSelecionadoAtivo?" is-selected":""));card.dataset.index=index;
+  const top=el("div","presence-card-top"),photo=el("div","presence-photo");
+  if(v.foto_url){const img=document.createElement("img");img.src=v.foto_url;img.alt="Foto do visitante";photo.appendChild(img)}else photo.appendChild(el("span","",(v.nome||"?").slice(0,1).toUpperCase()));
+  photo.appendChild(el("i","presence-online"));
+  const ident=el("div","presence-identity");ident.append(el("span","presence-state","DENTRO AGORA"),el("h2","",(v.nome||"").toUpperCase()),el("p","",v.cpf||"—"));
+  const time=el("div","presence-time");time.append(el("span","","ENTRADA"),el("strong","",horaEntrada(v.data_entrada)));top.append(photo,ident,time);
+  const route=el("div","presence-route");
+  [["Destino",v.endereco||"Não informado"],["Morador / unidade",[v.morador_nome,v.unidade_codigo].filter(Boolean).join(" · ")||"—"]].forEach(([a,b])=>{const x=el("div");x.append(el("span","",a),el("strong","",b));route.appendChild(x)});
+  const meta=el("div","presence-meta");meta.append(el("span","",(v.tipo||"Visitante").toUpperCase()),el("span","",textoVeiculo(v)));
+  card.append(top,route,meta);
+  if(v.observacao){const note=el("div","presence-note");note.append(el("span","","OBS"),document.createTextNode(v.observacao));card.appendChild(note)}
+  const btn=el("button","presence-exit");btn.type="button";btn.append(el("span","","Registrar saída"),el("b","","→"));btn.addEventListener("click",e=>{e.stopPropagation();registrarSaida(v)});card.appendChild(btn);
+  card.addEventListener("click",()=>{indiceSelecionadoAtivo=index;document.querySelectorAll(".presence-card").forEach((n,i)=>n.classList.toggle("is-selected",i===index))});listaAtivos.appendChild(card)
+ })
 }
-
-function limparMensagemAtivo() {
-    mensagemAtivo.innerHTML = "";
-}
-
-// ==============================
-// MONTA TEXTO DO VEÍCULO
-// ==============================
-function montarTextoVeiculo(v) {
-    if (!(v.marca || v.modelo || v.placa)) {
-        return "Sem veículo";
-    }
-
-    let partes = [];
-    if (v.marca) partes.push(v.marca);
-    if (v.modelo) partes.push(v.modelo);
-
-    let texto = partes.join(" ").trim();
-
-    if (v.placa) {
-        texto += (texto ? " - " : "") + v.placa;
-    }
-
-    return texto || "Sem veículo";
-}
-
-// ==============================
-// FORMATA DATA/HORA
-// ==============================
-function formatarEntrada(dataEntrada) {
-    if (!dataEntrada) return "-";
-    return dataEntrada;
-}
-
-// ==============================
-// RENDERIZAR LISTA DE ATIVOS
-// ==============================
-function renderizarAtivos(data) {
-    ativosAtuais = data;
-    listaAtivos.innerHTML = "";
-
-    if (!data || data.length === 0) {
-        listaAtivos.innerHTML = "<p>Nenhum visitante ativo encontrado.</p>";
-        return;
-    }
-
-    if (indiceSelecionadoAtivo < 0) indiceSelecionadoAtivo = 0;
-    if (indiceSelecionadoAtivo > data.length - 1) indiceSelecionadoAtivo = data.length - 1;
-
-    data.forEach((v, index) => {
-        const selecionado = index === indiceSelecionadoAtivo;
-
-        const estiloCard = selecionado
-            ? "display:flex; gap:15px; align-items:flex-start; flex-wrap:wrap; border:2px solid #007bff; background:#f4f9ff; cursor:pointer;"
-            : "display:flex; gap:15px; align-items:flex-start; flex-wrap:wrap; cursor:pointer;";
-
-        const fotoHtml = v.foto
-            ? `<img src="/static/fotos/${v.foto}"
-                    alt="Foto de ${v.nome}"
-                    style="width:90px; height:90px; object-fit:cover; border-radius:10px; border:1px solid #ddd;">`
-            : `<div style="
-                    width:90px;
-                    height:90px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    border-radius:10px;
-                    border:1px solid #ddd;
-                    background:#f8f9fa;
-                    color:#777;
-                    font-size:13px;
-                    text-align:center;
-                    padding:8px;
-                ">
-                    Sem foto
-               </div>`;
-
-        listaAtivos.innerHTML += `
-        <div
-            class="visitor-card ${selecionado ? "selecionado" : ""}"
-            data-index="${index}"
-            onclick="selecionarAtivo(${index})"
-        >
-            <div class="visitor-photo-wrap">
-                ${fotoHtml}
-            </div>
-
-            <div class="visitor-main">
-
-                <div class="card-visitante">
-                    <div class="info-grid">
-                        <div class="info-item destaque">
-                            <span class="label-ui">Nome</span>
-                            <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">CPF</span>
-                            <span class="valor-ui">${v.cpf || "-"}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">Destino</span>
-                            <span class="valor-ui">${v.endereco || "-"}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">Observação</span>
-                            <span class="valor-ui">${v.observacao || "-"}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="extras-grid">
-
-                    <div class="extra-card">
-                        <span class="label-ui">Tipo</span>
-                        <div class="badge-ui badge-tipo">
-                            🏷 ${(v.tipo || "SEM TIPO").toUpperCase()}
-                        </div>
-                    </div>
-
-                    <div class="extra-card">
-                        <span class="label-ui">Veículo</span>
-                        <div class="badge-ui badge-veiculo">
-                            🚗 ${montarTextoVeiculo(v)}
-                        </div>
-                    </div>
-
-                    <div class="extra-card">
-                        <span class="label-ui">Entrada</span>
-                        <div class="badge-ui badge-entrada">
-                            ⏰ ${formatarEntrada(v.data_entrada)}
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="card-actions">
-                    <form method="POST" action="/saida/${v.id}"
-                          onsubmit="event.stopPropagation(); return confirm('Registrar saída de ${(v.nome||'').replace(/'/g,'')}?')">
-                        <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    `;
-    });
-}
-
-// ==============================
-// SELECIONAR ITEM
-// ==============================
-function selecionarAtivo(index) {
-    indiceSelecionadoAtivo = index;
-    renderizarAtivos(ativosAtuais);
-}
-
-// ==============================
-// BUSCA INTELIGENTE
-// ==============================
-inputAtivo.addEventListener("input", function () {
-    const termo = inputAtivo.value.trim();
-    limparMensagemAtivo();
-
-    if (termo.length === 0) {
-        window.location.href = "/ativos";
-        return;
-    }
-
-    fetch(`/buscar_ativos_ajax?q=${encodeURIComponent(termo)}`)
-        .then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error("Erro ao buscar visitantes ativos.");
-            }
-            return data;
-        })
-        .then((data) => {
-            indiceSelecionadoAtivo = 0;
-            renderizarAtivos(data);
-        })
-        .catch((erro) => {
-            listaAtivos.innerHTML = `<p style="color:red;">${erro.message}</p>`;
-            console.error("Erro na busca:", erro);
-        });
-});
-
-// ==============================
-// TECLADO NA BUSCA
-// ==============================
-inputAtivo.addEventListener("keydown", function(event) {
-    if (ativosAtuais.length === 0) return;
-
-    if (event.key === "ArrowDown") {
-        event.preventDefault();
-        indiceSelecionadoAtivo = Math.min(indiceSelecionadoAtivo + 1, ativosAtuais.length - 1);
-        renderizarAtivos(ativosAtuais);
-        return;
-    }
-
-    if (event.key === "ArrowUp") {
-        event.preventDefault();
-        indiceSelecionadoAtivo = Math.max(indiceSelecionadoAtivo - 1, 0);
-        renderizarAtivos(ativosAtuais);
-        return;
-    }
-
-    if (event.key === "Enter") {
-        event.preventDefault();
-
-        const ativoSelecionado = ativosAtuais[indiceSelecionadoAtivo];
-        if (!ativoSelecionado) return;
-
-        const confirmar = confirm(`Registrar saída de ${ativoSelecionado.nome}?`);
-        if (confirmar) {
-            const form = document.createElement("form");
-            form.method = "POST";
-            form.action = `/saida/${ativoSelecionado.id}`;
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-});
+let buscaTimer;
+inputAtivo.addEventListener("input",()=>{clearTimeout(buscaTimer);const termo=inputAtivo.value.trim();mensagemAtivo.replaceChildren();buscaTimer=setTimeout(()=>{if(!termo){location.href={{ url_for('visitantes.ativos')|tojson }};return}fetch({{ url_for('visitantes.buscar_ativos_ajax')|tojson }}+"?q="+encodeURIComponent(termo),{headers:{"Accept":"application/json"}}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.mensagem||"Erro ao buscar.");return d}).then(d=>{indiceSelecionadoAtivo=0;renderizarAtivos(d)}).catch(e=>{listaAtivos.replaceChildren();mostrarErroAtivo(e.message)})},180)});
+inputAtivo.addEventListener("keydown",e=>{if(!ativosAtuais.length)return;if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();indiceSelecionadoAtivo=e.key==="ArrowDown"?Math.min(indiceSelecionadoAtivo+1,ativosAtuais.length-1):Math.max(indiceSelecionadoAtivo-1,0);document.querySelectorAll(".presence-card").forEach((n,i)=>n.classList.toggle("is-selected",i===indiceSelecionadoAtivo));document.querySelectorAll(".presence-card")[indiceSelecionadoAtivo]?.scrollIntoView({block:"nearest"})}else if(e.key==="Enter"){e.preventDefault();const v=ativosAtuais[indiceSelecionadoAtivo];if(v)registrarSaida(v)}});
 </script>
 {% endblock %}

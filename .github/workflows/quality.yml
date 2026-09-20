@@ -1,0 +1,43 @@
+name: quality-gate
+
+on:
+  pull_request:
+  push:
+    branches: [main, hardening/saas-architecture]
+
+jobs:
+  static-quality:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - name: Compile Python
+        run: python -m compileall -q .
+      - name: Unit tests
+        run: pytest -q
+      - name: Dependency integrity
+        run: pip check
+      - name: Repository hygiene
+        run: |
+          test -z "$(git ls-files | grep -E '(^|/)\.env$|(^|/)venv/|(^|/)__pycache__/|\.pyc$|\.sqlite3?$|\.db$|^static/fotos/' || true)"
+          test -z "$(git grep -IlE 'BEGIN (RSA|OPENSSH|EC) PRIVATE KEY' -- . ':!*.example' ':!.github/workflows/quality.yml' || true)"
+      - name: Production config must fail closed without secret
+        env:
+          APP_ENV: production
+          DATABASE_URL: postgresql://example:example@localhost/example
+        run: |
+          python - <<'PY'
+          from config import Config
+          try:
+              Config.validate()
+          except RuntimeError:
+              print("fail-closed config verified")
+          else:
+              raise SystemExit("production config unexpectedly accepted missing SECRET_KEY")
+          PY

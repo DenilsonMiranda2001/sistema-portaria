@@ -1,0 +1,43 @@
+{% extends "platform_base.html" %}
+{% block title %}{{ condominio.nome }} | Administração Geral{% endblock %}
+{% block content %}
+<div class="tenant-admin">
+  <a class="back" href="{{ url_for('platform_admin.condominios') }}">← Voltar para condomínios</a>
+  <section class="head">
+    <div><span>OPERAÇÃO</span><h1>{{ condominio.nome }}</h1><p>Código {{ condominio.slug }} · {{ condominio.total_usuarios }} usuário(s)</p></div>
+    <form method="post" action="{{ url_for('platform_admin.status_condominio', condominio_id=condominio.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="ativo" value="{{ '0' if condominio.ativo else '1' }}">
+      <button class="{{ 'danger' if condominio.ativo else 'ok' }}">{{ 'Inativar operação' if condominio.ativo else 'Reativar operação' }}</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Dados do condomínio</h2>
+    <form class="grid" method="post" action="{{ url_for('platform_admin.editar_condominio', condominio_id=condominio.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Nome<input name="nome" maxlength="160" value="{{ condominio.nome }}" required></label>
+      <label>Código<input name="slug" maxlength="80" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value="{{ condominio.slug }}" required></label>
+      <button>Salvar alterações</button>
+    </form>
+  </section>
+  <section class="card">
+    <div class="title"><div><h2>Usuários da operação</h2><p>Gerenciamento real dos acessos vinculados a este condomínio.</p></div><strong>{{ condominio.usuarios_ativos }} ativos</strong></div>
+    <div class="users">
+    {% for u in usuarios %}
+      <div class="user">
+        <div><strong>{{ u.nome }}</strong><span>{{ u.usuario }} · {{ 'Administração' if u.nivel == 'admin' else 'Porteiro / Funcionário' }}</span></div>
+        <span class="badge {{ 'active' if u.ativo else '' }}">{{ 'Ativo' if u.ativo else 'Inativo' }}</span>
+        <form method="post" action="{{ url_for('platform_admin.status_usuario_condominio', condominio_id=condominio.id, usuario_id=u.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="ativo" value="{{ '0' if u.ativo else '1' }}">
+          <button class="small">{{ 'Inativar' if u.ativo else 'Reativar' }}</button>
+        </form>
+      </div>
+    {% else %}<p>Nenhum usuário cadastrado nesta operação.</p>{% endfor %}
+    </div>
+  </section>
+</div>
+<style>
+.tenant-admin{max-width:1080px;margin:auto;padding:28px 0 60px;color:#172033}.back{display:inline-block;margin-bottom:20px;color:#45668f;text-decoration:none;font-weight:700}.head,.title,.user{display:flex;align-items:center;justify-content:space-between;gap:18px}.head{margin-bottom:22px}.head span{font-size:11px;font-weight:800;letter-spacing:.12em;color:#657b9b}.head h1{margin:5px 0;font-size:30px}.head p,.title p,.user span{margin:0;color:#748095}.card{background:#fff;border:1px solid #dfe5ee;border-radius:17px;padding:22px;margin-bottom:18px;box-shadow:0 8px 26px rgba(25,39,63,.05)}.card h2{margin:0 0 17px;font-size:19px}.title h2{margin-bottom:4px}.title{margin-bottom:18px}.grid{display:grid;grid-template-columns:1.5fr 1fr auto;gap:12px;align-items:end}label{font-size:12px;font-weight:700;color:#566276}input{display:block;width:100%;box-sizing:border-box;height:43px;margin-top:7px;border:1px solid #cfd7e3;border-radius:9px;padding:0 11px}button{height:43px;border:0;border-radius:9px;padding:0 16px;font-weight:800;cursor:pointer;background:#172033;color:#fff}.danger{background:#8f3440}.ok{background:#24764b}.users{display:grid;gap:10px}.user{border:1px solid #e3e7ed;border-radius:12px;padding:13px}.user>div strong,.user>div span{display:block}.user>div span{font-size:12px;margin-top:3px}.badge{margin-left:auto;border-radius:999px;background:#eef0f3;padding:5px 9px;font-size:11px!important;font-weight:800}.badge.active{background:#e6f5ec;color:#237746}.small{height:34px;background:#edf1f6;color:#35465d}
+@media(max-width:700px){.head,.title{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.user{align-items:flex-start;flex-wrap:wrap}.badge{margin-left:0}.tenant-admin{padding-top:16px}}
+</style>
+{% endblock %}

@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Alterar Senha</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -20,14 +21,15 @@
             <h2>Alterar senha de {{ user['nome'] }}</h2>
 
             <form method="POST" class="form-coluna">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="campo">
                     <label>Nova senha</label>
-                    <input class="input-padrao" type="password" name="nova_senha" required>
+                    <input class="input-padrao" type="password" name="nova_senha" minlength="12" autocomplete="new-password" required>
                 </div>
 
                 <div class="campo">
                     <label>Confirmar senha</label>
-                    <input class="input-padrao" type="password" name="confirmar_senha" required>
+                    <input class="input-padrao" type="password" name="confirmar_senha" minlength="12" autocomplete="new-password" required>
                 </div>
 
                 <button type="submit" class="btn-principal">Salvar nova senha</button>

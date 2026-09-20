@@ -3,31 +3,25 @@
 {% block title %}Lote #{{ lote.id }}{% endblock %}
 {% block content %}
 {{ subnav('lotes') }}
-<div class="enc-header">
-    <div>
-        <h2>Lote #{{ lote.id }} · {{ lote.transportadora }}</h2>
-        <p>{{ lote.nome_entregador or 'Entregador não informado' }} · {{ lote.data_chegada.strftime('%d/%m/%Y %H:%M') }} · {{ lote.total_encomendas }} pacote(s)</p>
-    </div>
-    <div class="enc-lote-status">{{ status_badge(lote.status) }}
+<div class="enc-lote-toolbar"><div><strong>Recebimento #{{ lote.id }} · {{ lote.transportadora }}</strong><small>{{ lote.nome_entregador or 'Entregador não informado' }} · {{ lote.data_chegada.strftime('%d/%m/%Y %H:%M') }} · {{ lote.total_encomendas }} pacote(s)</small></div><div class="enc-lote-status">{{ status_badge(lote.status) }}
         {% if lote.status not in ('concluido', 'cancelado') %}
         <form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="status" value="concluido"><button class="btn enc-btn enc-btn-success">Concluir lote</button>
         </form>
         <form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}"
               onsubmit="return confirm('Cancelar o lote e as encomendas ainda abertas?')">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="status" value="cancelado"><button class="btn enc-btn enc-btn-danger">Cancelar lote</button>
         </form>
         {% endif %}
-    </div>
-</div>
+    </div></div>
 
 {% if lote.status not in ('concluido', 'cancelado') %}
 <section class="card enc-rajada">
-    <h3>Adicionar próxima encomenda</h3>
+    <div class="quick-section-title"><span>01</span><strong>Adicionar encomenda</strong></div>
     <form method="post" id="form-encomenda" autocomplete="off">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="enc-form-grid enc-form-grid-3">
             <label><span>Buscar morador / unidade</span>
                 <input id="morador_busca" list="moradores_lista" placeholder="Digite o nome ou unidade">
@@ -42,12 +36,12 @@
             <label><span>Descrição curta</span><input name="descricao" maxlength="255" placeholder="Ex.: caixa média"></label>
             <label><span>Observação</span><input name="observacao"></label>
         </div>
-        <button class="btn btn-submit enc-salvar-proxima" type="submit">Salvar e adicionar próxima</button>
+        <button class="btn btn-submit enc-salvar-proxima" type="submit">Registrar e continuar</button>
     </form>
 </section>
 {% endif %}
 
-<h3 class="enc-secao-titulo">Pacotes deste lote</h3>
+<div class="enc-secao-titulo">Encomendas deste recebimento</div>
 <div class="enc-lista">
 {% for encomenda in encomendas %}
 <article class="card enc-item">

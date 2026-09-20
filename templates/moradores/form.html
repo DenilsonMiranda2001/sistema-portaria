@@ -2,79 +2,31 @@
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<div class="card-padrao">
-    <div class="header-secao header-secao-flex">
-        <div>
-            <h2>🏠 {{ titulo }}</h2>
-            <p class="texto-ajuda">Preencha os dados do morador. Campos marcados com * são obrigatórios.</p>
-        </div>
-        <a class="link-voltar" href="{{ url_for('moradores.listar') }}">⬅ Voltar</a>
-    </div>
-
-    <form method="POST" autocomplete="off" class="form-cadastro-visitante">
-
-        <div class="card-bloco">
-            <h3>👤 Dados pessoais</h3>
-            <div class="grid-formulario">
-                <input class="input-padrao campo-full" type="text" name="nome" id="nome"
-                       placeholder="Nome completo *" required autofocus
-                       value="{{ morador.nome if morador else '' }}">
-
-                <input class="input-padrao" type="text" name="cpf" id="cpf"
-                       placeholder="CPF (somente números)"
-                       value="{{ morador.cpf if morador else '' }}">
-
-                <input class="input-padrao" type="tel" name="telefone" id="telefone"
-                       placeholder="Telefone / WhatsApp"
-                       value="{{ morador.telefone if morador else '' }}">
-
-                <input class="input-padrao" type="email" name="email" id="email"
-                       placeholder="E-mail (opcional)"
-                       value="{{ morador.email if morador else '' }}">
-            </div>
-        </div>
-
-        <div class="card-bloco">
-            <h3>🏡 Unidade</h3>
-            <div class="grid-formulario">
-                {% if unidades %}
-                <div>
-                    <label class="label-campo">Selecionar unidade existente</label>
-                    <select class="input-padrao" name="unidade_id" id="unidade_id">
-                        <option value="">— Nenhuma —</option>
-                        {% for u in unidades %}
-                        <option value="{{ u.id }}"
-                            {% if morador and morador.unidade_id == u.id %}selected{% endif %}>
-                            {{ u.codigo }}{% if u.descricao %} — {{ u.descricao }}{% endif %}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
-
-                <div>
-                    <label class="label-campo">Ou criar nova unidade</label>
-                    <input class="input-padrao" type="text" name="nova_unidade" id="nova_unidade"
-                           placeholder="Ex: QUADRA 07, CONJUNTO 02, CASA 20">
-                    <small class="texto-ajuda">Deixe em branco se já selecionou acima.</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-bloco">
-            <h3>📝 Observações</h3>
-            <textarea class="input-padrao textarea-cadastro" name="observacao" id="observacao"
-                      placeholder="Observações sobre o morador (opcional)" rows="3">{{ morador.observacao if morador and morador.observacao else '' }}</textarea>
-        </div>
-
-        <div class="acao-formulario">
-            <a class="btn-secundario" href="{{ url_for('moradores.listar') }}">Cancelar</a>
-            <button class="btn-principal" type="submit">
-                💾 {{ 'Salvar alterações' if morador else 'Cadastrar morador' }}
-            </button>
-        </div>
-    </form>
+<form method="POST" autocomplete="off" class="quick-access-form resident-quick-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="quick-access-grid resident-access-grid">
+<section class="quick-panel quick-main">
+<div class="quick-section-title"><span>01</span><strong>Morador</strong></div>
+<div class="quick-fields resident-fields">
+<label class="span-2"><span>Nome completo *</span><input class="input-padrao" type="text" name="nome" id="nome" required autofocus value="{{ morador.nome if morador else '' }}"></label>
+<label><span>CPF</span><input class="input-padrao" type="text" name="cpf" id="cpf" value="{{ morador.cpf if morador else '' }}"></label>
+<label><span>Telefone / WhatsApp</span><input class="input-padrao" type="tel" name="telefone" id="telefone" value="{{ morador.telefone if morador else '' }}"></label>
+<label class="span-2"><span>E-mail</span><input class="input-padrao" type="email" name="email" id="email" value="{{ morador.email if morador else '' }}"></label>
 </div>
+<div class="quick-divider"></div>
+<div class="quick-section-title"><span>02</span><strong>Unidade</strong></div>
+<div class="quick-fields resident-unit-fields">
+{% if unidades %}<label><span>Unidade existente</span><select class="input-padrao" name="unidade_id" id="unidade_id"><option value="">Nenhuma</option>{% for u in unidades %}<option value="{{ u.id }}" {% if morador and morador.unidade_id == u.id %}selected{% endif %}>{{ u.codigo }}{% if u.descricao %} — {{ u.descricao }}{% endif %}</option>{% endfor %}</select></label>{% endif %}
+<label><span>Ou criar nova unidade</span><input class="input-padrao" type="text" name="nova_unidade" id="nova_unidade" placeholder="Ex.: BLOCO A · 204"></label>
+</div>
+<div class="quick-divider"></div>
+<div class="quick-section-title"><span>03</span><strong>Observação</strong><small>opcional</small></div>
+<div class="quick-fields"><label class="span-2"><span>Observação</span><input class="input-padrao" name="observacao" id="observacao" value="{{ morador.observacao if morador and morador.observacao else '' }}"></label></div>
+</section>
+<aside class="quick-panel resident-context-panel"><div class="quick-section-title"><span>04</span><strong>Vínculo residencial</strong></div><div class="resident-context-copy"><strong>{{ 'Atualização de cadastro' if morador else 'Novo morador' }}</strong><p>O morador deve estar vinculado à unidade correta. Essa relação é usada nos acessos e no recebimento de encomendas.</p></div>{% if morador and morador.unidade_codigo %}<div class="resident-unit-chip"><span>UNIDADE ATUAL</span><strong>{{ morador.unidade_codigo }}</strong></div>{% endif %}</aside>
+</div>
+<footer class="quick-submit"><span><b>{{ 'Editando morador.' if morador else 'Cadastro residencial.' }}</b> Revise o vínculo com a unidade.</span><div class="quick-submit-actions"><a href="{{ url_for('moradores.listar') }}">Cancelar</a><button class="btn-principal" type="submit">{{ 'Salvar alterações' if morador else 'Cadastrar morador' }}</button></div></footer>
+</form>
 
 <script>
 // Força maiúsculo nos campos de texto

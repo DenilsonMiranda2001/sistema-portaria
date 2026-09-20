@@ -2,133 +2,39 @@
 {% block title %}Início{% endblock %}
 
 {% block content %}
-
-<div class="card-padrao">
-    <div class="header-secao">
-        <h2>🚪 Controle de Acesso</h2>
-        <p class="texto-ajuda">
-            Digite CPF, nome ou placa para localizar o visitante e registrar a entrada.
-        </p>
-    </div>
-
-    <div class="busca-box">
-        <input
-            type="text"
-            id="busca"
-            class="input-padrao busca-input"
-            placeholder="Buscar visitante..."
-            autofocus
-            autocomplete="off"
-        >
-    </div>
-
+<section class="command-grid command-grid-home">
+  <div class="command-search">
+    <div class="command-search-head"><span>01</span><div><strong>Localizar visitante</strong><small>Pesquisa inteligente no cadastro da operação</small></div></div>
+    <div class="command-input-wrap"><span class="search-symbol"></span><input type="text" id="busca" class="input-padrao busca-input" placeholder="Nome, CPF ou placa" autofocus autocomplete="off"><kbd>ENTER</kbd></div>
     <div id="mensagem" class="mensagem-box"></div>
-
-    <div id="lista" class="lista-resultados">
-        <div class="estado-vazio-inicial">
-            🔎 Aguardando busca...
-        </div>
-    </div>
-</div>
-
-<div class="painel-resumo">
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">🚨</span>
-            <h3>Ativos agora</h3>
-        </div>
-        <p id="ativos" class="valor-destaque contador" data-valor="{{ total_ativos }}">0</p>
-    </div>
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">📅</span>
-            <h3>Entradas hoje</h3>
-        </div>
-        <p id="entradas" class="valor-destaque contador" data-valor="{{ entradas_hoje }}">0</p>
-    </div>
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">🚪</span>
-            <h3>Saídas hoje</h3>
-        </div>
-        <p id="saidas" class="valor-destaque contador" data-valor="{{ saidas_hoje }}">0</p>
-    </div>
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">👥</span>
-            <h3>Moradores</h3>
-        </div>
-        <p id="moradores" class="valor-destaque contador" data-valor="{{ total_moradores }}">0</p>
-    </div>
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">👤</span>
-            <h3>Cadastrados</h3>
-        </div>
-        <p id="cadastrados" class="valor-destaque contador" data-valor="{{ total_cadastrados }}">0</p>
-    </div>
-
-    <div class="card-mini destaque hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">🕒</span>
-            <h3>Última entrada</h3>
-        </div>
-        <p id="ultima_nome" class="nome-destaque">{{ ultima_nome }}</p>
-        <small id="ultima_hora" class="hora-destaque">{{ ultima_hora }}</small>
-    </div>
-
-</div>
-
+    <div id="lista" class="lista-resultados"><div class="estado-vazio-inicial"><strong>Pronto para uma nova entrada</strong><span>Comece digitando para localizar um cadastro.</span></div></div>
+  </div>
+  <aside class="command-metrics">
+    <a class="active-mini-panel" href="{{ url_for('visitantes.ativos') }}" aria-label="Abrir todos os acessos ativos">
+      <div class="active-mini-head"><span><i></i> NO CONDOMÍNIO</span><strong id="ativos" class="contador" data-valor="{{ total_ativos }}">0</strong></div>
+      <div class="active-mini-list">
+        {% for a in visitantes_ativos_resumo[:3] %}
+        <div class="active-mini-person"><span class="person-initial">{{ a.nome[:1]|upper }}</span><div><strong>{{ a.nome }}</strong><small>{% if a.unidade_codigo %}Unidade {{ a.unidade_codigo }}{% elif a.endereco %}{{ a.endereco }}{% else %}Destino não informado{% endif %}</small></div><time>{{ a.data_entrada.strftime('%H:%M') if a.data_entrada else '—' }}</time></div>
+        {% else %}
+        <div class="active-mini-empty"><span>✓</span><small>Nenhum acesso ativo</small></div>
+        {% endfor %}
+      </div>
+      <div class="active-mini-foot"><span>Ver todos os acessos</span><b>→</b></div>
+    </a>
+    <div class="metric-pair"><div><span>ENTRADAS HOJE</span><strong id="entradas" class="contador" data-valor="{{ entradas_hoje }}">0</strong></div><div><span>SAÍDAS HOJE</span><strong id="saidas" class="contador" data-valor="{{ saidas_hoje }}">0</strong></div></div>
+    <div class="metric-pair muted"><div><span>MORADORES</span><strong id="moradores" class="contador" data-valor="{{ total_moradores }}">0</strong></div><div><span>VISITANTES</span><strong id="cadastrados" class="contador" data-valor="{{ total_cadastrados }}">0</strong></div></div>
+    <div class="last-access"><span>ÚLTIMA ENTRADA</span><strong id="ultima_nome">{{ ultima_nome }}</strong><small id="ultima_hora">{{ ultima_hora }}</small></div>
+  </aside>
+</section>
 {% if ultimas_entradas %}
-<div class="card-padrao" style="margin-top:16px;">
-    <div class="header-secao">
-        <h2>🕒 Últimas entradas</h2>
-    </div>
-    <table class="tabela-padrao">
-        <thead>
-            <tr>
-                <th>Foto</th>
-                <th>Visitante</th>
-                <th>Destino</th>
-                <th>Morador / Unidade</th>
-                <th>Hora</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for e in ultimas_entradas %}
-            <tr>
-                <td>
-                    {% if e.foto %}
-                        <img src="{{ url_for('static', filename='fotos/' ~ e.foto) }}"
-                             class="foto-tabela" alt="Foto">
-                    {% else %}
-                        <div class="foto-tabela placeholder-sm">—</div>
-                    {% endif %}
-                </td>
-                <td><strong>{{ e.nome }}</strong></td>
-                <td>{{ e.endereco or '—' }}</td>
-                <td>
-                    {% if e.morador_nome %}
-                        {{ e.morador_nome }}
-                        {% if e.unidade_codigo %}
-                            <span class="badge-unidade">{{ e.unidade_codigo }}</span>
-                        {% endif %}
-                    {% else %}
-                        <span class="texto-muted">—</span>
-                    {% endif %}
-                </td>
-                <td>{{ e.data_entrada.strftime('%H:%M') if e.data_entrada else '—' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<section class="recent-flow"><div class="recent-flow-head"><div><span class="page-eyebrow">MOVIMENTO RECENTE</span><h2>Últimas entradas</h2></div><a href="{{ url_for('visitantes.ativos') }}">Acessos ativos</a></div><div class="recent-table"><table class="tabela-padrao"><thead><tr><th>Visitante</th><th>Destino</th><th>Morador / Unidade</th><th>Horário</th></tr></thead><tbody>{% for e in ultimas_entradas %}<tr><td><div class="person-cell"><span class="person-initial">{{ e.nome[:1]|upper }}</span><strong>{{ e.nome }}</strong></div></td><td>{{ e.endereco or '—' }}</td><td>{% if e.morador_nome %}{{ e.morador_nome }} {% if e.unidade_codigo %}<span class="badge-unidade">{{ e.unidade_codigo }}</span>{% endif %}{% else %}<span class="texto-muted">—</span>{% endif %}</td><td><strong>{{ e.data_entrada.strftime('%H:%M') if e.data_entrada else '—' }}</strong></td></tr>{% endfor %}</tbody></table></div></section>
 {% endif %}
+<style>
+.command-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:18px 0 32px}.command-copy h1{font-size:clamp(38px,5vw,68px);line-height:.98;letter-spacing:-.06em;margin:8px 0 16px;max-width:850px;color:#111b2c}.command-copy h1 em{font-style:normal;color:#6d7d93;font-weight:500}.command-copy p{max-width:650px;margin:0;color:#788396;font-size:14px;line-height:1.6}.command-clock{min-width:150px;text-align:right;padding-bottom:5px}.command-clock span,.command-clock strong,.command-clock small{display:block}.command-clock span{font-size:8px;letter-spacing:.18em;font-weight:900;color:#8290a5}.command-clock strong{font-size:38px;letter-spacing:-.05em;margin:3px 0}.command-clock small{font-size:10px;color:#8b95a5}.command-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(290px,.65fr);gap:18px;align-items:start}.command-search,.command-metrics>div,.recent-flow{background:#fff;border:1px solid #e2e7ee;border-radius:18px;box-shadow:0 14px 40px rgba(19,31,50,.045)}.command-search{padding:24px;min-height:410px}.command-search-head{display:flex;gap:13px;align-items:center;margin-bottom:20px}.command-search-head>span{width:32px;height:32px;border-radius:9px;background:#111d30;color:#fff;display:grid;place-items:center;font-size:9px;font-weight:900}.command-search-head strong,.command-search-head small{display:block}.command-search-head strong{font-size:14px}.command-search-head small{font-size:10px;color:#8b95a5;margin-top:3px}.command-input-wrap{height:62px;border:1px solid #d8dee7;border-radius:14px;display:flex;align-items:center;padding:0 16px;gap:12px;background:#fafbfd;transition:.18s}.command-input-wrap:focus-within{background:#fff;border-color:#8aa2c0;box-shadow:0 0 0 4px rgba(63,111,174,.08)}.command-input-wrap input{border:0!important;box-shadow:none!important;background:transparent!important;font-size:17px!important;height:auto!important;padding:0!important}.command-input-wrap kbd{font:800 8px/1 sans-serif;color:#8994a5;border:1px solid #dce2e9;border-radius:6px;padding:6px;background:#fff}.search-symbol{width:14px;height:14px;border:2px solid #60718a;border-radius:50%;position:relative}.search-symbol:after{content:"";position:absolute;width:6px;height:2px;background:#60718a;right:-5px;bottom:-2px;transform:rotate(45deg)}.estado-vazio-inicial{min-height:230px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#8691a2!important;background:transparent!important;border:0!important}.estado-vazio-inicial:before{content:"";width:42px;height:42px;border-radius:50%;border:1px solid #dfe5ec;margin-bottom:14px;box-shadow:inset 0 0 0 10px #f8f9fb}.estado-vazio-inicial strong,.estado-vazio-inicial span{display:block}.estado-vazio-inicial strong{color:#46546a;font-size:13px}.estado-vazio-inicial span{font-size:11px;margin-top:5px}.command-metrics{display:grid;gap:12px}.metric-feature{padding:24px;background:#111d30!important;color:#fff!important;border-color:#111d30!important}.metric-feature span,.metric-feature strong,.metric-feature small{display:block}.metric-feature span,.metric-pair span,.last-access>span{font-size:8px;letter-spacing:.15em;font-weight:900;color:#8290a5}.metric-feature strong{font-size:58px;letter-spacing:-.06em;line-height:1;margin:12px 0 4px}.metric-feature small{font-size:10px;color:#8594aa}.metric-feature a{display:inline-block;margin-top:25px;color:#fff;text-decoration:none;font-size:10px;font-weight:800}.metric-pair{display:grid!important;grid-template-columns:1fr 1fr;padding:0!important;overflow:hidden}.metric-pair>div{padding:19px}.metric-pair>div+div{border-left:1px solid #e6eaf0}.metric-pair strong{display:block;font-size:27px;letter-spacing:-.04em;margin-top:8px}.metric-pair.muted{background:#f8f9fb}.last-access{padding:18px}.last-access strong,.last-access small{display:block}.last-access strong{font-size:12px;margin-top:8px}.last-access small{font-size:10px;color:#8a95a6;margin-top:3px}.recent-flow{margin-top:18px;padding:22px}.recent-flow-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}.recent-flow-head h2{margin:4px 0 0;font-size:20px}.recent-flow-head a{font-size:10px;font-weight:800;color:#506987;text-decoration:none}.person-cell{display:flex;align-items:center;gap:10px}.person-initial{width:30px;height:30px;border-radius:9px;background:#edf2f7;display:grid;place-items:center;font-size:10px;font-weight:900;color:#48617e}@media(max-width:900px){.command-grid{grid-template-columns:1fr}.command-metrics{grid-template-columns:1.2fr 1fr}.metric-feature{grid-row:span 2}}@media(max-width:650px){.command-hero{align-items:flex-start;padding-top:6px}.command-copy h1{font-size:39px}.command-clock{display:none}.command-search{padding:16px;min-height:350px}.command-metrics{grid-template-columns:1fr}.metric-feature{grid-row:auto}.recent-flow{padding:16px;overflow:hidden}.recent-table{overflow-x:auto}.command-input-wrap kbd{display:none}}
+.home-live-strip{margin-top:10px;background:#fff;border:1px solid #e2e7ee;border-radius:14px;padding:12px 14px}.home-live-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.home-live-head strong{font-size:12px}.home-live-head a{font-size:10px;font-weight:800;text-decoration:none;color:#506987}.home-live-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.home-live-person{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:8px;border:1px solid #e8ecf1;border-radius:9px;padding:7px 9px}.home-live-person strong,.home-live-person small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.home-live-person strong{font-size:10px}.home-live-person small{font-size:9px;color:#7b8798;margin-top:2px}.home-live-person time{font-size:9px;font-weight:800;color:#65758b}@media(max-width:900px){.home-live-list{grid-template-columns:1fr 1fr}}@media(max-width:600px){.home-live-list{grid-template-columns:1fr}}/* Active access compact preview */
+.active-mini-panel{display:block;text-decoration:none!important;background:#fff!important;color:inherit!important;border:1px solid #e2e7ee!important;border-radius:12px!important;padding:0!important;overflow:hidden;box-shadow:0 5px 18px rgba(20,32,51,.035)!important;transition:.16s ease}.active-mini-panel:hover{border-color:#c8d5e6!important;box-shadow:0 10px 26px rgba(20,32,51,.07)!important;transform:translateY(-1px)}.active-mini-head{display:flex;align-items:center;justify-content:space-between;padding:12px 13px 9px}.active-mini-head>span{font-size:7px;letter-spacing:.14em;font-weight:900;color:#748196}.active-mini-head i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#12a674;margin-right:5px;box-shadow:0 0 0 3px rgba(18,166,116,.08)}.active-mini-head>strong{font-size:22px;line-height:1;letter-spacing:-.04em;color:#17263a}.active-mini-list{padding:0 8px 8px;display:grid;gap:5px}.active-mini-person{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:7px;align-items:center;padding:6px;border:1px solid #edf0f3;border-radius:8px;background:#fafbfc}.active-mini-person .person-initial{width:28px;height:28px;border-radius:7px}.active-mini-person strong,.active-mini-person small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.active-mini-person strong{font-size:8px;color:#26374d}.active-mini-person small{font-size:7px;color:#8792a2;margin-top:1px}.active-mini-person time{font-size:7px;font-weight:800;color:#68788e}.active-mini-empty{min-height:54px;display:flex;align-items:center;justify-content:center;gap:7px;color:#8490a0}.active-mini-empty>span{width:22px;height:22px;display:grid;place-items:center;border-radius:7px;background:#eaf8f3;color:#0b9b6d;font-weight:900}.active-mini-empty small{font-size:8px}.active-mini-foot{border-top:1px solid #edf0f3;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-size:8px;font-weight:800;color:#536b89}.active-mini-foot b{font-size:12px}
+</style>
+<script>setInterval(()=>{const e=document.getElementById('pcClock');if(e)e.textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})},1000);</script>
 
 <script>
 const MARCAS = [
@@ -207,19 +113,16 @@ async function obterJsonSeguro(res, mensagemPadrao = "Erro na comunicação com 
 }
 
 function mostrarMensagem(texto, tipo = "erro") {
-    mensagem.innerHTML = `<div class="msg-ui ${tipo}">${texto}</div>`;
+    mensagem.replaceChildren(); const box=node("div","msg-ui "+tipo,texto); mensagem.appendChild(box);
 }
 
 function limparMensagem() {
-    mensagem.innerHTML = "";
+    mensagem.replaceChildren();
 }
 
 function mostrarEstadoInicial() {
-    lista.innerHTML = `
-        <div class="estado-vazio-inicial">
-            🔎 Comece digitando CPF, nome ou placa para buscar visitantes.
-        </div>
-    `;
+    lista.replaceChildren();
+    const vazio=document.createElement("div");vazio.className="estado-vazio-inicial";vazio.textContent="Comece digitando CPF, nome ou placa para buscar visitantes.";lista.appendChild(vazio);
 }
 
 function atualizarCampoEstado(id, campo, valor) {
@@ -411,281 +314,42 @@ function selecionarVisitante(index) {
     renderizarResultados(resultadosAtuais, ultimoTermoBuscado);
 }
 
+function node(tag, cls, text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n}
+function labeled(label,value,cls=""){const box=node("div","info-item "+cls);box.append(node("span","label-ui",label),node("span","valor-ui",value||"—"));return box}
 function renderizarResultados(data, termo) {
-    resultadosAtuais = data;
-    lista.innerHTML = "";
-
-    if (!data || data.length === 0) {
-        lista.innerHTML = `
-            <div class="estado-vazio">
-                <div>Nenhum resultado encontrado.</div>
-                <a class="btn-principal btn-sm" href="/cadastro?cpf=${encodeURIComponent(termo)}">
-                    ➕ Cadastrar novo visitante
-                </a>
-            </div>
-        `;
-        return;
+    resultadosAtuais=Array.isArray(data)?data:[]; lista.replaceChildren();
+    if(!resultadosAtuais.length){
+        const empty=node("div","estado-vazio"),msg=node("div","", "Nenhum resultado encontrado."),a=node("a","btn-principal btn-sm","Cadastrar novo visitante");
+        a.href={{ url_for('visitantes.cadastro')|tojson }}+"?cpf="+encodeURIComponent(termo||"");empty.append(msg,a);lista.appendChild(empty);return;
     }
-
-    if (indiceSelecionado < 0) indiceSelecionado = 0;
-    if (indiceSelecionado > data.length - 1) indiceSelecionado = data.length - 1;
-
-    data.forEach((v, index) => {
-        const selecionado = index === indiceSelecionado;
-        const estado = obterEstadoVisitante(v);
-
-        const fotoHtml = v.foto
-    ? `
-        <div class="foto-card-mini">
-            <img 
-                src="/static/fotos/${v.foto}" 
-                alt="Foto de ${v.nome}" 
-                class="visitor-photo"
-                data-foto-visitante="${v.id}"
-            >
-
-            <div class="foto-acao-box">
-                <button
-                    type="button"
-                    class="btn-foto-premium"
-                    onclick="event.stopPropagation(); abrirModalFoto(${v.id})"
-                    title="Atualizar foto"
-                >
-                    ✏️ Atualizar foto
-                </button>
-            </div>
-        </div>
-    `
-    : `
-        <div class="foto-card-mini">
-            <div class="visitor-photo placeholder">
-                <span>Sem foto</span>
-            </div>
-
-            <div class="foto-acao-box">
-                <button
-                    type="button"
-                    class="btn-foto-premium"
-                    onclick="event.stopPropagation(); abrirModalFoto(${v.id})"
-                    title="Adicionar foto"
-                >
-                    📷 Adicionar foto
-                </button>
-            </div>
-        </div>
-    `;
-
-        lista.innerHTML += `
-        <div
-            class="visitor-card ${selecionado ? "selecionado" : ""}"
-            data-id="${v.id}"
-            data-index="${index}"
-            onclick="selecionarVisitante(${index})"
-        >
-            <div class="visitor-photo-wrap">
-                ${fotoHtml}
-            </div>
-
-            <div class="visitor-main">
-
-            <div class="card-visitante">
-                <div class="info-grid">
-                    <div class="info-item destaque">
-                        <span class="label-ui">Nome</span>
-                        <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="label-ui">CPF</span>
-                        <span class="valor-ui">${v.cpf || "-"}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="extras-grid">
-                <div class="extra-card">
-                    <span class="label-ui">Tipo</span>
-                    <div class="badge-ui badge-tipo">
-                        🏷 ${((v.tipo || "SEM TIPO")).toUpperCase()}
-                    </div>
-                </div>
-
-                <div class="extra-card">
-                    <span class="label-ui">Placa</span>
-                    <div class="badge-ui badge-veiculo">
-                        🚘 ${v.placa ? String(v.placa).toUpperCase() : "SEM PLACA"}
-                    </div>
-                </div>
-
-                <div class="extra-card">
-                    <span class="label-ui">Veículo</span>
-                    <div class="badge-ui badge-veiculo">
-                        🚗 ${
-                            (v.marca || v.modelo)
-                                ? `${(v.marca || "").toUpperCase()} ${(v.modelo || "").toUpperCase()}`.trim()
-                                : "SEM VEÍCULO"
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <div class="linha-dupla">
-
-                <div class="extra-card" onclick="event.stopPropagation()">
-                    <span class="label-ui">Observação</span>
-
-                    <div class="observacao-resumo-box">
-                        ${
-                            v.observacao
-                                ? String(v.observacao).length > 50
-                                    ? String(v.observacao).substring(0, 50) + "..."
-                                    : String(v.observacao)
-                                : "Sem observações"
-                        }
-                    </div>
-
-                    <button
-                        class="btn-secundario btn-sm"
-                        type="button"
-                        onclick="event.stopPropagation(); toggleObservacao(${v.id})"
-                        style="margin-top: 6px;"
-                    >
-                        ✏️ Editar
-                    </button>
-
-                    <div id="box_observacao_${v.id}" style="display:none; margin-top:8px;">
-                        <textarea
-                            id="observacao_${v.id}"
-                            class="input-padrao textarea-premium"
-                            onclick="event.stopPropagation()"
-                            oninput="this.value = this.value.toUpperCase()"
-                        >${v.observacao || ""}</textarea>
-
-                        <div style="display:flex; gap:6px; margin-top:6px;">
-                            <button class="btn-secundario btn-sm"
-                                onclick="event.stopPropagation(); toggleObservacao(${v.id})">
-                                Cancelar
-                            </button>
-
-                            <button class="btn-principal btn-sm"
-                                onclick="event.stopPropagation(); salvarObservacao(${v.id})">
-                                💾 Salvar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="extra-card" onclick="event.stopPropagation()">
-                    <span class="label-ui">Entrada</span>
-
-                    <select
-                        id="tipo_chegada_${v.id}"
-                        class="input-padrao"
-                        onclick="event.stopPropagation()"
-                        onchange="alternarTipoChegada(${v.id})"
-                    >
-                        <option value="VEICULO" ${estado.tipoChegada === "VEICULO" ? "selected" : ""}>🚗 Veículo</option>
-                        <option value="PEDESTRE" ${estado.tipoChegada === "PEDESTRE" ? "selected" : ""}>🚶 Pedestre</option>
-                    </select>
-
-                    <div
-                        id="bloco_veiculo_${v.id}"
-                        class="${estado.tipoChegada === "PEDESTRE" ? "oculto" : ""}"
-                        style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;"
-                    >
-                        <input
-                            type="text"
-                            id="placa_${v.id}"
-                            class="input-padrao"
-                            placeholder="Placa"
-                            value="${estado.placa || ""}"
-                            onclick="event.stopPropagation()"
-                            oninput="this.value=this.value.toUpperCase(); atualizarCampoEstado(${v.id}, 'placa', this.value)"
-                        >
-
-                        <div class="campo-autocomplete" onclick="event.stopPropagation()" style="position:relative;">
-                            <input
-                                type="text"
-                                id="marca_${v.id}"
-                                class="input-padrao"
-                                value="${estado.marca || ""}"
-                                placeholder="Marca"
-                                autocomplete="off"
-                                onclick="event.stopPropagation()"
-                            >
-                            <div id="sugestoes_marca_${v.id}" class="caixa-sugestoes"></div>
-                        </div>
-
-                        <div class="campo-autocomplete" onclick="event.stopPropagation()" style="grid-column: span 2; position:relative;">
-                            <input
-                                type="text"
-                                id="modelo_${v.id}"
-                                class="input-padrao"
-                                value="${estado.modelo || ""}"
-                                placeholder="Modelo"
-                                autocomplete="off"
-                                onclick="event.stopPropagation()"
-                            >
-                            <div id="sugestoes_modelo_${v.id}" class="caixa-sugestoes"></div>
-                        </div>
-                    </div>
-                </div>
-
-            <div class="extra-card" onclick="event.stopPropagation()">
-                <span class="label-ui">Destino</span>
-
-                <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:end; margin-top:6px;">
-                    <div>
-                        <input
-                        type="text"
-                        id="endereco_${v.id}"
-                        class="input-padrao input-destino-compacto"
-                        value="${estado.endereco || ""}"
-                        placeholder="070220"
-                        autocomplete="off"
-                        onclick="event.stopPropagation()"
-                        oninput="sugerirEndereco(this, ${v.id})"
-                        onblur="formatarEnderecoInput(this, ${v.id})"
-                        onkeydown="aplicarEnderecoAoPressionarEnter(event, this, ${v.id})"
-                    >
-                        <small id="sugestao_endereco_${v.id}" style="display:block; margin-top:4px; color:#666; font-size:12px;"></small>
-                    </div>
-
-                    <button
-                        class="btn-principal"
-                        type="button"
-                        onclick="event.stopPropagation(); registrarEntrada(${v.id})"
-                        style="height: 42px; white-space: nowrap;"
-                    >
-                        🚪 Registrar Entrada
-                    </button>
-                </div>
-
-                ${
-                    estado.ultimoEndereco
-                        ? `
-                        <div
-                            class="destino-sugestao-box"
-                            style="margin-top: 8px; cursor: pointer;"
-                            onclick="event.stopPropagation(); usarUltimoEndereco(${v.id}, '${(montarEnderecoPadrao(estado.ultimoEndereco) || estado.ultimoEndereco || "").replace(/'/g, "\\'")}')"
-                        >
-                            <span class="destino-sugestao-label">Último endereço usado</span>
-                            <div class="chip-destino">
-                                🏠 ${montarEnderecoPadrao(estado.ultimoEndereco) || estado.ultimoEndereco}
-                            </div>
-                        </div>
-                        `
-                        : ""
-                }
-            </div>
-
-        </div>
-        `;
-    });
-
-    data.forEach((v) => {
-        criarAutocompleteDinamico(`marca_${v.id}`, `sugestoes_marca_${v.id}`, MARCAS, v.id, "marca");
-        criarAutocompleteDinamico(`modelo_${v.id}`, `sugestoes_modelo_${v.id}`, MODELOS, v.id, "modelo");
+    indiceSelecionado=Math.max(0,Math.min(indiceSelecionado,resultadosAtuais.length-1));
+    resultadosAtuais.forEach((v,index)=>{
+        const estado=obterEstadoVisitante(v),card=node("div","visitor-card"+(index===indiceSelecionado?" selecionado":""));card.dataset.id=v.id;card.dataset.index=index;
+        const photoWrap=node("div","visitor-photo-wrap");
+        if(v.foto_url){const img=document.createElement("img");img.src=v.foto_url;img.alt="Foto do visitante";img.className="visitor-photo";photoWrap.appendChild(img)}
+        else photoWrap.appendChild(node("div","visitor-photo placeholder","Sem foto"));
+        const main=node("div","visitor-main"),details=node("div","card-visitante"),grid=node("div","info-grid");
+        grid.append(labeled("Nome",(v.nome||"").toUpperCase(),"destaque"),labeled("CPF",v.cpf||"—"));details.appendChild(grid);
+        const extras=node("div","extras-grid");
+        [["Tipo",(v.tipo||"SEM TIPO").toUpperCase()],["Placa",(v.placa||"SEM PLACA").toUpperCase()],["Veículo",([v.marca,v.modelo].filter(Boolean).join(" ")||"SEM VEÍCULO").toUpperCase()]].forEach(([l,val])=>{const x=node("div","extra-card");x.append(node("span","label-ui",l),node("div","badge-ui",val));extras.appendChild(x)});
+        const operation=node("div","linha-dupla"),vehicle=node("div","extra-card"),dest=node("div","extra-card");
+        vehicle.appendChild(node("span","label-ui","Entrada"));
+        const arrival=document.createElement("select");arrival.id="tipo_chegada_"+v.id;arrival.className="input-padrao";
+        [["VEICULO","Veículo"],["PEDESTRE","Pedestre"]].forEach(([val,label])=>{const o=document.createElement("option");o.value=val;o.textContent=label;o.selected=estado.tipoChegada===val;arrival.appendChild(o)});
+        const vehicleFields=node("div","home-entry-vehicle");
+        const plate=document.createElement("input");plate.id="placa_"+v.id;plate.className="input-padrao";plate.placeholder="Placa";plate.value=estado.placa||"";
+        const brand=document.createElement("input");brand.id="marca_"+v.id;brand.className="input-padrao";brand.placeholder="Marca";brand.value=estado.marca||"";
+        const model=document.createElement("input");model.id="modelo_"+v.id;model.className="input-padrao";model.placeholder="Modelo";model.value=estado.modelo||"";
+        [[plate,"placa"],[brand,"marca"],[model,"modelo"]].forEach(([input,campo])=>input.addEventListener("input",()=>{input.value=input.value.toUpperCase();atualizarCampoEstado(v.id,campo,input.value)}));
+        vehicleFields.append(plate,brand,model);if(estado.tipoChegada==="PEDESTRE")vehicleFields.hidden=true;
+        arrival.addEventListener("change",()=>{estado.tipoChegada=arrival.value;if(arrival.value==="PEDESTRE"){estado.placa=estado.marca=estado.modelo="";vehicleFields.hidden=true}else vehicleFields.hidden=false});
+        vehicle.append(arrival,vehicleFields);
+        dest.appendChild(node("span","label-ui","Destino"));
+        const row=node("div","home-entry-destination"),address=document.createElement("input");address.id="endereco_"+v.id;address.className="input-padrao input-destino-compacto";address.placeholder="Unidade ou destino";address.value=estado.endereco||"";
+        address.addEventListener("input",()=>atualizarCampoEstado(v.id,"endereco",address.value));
+        const enter=node("button","btn-principal","Registrar entrada");enter.type="button";enter.addEventListener("click",()=>registrarEntrada(v.id));row.append(address,enter);dest.appendChild(row);
+        if(estado.ultimoEndereco){const last=node("button","home-last-destination","Último destino: "+estado.ultimoEndereco);last.type="button";last.addEventListener("click",()=>{address.value=estado.ultimoEndereco;atualizarCampoEstado(v.id,"endereco",estado.ultimoEndereco);address.focus()});dest.appendChild(last)}
+        operation.append(vehicle,dest);main.append(details,extras,operation);card.append(photoWrap,main);card.addEventListener("click",()=>{indiceSelecionado=index});lista.appendChild(card);
     });
 }
 
@@ -741,7 +405,7 @@ input.addEventListener("input", function () {
             .catch((erro) => {
                 resultadosAtuais = [];
                 indiceSelecionado = 0;
-                lista.innerHTML = `<div class="estado-erro">${erro.message}</div>`;
+                lista.replaceChildren(); const erroBox=document.createElement("div");erroBox.className="estado-erro";erroBox.textContent=erro.message;lista.appendChild(erroBox);
                 console.error("Erro na busca:", erro);
             });
     }, 400);
@@ -821,6 +485,7 @@ function registrarEntrada(id) {
     body.append("marca", marca);
     body.append("modelo", modelo);
     body.append("observacao", observacao);
+    body.append("csrf_token", document.querySelector('meta[name="csrf-token"]').content);
 
     fetch("/entrada_ajax", {
         method: "POST",
@@ -939,6 +604,7 @@ function salvarObservacao(id) {
     const body = new URLSearchParams();
     body.append("id", id);
     body.append("observacao", observacao);
+    body.append("csrf_token", document.querySelector('meta[name="csrf-token"]').content);
 
     fetch("/atualizar_observacao_ajax", {
         method: "POST",

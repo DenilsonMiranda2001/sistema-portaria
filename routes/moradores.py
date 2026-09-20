@@ -2,7 +2,7 @@ import logging
 from flask import Blueprint, render_template, request, redirect, flash, url_for, session
 
 from database.models import (
-    cadastrar_morador,
+    cadastrar_morador_com_unidade,
     listar_moradores,
     buscar_moradores,
     buscar_morador_por_id,
@@ -11,9 +11,10 @@ from database.models import (
     ativar_morador,
     cpf_morador_ja_cadastrado,
     listar_unidades,
-    criar_unidade,
 )
 from utils.validators import limpar_cpf, validar_cpf
+from utils.audit import registrar_auditoria
+from utils.authz import roles_required
 
 moradores_bp = Blueprint("moradores", __name__, url_prefix="/moradores")
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ def _admin_ou_funcionario():
 
 
 @moradores_bp.route("/")
+@roles_required("admin", "funcionario")
 def listar():
     termo = request.args.get("q", "").strip()
     dados = buscar_moradores(termo) if termo else listar_moradores()
@@ -31,6 +33,7 @@ def listar():
 
 
 @moradores_bp.route("/novo", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def novo():
     unidades = listar_unidades()
 
@@ -42,12 +45,7 @@ def novo():
         unidade_id = request.form.get("unidade_id") or None
         observacao = request.form.get("observacao", "").strip()
 
-        # Permitir criar unidade on-the-fly
         nova_unidade = request.form.get("nova_unidade", "").strip().upper()
-        if nova_unidade and not unidade_id:
-            resultado = criar_unidade(nova_unidade)
-            if resultado:
-                unidade_id = resultado["id"]
 
         if not nome:
             flash("Informe o nome do morador.", "erro")
@@ -63,9 +61,12 @@ def novo():
                 return redirect(url_for("moradores.novo"))
 
         try:
-            cadastrar_morador(nome, cpf or None, telefone, email, unidade_id, observacao)
+            morador_id = cadastrar_morador_com_unidade(nome, cpf or None, telefone, email, unidade_id, nova_unidade, observacao, session["usuario_id"])
             flash("Morador cadastrado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("moradores.novo"))
         except Exception:
             logger.exception("Erro ao cadastrar morador")
             flash("Erro ao cadastrar morador.", "erro")
@@ -75,6 +76,7 @@ def novo():
 
 
 @moradores_bp.route("/<int:id>/editar", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def editar(id):
     morador  = buscar_morador_por_id(id)
     unidades = listar_unidades()
@@ -92,10 +94,6 @@ def editar(id):
         observacao = request.form.get("observacao", "").strip()
 
         nova_unidade = request.form.get("nova_unidade", "").strip().upper()
-        if nova_unidade and not unidade_id:
-            resultado = criar_unidade(nova_unidade)
-            if resultado:
-                unidade_id = resultado["id"]
 
         if not nome:
             flash("Informe o nome do morador.", "erro")
@@ -111,9 +109,12 @@ def editar(id):
                 return redirect(url_for("moradores.editar", id=id))
 
         try:
-            atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao)
+            atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao, nova_unidade, session["usuario_id"])
             flash("Morador atualizado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("moradores.editar", id=id))
         except Exception:
             logger.exception("Erro ao atualizar morador")
             flash("Erro ao atualizar morador.", "erro")
@@ -123,6 +124,7 @@ def editar(id):
 
 
 @moradores_bp.route("/<int:id>")
+@roles_required("admin", "funcionario")
 def detalhe(id):
     morador = buscar_morador_por_id(id)
     if not morador:
@@ -132,24 +134,26 @@ def detalhe(id):
 
 
 @moradores_bp.route("/<int:id>/inativar", methods=["POST"])
+@roles_required("admin")
 def inativar(id):
     morador = buscar_morador_por_id(id)
     if not morador:
         flash("Morador não encontrado.", "erro")
         return redirect(url_for("moradores.listar"))
 
-    inativar_morador(id)
+    inativar_morador(id, session["usuario_id"])
     flash(f"Morador {morador['nome']} inativado.", "sucesso")
     return redirect(url_for("moradores.listar"))
 
 
 @moradores_bp.route("/<int:id>/ativar", methods=["POST"])
+@roles_required("admin")
 def ativar(id):
     morador = buscar_morador_por_id(id)
     if not morador:
         flash("Morador não encontrado.", "erro")
         return redirect(url_for("moradores.listar"))
 
-    ativar_morador(id)
+    ativar_morador(id, session["usuario_id"])
     flash(f"Morador {morador['nome']} reativado.", "sucesso")
     return redirect(url_for("moradores.listar"))

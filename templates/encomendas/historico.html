@@ -3,7 +3,7 @@
 {% block title %}Histórico de Encomendas{% endblock %}
 {% block content %}
 {{ subnav('historico') }}
-<div class="enc-header"><div><h2>Histórico de encomendas</h2><p>Registros finalizados permanecem disponíveis para consulta.</p></div></div>
+<div class="compact-list-toolbar"><strong>Histórico de encomendas</strong><span class="enc-context-label">Retiradas e registros finalizados</span></div>
 <form class="card enc-busca" method="get">
     <input name="q" value="{{ termo }}" placeholder="Unidade, morador, código ou rastreio">
     <button class="btn enc-btn enc-btn-primary">Buscar</button>

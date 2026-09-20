@@ -2,174 +2,43 @@
 {% block title %}Editar Cadastro{% endblock %}
 
 {% block content %}
-<div class="card-padrao">
-    <div class="header-secao header-secao-flex">
-        <div>
-            <h2>📝 Editar Visitante</h2>
-            <p class="texto-ajuda">
-                Atualize os dados do visitante mantendo o mesmo padrão do sistema.
-            </p>
-        </div>
-
-        <a class="link-voltar" href="/visitantes">⬅ Voltar</a>
-    </div>
-
-    {% if visitante %}
-    <form method="POST" enctype="multipart/form-data" autocomplete="off" class="form-cadastro-visitante">
-
-        <div class="card-bloco">
-            <h3>👤 Dados do visitante</h3>
-
-            <div class="grid-formulario">
-                <input class="input-padrao" type="text" name="nome" id="nome"
-                value="{{ visitante.nome or '' }}"
-                placeholder="Nome completo" required>
-
-            <input class="input-padrao" type="text" name="cpf" id="cpf"
-                value="{{ visitante.cpf or cpf_pre or '' }}" placeholder="CPF" required>
-
-            <div class="campo-full" style="display: flex; flex-direction: column; gap: 6px;">
-                <input class="input-padrao" type="text" name="endereco" id="endereco"
-                    value="{{ visitante.endereco or '' }}"
-                    placeholder="Ex: 070220 ou QUADRA 07, CONJUNTO 02, CASA 20"
-                    autocomplete="off">
-
-                    <small id="sugestao-endereco" style="color: #666; font-size: 13px;"></small>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid-blocos">
-            <div class="card-bloco">
-                <h3>🏷 Tipo de visita</h3>
-
-                <div class="campo-autocomplete">
-                    <input class="input-padrao" type="text" name="tipo" id="tipo"
-                           value="{{ visitante.tipo or '' }}"
-                           placeholder="Tipo de visita">
-                    <div id="sugestoes_tipo" class="caixa-sugestoes"></div>
-                </div>
-            </div>
-
-            <div class="card-bloco">
-                <h3>📝 Observação</h3>
-
-                <textarea
-                    class="input-padrao textarea-cadastro"
-                    name="observacao"
-                    id="observacao"
-                    placeholder="Observações do visitante"
-                    rows="4"
-                >{{ visitante.observacao or '' }}</textarea>
-            </div>
-        </div>
-
-        <div class="card-bloco">
-            <h3>🚗 Veículo</h3>
-
-            <div class="grid-formulario">
-                <input class="input-padrao" type="text" name="placa" id="placa"
-                       value="{{ visitante.placa or '' }}" placeholder="Placa">
-
-                <div class="campo-autocomplete">
-                    <input class="input-padrao" type="text" name="modelo" id="modelo"
-                           value="{{ visitante.modelo or '' }}" placeholder="Modelo">
-                    <div id="sugestoes_modelo" class="caixa-sugestoes"></div>
-                </div>
-
-                <div class="campo-autocomplete">
-                    <input class="input-padrao" type="text" name="marca" id="marca"
-                           value="{{ visitante.marca or '' }}" placeholder="Marca">
-                    <div id="sugestoes_marca" class="caixa-sugestoes"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-bloco">
-        <h3>📷 Foto do visitante</h3>
-
-        <div class="foto-atual-box">
-            {% if visitante.foto %}
-                <div class="preview-box preview-box-visivel">
-                    <p class="preview-label">Foto atual</p>
-                    <img
-                        src="{{ url_for('static', filename='fotos/' + visitante.foto) }}"
-                        alt="Foto do visitante"
-                        class="foto-atual-img"
-                        data-foto-visitante="{{ visitante.id }}"
-                    >
-
-                    <div style="margin-top:10px;">
-                        <button
-                            type="button"
-                            class="btn-secundario btn-sm"
-                            onclick="abrirModalFotoEditar()"
-                        >
-                            ✏️ Atualizar foto
-                        </button>
-                    </div>
-                </div>
-            {% else %}
-                <div class="sem-foto-box">
-                    Sem foto atual
-
-                    <div style="margin-top:10px;">
-                        <button
-                            type="button"
-                            class="btn-secundario btn-sm"
-                            onclick="abrirModalFotoEditar()"
-                        >
-                            📷 Adicionar foto
-                        </button>
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="divisor">
-            ───── ou usar método manual ─────
-        </div>
-
-        <p class="preview-label preview-label-topo">📸 Tirar nova foto (manual)</p>
-
-        <div class="camera-actions">
-            <button type="button" class="btn-principal btn-sm" id="btnAbrirCamera">📷 Abrir câmera</button>
-            <button type="button" class="btn-secundario btn-sm" id="btnCapturar" style="display:none;">📸 Capturar</button>
-            <button type="button" class="btn-remover btn-sm" id="btnFecharCamera" style="display:none;">❌ Fechar</button>
-            <button type="button" class="btn-principal btn-sm" id="btnNovaFoto" style="display:none;">🔄 Tirar novamente</button>
-        </div>
-
-        <div class="foto-grid">
-            <div id="camera-container" class="camera-box">
-                <video id="video" autoplay playsinline></video>
-            </div>
-
-            <div id="preview-container" class="preview-box">
-                <p class="preview-label">Nova foto</p>
-                <img id="preview-foto" src="" alt="Prévia da nova foto">
-            </div>
-        </div>
-
-        <canvas id="canvas" style="display:none;"></canvas>
-        <input type="hidden" name="foto_webcam" id="foto_webcam">
-
-        <div class="divisor">
-            ───── ou enviar imagem ─────
-        </div>
-
-        <input class="input-padrao" type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*">
-    </div>
-
-        <div class="acao-formulario">
-            <button class="btn-principal btn-sm" type="submit">💾 Salvar Alterações</button>
-        </div>
-    </form>
-    {% else %}
-        <div class="estado-erro">Visitante não encontrado.</div>
-    {% endif %}
-
-    
+{% if visitante %}
+<form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form quick-edit-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="quick-access-grid">
+<section class="quick-panel quick-main">
+<div class="quick-section-title"><span>01</span><strong>Visitante</strong></div>
+<div class="quick-fields identity-fields">
+<label class="span-2"><span>Nome completo *</span><input class="input-padrao" type="text" name="nome" id="nome" value="{{ visitante.nome or '' }}" required autofocus></label>
+<label><span>CPF *</span><input class="input-padrao" type="text" name="cpf" id="cpf" value="{{ visitante.cpf or cpf_pre or '' }}" required></label>
+<label><span>Tipo</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="tipo" id="tipo" value="{{ visitante.tipo or '' }}" placeholder="Visitante, entregador..."><div id="sugestoes_tipo" class="caixa-sugestoes"></div></div></label>
+<label class="span-2"><span>Endereço</span><input class="input-padrao" type="text" name="endereco" id="endereco" value="{{ visitante.endereco or '' }}" placeholder="Endereço do visitante" autocomplete="off"><small id="sugestao-endereco"></small></label>
 </div>
+<div class="quick-divider"></div>
+<div class="quick-section-title"><span>02</span><strong>Observação</strong></div>
+<div class="quick-fields"><label class="span-2"><span>Observação</span><input class="input-padrao" name="observacao" id="observacao" value="{{ visitante.observacao or '' }}" placeholder="Opcional"></label></div>
+<div class="quick-divider"></div>
+<div class="quick-section-title"><span>03</span><strong>Veículo</strong><small>opcional</small></div>
+<div class="quick-fields vehicle-fields">
+<label><span>Placa</span><input class="input-padrao" type="text" name="placa" id="placa" value="{{ visitante.placa or '' }}"></label>
+<label><span>Marca</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="marca" id="marca" value="{{ visitante.marca or '' }}"><div id="sugestoes_marca" class="caixa-sugestoes"></div></div></label>
+<label><span>Modelo</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="modelo" id="modelo" value="{{ visitante.modelo or '' }}"><div id="sugestoes_modelo" class="caixa-sugestoes"></div></div></label>
+</div>
+</section>
+<aside class="quick-panel quick-photo">
+<div class="quick-section-title"><span>04</span><strong>Foto</strong></div>
+<div class="photo-stage edit-photo-stage">
+{% if visitante.foto %}<img class="edit-current-photo" src="{{ url_for('visitantes.foto', id=visitante.id) }}" alt="Foto atual" data-foto-visitante="{{ visitante.id }}">{% else %}<div class="photo-placeholder"><span>Sem foto</span><small>Adicione uma foto do visitante</small></div>{% endif %}
+<div id="camera-container" class="camera-box"><video id="video" autoplay playsinline></video></div><div id="preview-container" class="preview-box"><img id="preview-foto" src="" alt="Prévia da nova foto"></div>
+</div>
+<canvas id="canvas" style="display:none"></canvas><input type="hidden" name="foto_webcam" id="foto_webcam">
+<div class="photo-actions"><button type="button" class="btn-principal" id="btnAbrirCamera">Atualizar foto</button><button type="button" class="btn-secundario" id="btnCapturar" style="display:none">Capturar</button><button type="button" class="btn-remover" id="btnFecharCamera" style="display:none">Fechar</button><button type="button" class="btn-secundario" id="btnNovaFoto" style="display:none">Refazer</button></div>
+<label class="file-compact"><span>ou enviar foto</span><input type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*"></label>
+</aside>
+</div>
+<footer class="quick-submit"><span><b>Editando cadastro.</b> Revise os dados antes de salvar.</span><div class="quick-submit-actions"><a href="{{ url_for('visitantes.visitantes') }}">Cancelar</a><button class="btn-principal" type="submit">Salvar alterações</button></div></footer>
+</form>
+{% else %}<div class="estado-erro">Visitante não encontrado.</div>{% endif %}
 
 <script>
 const TIPOS_VISITA = [
@@ -402,153 +271,13 @@ if (campoFoto) {
 }
 
 // ================= WEBCAM =================
-const btnAbrirCamera = document.getElementById("btnAbrirCamera");
-const btnCapturar = document.getElementById("btnCapturar");
-const btnFecharCamera = document.getElementById("btnFecharCamera");
-const btnNovaFoto = document.getElementById("btnNovaFoto");
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const cameraContainer = document.getElementById("camera-container");
-const previewContainer = document.getElementById("preview-container");
-const previewFoto = document.getElementById("preview-foto");
-const fotoWebcam = document.getElementById("foto_webcam");
-const inputFoto = document.getElementById("foto");
-
-let streamCamera = null;
-
-async function abrirCamera() {
-    try {
-        streamCamera = await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: { ideal: 640 },
-                height: { ideal: 480 },
-                facingMode: "user"
-            },
-            audio: false
-        });
-
-        video.srcObject = streamCamera;
-        cameraContainer.style.display = "block";
-        btnCapturar.style.display = "inline-flex";
-        btnFecharCamera.style.display = "inline-flex";
-        btnAbrirCamera.style.display = "none";
-        btnNovaFoto.style.display = "none";
-    } catch (erro) {
-        console.error("Erro ao abrir câmera:", erro);
-        alert("Não foi possível acessar a câmera. Verifique a permissão do navegador.");
-    }
-}
-
-function fecharCamera() {
-    if (streamCamera) {
-        streamCamera.getTracks().forEach(track => track.stop());
-        streamCamera = null;
-    }
-
-    video.srcObject = null;
-    cameraContainer.style.display = "none";
-    btnCapturar.style.display = "none";
-    btnFecharCamera.style.display = "none";
-    btnAbrirCamera.style.display = "inline-flex";
-}
-
-function capturarFoto() {
-    if (!video.srcObject) return;
-
-    const largura = video.videoWidth || 640;
-    const altura = video.videoHeight || 480;
-
-    canvas.width = largura;
-    canvas.height = altura;
-
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, largura, altura);
-
-    const imagemBase64 = canvas.toDataURL("image/jpeg", 0.92);
-
-    previewFoto.src = imagemBase64;
-    previewContainer.style.display = "block";
-    fotoWebcam.value = imagemBase64;
-
-    inputFoto.value = "";
-    btnNovaFoto.style.display = "inline-flex";
-
-    fecharCamera();
-}
-
-function forcarMaiusculo(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    el.addEventListener("input", function () {
-        this.value = this.value.toUpperCase();
-    });
-}
-
-["nome", "endereco", "tipo", "placa", "marca", "modelo", "observacao"]
-    .forEach(forcarMaiusculo);
-
-// ================= MODAL PREMIUM NO EDITAR =================
-
-btnAbrirCamera.addEventListener("click", function() {
-    abrirModalFotoEditar();
-});
-
-btnNovaFoto.addEventListener("click", function() {
-    fotoWebcam.value = "";
-    previewFoto.src = "";
-    previewContainer.style.display = "none";
-    abrirModalFotoEditar();
-});
-
-function abrirModalFotoEditar() {
-    visitanteFotoAtual = null; // não salva direto no banco
-    fotoCapturadaBase64 = null;
-
-    const modal = document.getElementById("modalFoto");
-    modal.style.display = "flex";
-
-    document.getElementById("etapa_camera").style.display = "flex";
-    document.getElementById("etapa_preview").style.display = "none";
-    document.getElementById("btnCapturarFoto").style.display = "inline-flex";
-    document.getElementById("btnSalvarFoto").style.display = "none";
-    document.getElementById("btnVoltarCamera").style.display = "none";
-
-    navigator.mediaDevices.getUserMedia({
-        video: {
-            width: { ideal: 720 },
-            height: { ideal: 540 },
-            facingMode: "user"
-        },
-        audio: false
-    })
-    .then(stream => {
-        streamWebcam = stream;
-        const video = document.getElementById("video_webcam");
-        video.srcObject = streamWebcam;
-    })
-    .catch(erro => {
-        alert("Não foi possível acessar a webcam.");
-        console.error(erro);
-        fecharModalFoto();
-    });
-}
-
-// SOBRESCREVE O SALVAR DO MODAL (somente para edição local)
-function registrarSalvarFotoEditar() {
-    window.salvarFotoVisitante = function() {
-        if (!fotoCapturadaBase64) return;
-
-        previewFoto.src = fotoCapturadaBase64;
-        previewContainer.style.display = "block";
-        fotoWebcam.value = fotoCapturadaBase64;
-
-        inputFoto.value = "";
-        btnNovaFoto.style.display = "inline-flex";
-
-        fecharModalFoto();
-    };
-}
+const btnAbrirCamera=document.getElementById("btnAbrirCamera"),btnCapturar=document.getElementById("btnCapturar"),btnFecharCamera=document.getElementById("btnFecharCamera"),btnNovaFoto=document.getElementById("btnNovaFoto");
+const video=document.getElementById("video"),canvas=document.getElementById("canvas"),cameraContainer=document.getElementById("camera-container"),previewContainer=document.getElementById("preview-container"),previewFoto=document.getElementById("preview-foto"),fotoWebcam=document.getElementById("foto_webcam"),inputFoto=document.getElementById("foto");
+let streamCamera=null;
+async function abrirCamera(){try{streamCamera=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},audio:false});video.srcObject=streamCamera;cameraContainer.style.display="block";btnCapturar.style.display="inline-flex";btnFecharCamera.style.display="inline-flex";btnAbrirCamera.style.display="none"}catch(e){alert("Não foi possível acessar a câmera. Verifique a permissão do navegador.")}}
+function fecharCamera(){if(streamCamera){streamCamera.getTracks().forEach(t=>t.stop());streamCamera=null}video.srcObject=null;cameraContainer.style.display="none";btnCapturar.style.display="none";btnFecharCamera.style.display="none";btnAbrirCamera.style.display="inline-flex"}
+function capturarFoto(){if(!video.srcObject)return;canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);fotoWebcam.value=canvas.toDataURL("image/jpeg",.9);previewFoto.src=fotoWebcam.value;previewContainer.style.display="block";inputFoto.value="";btnNovaFoto.style.display="inline-flex";fecharCamera()}
+btnAbrirCamera.addEventListener("click",abrirCamera);btnCapturar.addEventListener("click",capturarFoto);btnFecharCamera.addEventListener("click",fecharCamera);btnNovaFoto.addEventListener("click",()=>{fotoWebcam.value="";previewFoto.src="";previewContainer.style.display="none";abrirCamera()});window.addEventListener("beforeunload",fecharCamera);
 
 document.addEventListener("DOMContentLoaded", function () {
     const campoEndereco = document.getElementById("endereco");
@@ -588,7 +317,7 @@ document.addEventListener("DOMContentLoaded", function () {
             sugestaoEndereco.textContent = "";
         }
     });
-     registrarSalvarFotoEditar();
+
 });
 </script>
 {% endblock %}

@@ -1,7 +1,5 @@
 import logging
-import hmac
 import re
-import secrets
 from urllib.parse import quote
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
@@ -19,31 +17,13 @@ from database.encomendas import (
     resumo_painel,
 )
 from database.models import listar_moradores
+from utils.audit import registrar_auditoria
+from utils.authz import roles_required
 
 
 encomendas_bp = Blueprint("encomendas", __name__, url_prefix="/encomendas")
 logger = logging.getLogger(__name__)
 TRANSPORTADORAS = ("Shopee", "Mercado Livre", "Correios", "Amazon", "Outra")
-
-
-def _csrf_token():
-    if "_csrf_encomendas" not in session:
-        session["_csrf_encomendas"] = secrets.token_urlsafe(32)
-    return session["_csrf_encomendas"]
-
-
-@encomendas_bp.context_processor
-def _injetar_csrf():
-    return {"csrf_encomendas": _csrf_token}
-
-
-@encomendas_bp.before_request
-def _validar_csrf():
-    if request.method == "POST":
-        esperado = session.get("_csrf_encomendas", "")
-        recebido = request.form.get("_csrf_token", "")
-        if not esperado or not hmac.compare_digest(esperado, recebido):
-            abort(400, description="Token de segurança inválido. Recarregue a página.")
 
 
 def _voltar_padrao():
@@ -65,7 +45,7 @@ def _whatsapp(encomenda):
         f"Código de retirada: {encomenda['codigo_retirada']}\n"
         f"Transportadora: {encomenda['transportadora']}\n"
         f"Data/hora: {data}\n\n"
-        "Responda:\n1 - Estou em casa\n2 - Pode deixar na portaria"
+        "A encomenda foi recebida e está disponível para retirada no ponto de encomendas do condomínio."
     )
     return f"https://wa.me/{telefone}?text={quote(mensagem)}"
 
@@ -77,6 +57,7 @@ def _adicionar_links_whatsapp(encomendas):
 
 
 @encomendas_bp.route("/")
+@roles_required("admin", "funcionario")
 def painel():
     filtro = request.args.get("filtro", "hoje")
     termo = request.args.get("q", "").strip()
@@ -97,11 +78,13 @@ def painel():
 
 
 @encomendas_bp.route("/lotes")
+@roles_required("admin", "funcionario")
 def lotes():
     return render_template("encomendas/lotes.html", lotes=listar_lotes())
 
 
 @encomendas_bp.route("/lotes/novo", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def novo_lote():
     if request.method == "POST":
         transportadora = request.form.get("transportadora", "").strip()
@@ -125,6 +108,7 @@ def novo_lote():
 
 
 @encomendas_bp.route("/lotes/<int:lote_id>", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def lote_detalhe(lote_id):
     lote = buscar_lote(lote_id)
     if not lote:
@@ -162,16 +146,22 @@ def lote_detalhe(lote_id):
 
 
 @encomendas_bp.route("/lotes/<int:lote_id>/status", methods=["POST"])
+@roles_required("admin", "funcionario")
 def status_lote(lote_id):
     status = request.form.get("status", "")
-    if atualizar_status_lote(lote_id, status):
-        flash("Status do lote atualizado.", "sucesso")
-    else:
-        flash("Lote ou status inválido.", "erro")
+    try:
+        alterou = atualizar_status_lote(lote_id, status, session["usuario_id"])
+        flash("Status do recebimento atualizado." if alterou else "Recebimento ou status inválido.", "sucesso" if alterou else "erro")
+    except ValueError as exc:
+        flash(str(exc), "erro")
+    except Exception:
+        logger.exception("Erro ao atualizar status do recebimento")
+        flash("Não foi possível atualizar o recebimento.", "erro")
     return redirect(url_for("encomendas.lote_detalhe", lote_id=lote_id))
 
 
 @encomendas_bp.route("/<int:encomenda_id>/status", methods=["POST"])
+@roles_required("admin", "funcionario")
 def status_encomenda(encomenda_id):
     encomenda = buscar_encomenda(encomenda_id)
     if not encomenda:
@@ -179,7 +169,7 @@ def status_encomenda(encomenda_id):
         return redirect(_voltar_padrao())
     try:
         alterou = atualizar_status_encomenda(
-            encomenda_id, request.form.get("status", ""), request.form.get("retirado_por")
+            encomenda_id, request.form.get("status", ""), request.form.get("retirado_por"), session["usuario_id"]
         )
         if alterou:
             flash("Status da encomenda atualizado.", "sucesso")
@@ -197,6 +187,7 @@ def status_encomenda(encomenda_id):
 
 
 @encomendas_bp.route("/retidas")
+@roles_required("admin", "funcionario")
 def retidas():
     termo = request.args.get("q", "").strip()
     dados = listar_encomendas("retidas", termo)
@@ -208,6 +199,7 @@ def retidas():
 
 
 @encomendas_bp.route("/historico")
+@roles_required("admin", "funcionario")
 def historico():
     termo = request.args.get("q", "").strip()
     dados = listar_encomendas("historico", termo)

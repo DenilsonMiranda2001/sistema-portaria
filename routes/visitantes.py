@@ -7,7 +7,7 @@ from datetime import datetime
 
 from flask import (
     Blueprint, render_template, request, redirect,
-    flash, jsonify, url_for, current_app, session
+    flash, jsonify, url_for, current_app, session, g, abort, send_from_directory
 )
 from werkzeug.utils import secure_filename
 
@@ -38,7 +38,10 @@ from utils.validators import (
     EXTENSOES_FOTO_PERMITIDAS,
 )
 from utils.imagem import salvar_foto_webcam
+from utils.storage import save_image, save_webcam_image, presigned_image_url
 from utils.endereco import formatar_endereco_condominio
+from utils.audit import registrar_auditoria
+from utils.authz import roles_required
 
 visitantes_bp = Blueprint("visitantes", __name__)
 logger = logging.getLogger(__name__)
@@ -62,15 +65,32 @@ def _salvar_foto(arquivo_foto, foto_webcam_b64, pasta_fotos):
     return None, None
 
 
+def _storage_ready():
+    return all([os.getenv("S3_ENDPOINT_URL"), os.getenv("S3_BUCKET"), os.getenv("S3_ACCESS_KEY_ID"), os.getenv("S3_SECRET_ACCESS_KEY")])
+
+
+def _save_photo_production(arquivo_foto, foto_webcam_b64):
+    if not foto_webcam_b64 and (not arquivo_foto or not arquivo_foto.filename):
+        return None, None
+    if not _storage_ready():
+        return None, "Armazenamento privado de fotos não está configurado."
+    try:
+        if foto_webcam_b64:
+            return save_webcam_image(foto_webcam_b64, g.tenant_id), None
+        return save_image(arquivo_foto, g.tenant_id), None
+    except (ValueError, RuntimeError):
+        logger.exception("Falha ao persistir foto do visitante")
+        return None, "Não foi possível armazenar a foto com segurança."
+
+
 # ──────────────────────────────────────────────────────────────
 # CADASTRO
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/cadastro", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def cadastro():
     cpf_pre = request.args.get("cpf", "")
-    unidades = listar_unidades()
-
     if request.method == "POST":
         nome = request.form.get("nome", "").strip().upper()
         cpf  = limpar_cpf(request.form.get("cpf", ""))
@@ -80,8 +100,6 @@ def cadastro():
         modelo  = request.form.get("modelo", "").strip().upper()
         observacao = request.form.get("observacao", "").strip().upper()
         endereco   = formatar_endereco_condominio(request.form.get("endereco", ""))
-        unidade_id = request.form.get("unidade_id") or None
-        morador_id = request.form.get("morador_id") or None
 
         if not nome:
             flash("Informe o nome do visitante.", "erro")
@@ -100,26 +118,53 @@ def cadastro():
             flash(f"CPF já cadastrado para: {existente['nome']}.", "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
-        pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
-        nome_foto, erro_foto = _salvar_foto(
-            request.files.get("foto"),
-            request.form.get("foto_webcam", "").strip(),
-            pasta_fotos,
-        )
+        arquivo_foto = request.files.get("foto")
+        foto_webcam = request.form.get("foto_webcam", "").strip()
+        if current_app.config.get("APP_ENV") == "production":
+            nome_foto, erro_foto = _save_photo_production(arquivo_foto, foto_webcam)
+        else:
+            pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
+            nome_foto, erro_foto = _salvar_foto(arquivo_foto, foto_webcam, pasta_fotos)
         if erro_foto:
             flash(erro_foto, "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
-        visitante_id = cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao)
-        registrar_entrada(
-            visitante_id, endereco, placa, marca, modelo, observacao,
-            session["usuario_id"], unidade_id, morador_id
-        )
+        try:
+            visitante_id = cadastrar_visitante(
+                nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao,
+                endereco=endereco,
+                usuario_id=session["usuario_id"],
+            )
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("visitantes.cadastro", cpf=cpf))
+        except Exception:
+            logger.exception("Erro ao cadastrar visitante e registrar entrada")
+            flash("Não foi possível concluir o cadastro do visitante.", "erro")
+            return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
-        flash("Visitante cadastrado e entrada registrada com sucesso!", "sucesso")
-        return redirect(url_for("visitantes.ativos"))
+        flash("Visitante cadastrado. Registre a entrada quando ele acessar o condomínio.", "sucesso")
+        return redirect(url_for("visitantes.visitantes"))
 
-    return render_template("cadastro.html", cpf_pre=cpf_pre, unidades=unidades)
+    return render_template("cadastro.html", cpf_pre=cpf_pre)
+
+
+@visitantes_bp.route("/foto/<int:id>")
+@roles_required("admin", "funcionario")
+def foto(id):
+    visitante = buscar_visitante_por_id(id)
+    if not visitante or not visitante.get("foto"):
+        abort(404)
+    referencia = visitante["foto"]
+    if current_app.config.get("APP_ENV") == "production":
+        if not _storage_ready() or "/" not in referencia:
+            abort(404)
+        try:
+            return redirect(presigned_image_url(referencia))
+        except Exception:
+            logger.exception("Falha ao gerar URL privada da foto")
+            abort(404)
+    return send_from_directory(os.path.join(current_app.root_path, "static", "fotos"), os.path.basename(referencia))
 
 
 # ──────────────────────────────────────────────────────────────
@@ -127,6 +172,7 @@ def cadastro():
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/visitantes", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def visitantes():
     pagina = request.args.get("pagina", 1, type=int)
     por_pagina = 20
@@ -147,6 +193,7 @@ def visitantes():
 
 
 @visitantes_bp.route("/ativos")
+@roles_required("admin", "funcionario")
 def ativos():
     dados = visitantes_ativos()
     return render_template("ativos.html", visitantes=dados)
@@ -157,6 +204,7 @@ def ativos():
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/entrada", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def entrada():
     unidades = listar_unidades()
 
@@ -175,9 +223,17 @@ def entrada():
             flash("Informe o endereço/destino da visita.", "erro")
             return redirect(url_for("visitantes.entrada"))
 
-        registrar_entrada(visitante["id"], endereco,
-                          usuario_id=session["usuario_id"],
-                          unidade_id=unidade_id, morador_id=morador_id)
+        try:
+            registrar_entrada(visitante["id"], endereco,
+                              usuario_id=session["usuario_id"],
+                              unidade_id=unidade_id, morador_id=morador_id)
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("visitantes.entrada"))
+        except Exception:
+            logger.exception("Erro ao registrar entrada")
+            flash("Não foi possível registrar a entrada.", "erro")
+            return redirect(url_for("visitantes.entrada"))
         flash("Entrada registrada com sucesso!", "sucesso")
         return redirect(url_for("visitantes.ativos"))
 
@@ -185,8 +241,17 @@ def entrada():
 
 
 @visitantes_bp.route("/saida/<int:id>", methods=["POST"])
+@roles_required("admin", "funcionario")
 def saida(id):
-    registrar_saida(id, session["usuario_id"])
+    try:
+        alterou = registrar_saida(id, session["usuario_id"])
+    except Exception:
+        logger.exception("Erro ao registrar saída")
+        flash("Não foi possível registrar a saída.", "erro")
+        return redirect(url_for("visitantes.ativos"))
+    if not alterou:
+        flash("Não há visita ativa para este visitante.", "aviso")
+        return redirect(url_for("visitantes.ativos"))
     flash("Saída registrada com sucesso!", "sucesso")
     return redirect(url_for("visitantes.ativos"))
 
@@ -196,6 +261,7 @@ def saida(id):
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/editar/<int:id>", methods=["GET", "POST"])
+@roles_required("admin", "funcionario")
 def editar(id):
     visitante = buscar_visitante_por_id(id)
     if not visitante:
@@ -210,6 +276,7 @@ def editar(id):
         modelo = request.form.get("modelo", "").strip().upper()
         marca  = request.form.get("marca", "").strip().upper()
         observacao = request.form.get("observacao", "").strip().upper()
+        endereco = formatar_endereco_condominio(request.form.get("endereco", ""))
 
         if cpf and not validar_cpf(cpf):
             flash("CPF inválido. Verifique os dígitos.", "erro")
@@ -220,12 +287,13 @@ def editar(id):
             flash(f"CPF já cadastrado para outro visitante: {existente['nome']}.", "erro")
             return redirect(url_for("visitantes.editar", id=id))
 
-        pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
-        nome_foto, erro_foto = _salvar_foto(
-            request.files.get("foto"),
-            request.form.get("foto_webcam", "").strip(),
-            pasta_fotos,
-        )
+        arquivo_foto = request.files.get("foto")
+        foto_webcam = request.form.get("foto_webcam", "").strip()
+        if current_app.config.get("APP_ENV") == "production":
+            nome_foto, erro_foto = _save_photo_production(arquivo_foto, foto_webcam)
+        else:
+            pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
+            nome_foto, erro_foto = _salvar_foto(arquivo_foto, foto_webcam, pasta_fotos)
         if erro_foto:
             flash(erro_foto, "erro")
             return redirect(url_for("visitantes.editar", id=id))
@@ -233,7 +301,7 @@ def editar(id):
         if not nome_foto:
             nome_foto = visitante["foto"]
 
-        atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao)
+        atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao, endereco=endereco, usuario_id=session["usuario_id"])
         flash("Cadastro atualizado com sucesso!", "sucesso")
         return redirect(url_for("visitantes.visitantes"))
 
@@ -241,18 +309,23 @@ def editar(id):
 
 
 @visitantes_bp.route("/remover/<int:id>", methods=["POST"])
+@roles_required("admin")
 def remover(id):
     visitante = buscar_visitante_por_id(id)
     if not visitante:
         flash("Visitante não encontrado.", "erro")
         return redirect(url_for("visitantes.visitantes"))
 
-    remover_visitante(id)
-    flash("Visitante removido com sucesso!", "sucesso")
+    try:
+        remover_visitante(id, session["usuario_id"])
+        flash("Visitante removido com sucesso!", "sucesso")
+    except ValueError as exc:
+        flash(str(exc), "erro")
     return redirect(url_for("visitantes.visitantes"))
 
 
 @visitantes_bp.route("/historico/<int:id>")
+@roles_required("admin", "funcionario")
 def historico(id):
     visitante = buscar_visitante_por_id(id)
     if not visitante:
@@ -268,6 +341,7 @@ def historico(id):
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/buscar_ajax")
+@roles_required("admin", "funcionario")
 def buscar_ajax():
     termo = request.args.get("q", "").strip()
     resultados = buscar_visitantes(termo)
@@ -280,13 +354,14 @@ def buscar_ajax():
         "placa": v.get("placa") or "",
         "modelo": v.get("modelo") or "",
         "marca": v.get("marca") or "",
-        "foto": v.get("foto") or "",
+        "foto_url": url_for("visitantes.foto", id=v["id"]) if v.get("foto") else "",
         "observacao": v.get("observacao") or "",
         "ultimo_endereco": v.get("ultimo_endereco") or "",
     } for v in resultados])
 
 
 @visitantes_bp.route("/buscar_cpf_ajax", methods=["POST"])
+@roles_required("admin", "funcionario")
 def buscar_cpf_ajax():
     cpf = limpar_cpf(request.form.get("cpf", ""))
     visitante = buscar_um_por_cpf(cpf)
@@ -302,6 +377,7 @@ def buscar_cpf_ajax():
 
 
 @visitantes_bp.route("/buscar_ativos_ajax")
+@roles_required("admin", "funcionario")
 def buscar_ativos_ajax():
     termo = request.args.get("q", "").strip()
     if not termo:
@@ -317,14 +393,16 @@ def buscar_ativos_ajax():
         "placa": v.get("placa") or "",
         "modelo": v.get("modelo") or "",
         "marca": v.get("marca") or "",
-        "foto": v.get("foto") or "",
+        "foto_url": url_for("visitantes.foto", id=v["id"]) if v.get("foto") else "",
         "observacao": v.get("observacao") or "",
         "morador_nome": v.get("morador_nome") or "",
         "unidade_codigo": v.get("unidade_codigo") or "",
+        "data_entrada": v["data_entrada"].isoformat() if v.get("data_entrada") else "",
     } for v in dados])
 
 
 @visitantes_bp.route("/buscar_moradores_ajax")
+@roles_required("admin", "funcionario")
 def buscar_moradores_ajax_rota():
     termo = request.args.get("q", "").strip()
     if len(termo) < 2:
@@ -339,6 +417,7 @@ def buscar_moradores_ajax_rota():
 
 
 @visitantes_bp.route("/entrada_ajax", methods=["POST"])
+@roles_required("admin", "funcionario")
 def entrada_ajax():
     try:
         visitante_id = request.form.get("id", "").strip()
@@ -361,12 +440,15 @@ def entrada_ajax():
         )
         return jsonify({"status": "ok"})
 
-    except Exception as e:
+    except ValueError as exc:
+        return jsonify({"status": "erro", "mensagem": str(exc)}), 400
+    except Exception:
         logger.exception("Erro em /entrada_ajax")
-        return jsonify({"status": "erro", "mensagem": str(e)}), 500
+        return jsonify({"status": "erro", "mensagem": "Não foi possível concluir a operação."}), 500
 
 
 @visitantes_bp.route("/atualizar_observacao_ajax", methods=["POST"])
+@roles_required("admin", "funcionario")
 def atualizar_observacao_ajax():
     visitante_id = request.form.get("id", "").strip()
     observacao   = request.form.get("observacao", "").strip().upper()
@@ -374,11 +456,12 @@ def atualizar_observacao_ajax():
     if not visitante_id:
         return jsonify({"status": "erro", "mensagem": "ID não informado."}), 400
 
-    atualizar_observacao_visitante(visitante_id, observacao)
+    atualizar_observacao_visitante(visitante_id, observacao, session["usuario_id"])
     return jsonify({"status": "ok", "mensagem": "Observação atualizada."})
 
 
 @visitantes_bp.route("/atualizar_foto_ajax", methods=["POST"])
+@roles_required("admin", "funcionario")
 def atualizar_foto_ajax():
     try:
         visitante_id  = request.form.get("id", "").strip()
@@ -389,6 +472,9 @@ def atualizar_foto_ajax():
         if not foto_base64:
             return jsonify({"status": "erro", "mensagem": "Nenhuma imagem enviada."}), 400
 
+        if current_app.config.get("APP_ENV") == "production":
+            return jsonify({"status": "erro", "mensagem": "Captura por webcam está temporariamente indisponível até o armazenamento privado ser configurado."}), 503
+
         pasta = os.path.join(current_app.root_path, "static", "fotos")
         os.makedirs(pasta, exist_ok=True)
         nome_arquivo = salvar_foto_webcam(foto_base64, pasta)
@@ -396,12 +482,12 @@ def atualizar_foto_ajax():
         if not nome_arquivo:
             return jsonify({"status": "erro", "mensagem": "Falha ao salvar imagem."}), 400
 
-        atualizar_foto_visitante(visitante_id, nome_arquivo)
+        atualizar_foto_visitante(visitante_id, nome_arquivo, session["usuario_id"])
         return jsonify({"status": "ok", "mensagem": "Foto atualizada.", "foto": nome_arquivo})
 
-    except Exception as e:
+    except Exception:
         logger.exception("Erro em /atualizar_foto_ajax")
-        return jsonify({"status": "erro", "mensagem": str(e)}), 500
+        return jsonify({"status": "erro", "mensagem": "Não foi possível atualizar a foto."}), 500
 
 
 # ──────────────────────────────────────────────────────────────
@@ -409,6 +495,7 @@ def atualizar_foto_ajax():
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/importar_visitantes", methods=["GET", "POST"])
+@roles_required("admin")
 def importar_visitantes():
     if session.get("usuario_tipo") != "admin":
         flash("Apenas administradores podem acessar essa área.", "erro")
@@ -422,7 +509,12 @@ def importar_visitantes():
 
         try:
             conteudo = arquivo.read().decode("utf-8-sig")
-            leitor   = csv.DictReader(io.StringIO(conteudo))
+            leitor = csv.DictReader(io.StringIO(conteudo))
+            esperadas = {"nome", "cpf", "endereco", "tipo", "placa", "modelo", "marca", "observacao"}
+            recebidas = set(leitor.fieldnames or [])
+            if recebidas != esperadas:
+                flash("CSV inválido. Use exatamente as colunas do modelo informado.", "erro")
+                return redirect(url_for("visitantes.importar_visitantes"))
 
             importados, duplicados, erros = 0, 0, 0
             detalhes_erros = []
@@ -431,6 +523,10 @@ def importar_visitantes():
             para_importar    = []
 
             for i, linha in enumerate(leitor, start=2):
+                if i > 5001:
+                    erros += 1
+                    detalhes_erros.append("Limite de 5.000 registros por importação excedido.")
+                    break
                 try:
                     nome = (linha.get("nome") or "").strip().upper()
                     cpf  = limpar_cpf(linha.get("cpf") or "")
@@ -439,6 +535,10 @@ def importar_visitantes():
                         erros += 1
                         detalhes_erros.append(f"Linha {i}: Nome ou CPF ausente")
                         continue
+                    if not validar_cpf(cpf):
+                        erros += 1
+                        detalhes_erros.append(f"Linha {i}: CPF inválido")
+                        continue
 
                     if cpf in cpfs_existentes or cpf in cpfs_no_arquivo:
                         duplicados += 1
@@ -446,6 +546,7 @@ def importar_visitantes():
 
                     para_importar.append((
                         nome, cpf,
+                        formatar_endereco_condominio(linha.get("endereco") or ""),
                         (linha.get("tipo") or "").strip().upper(),
                         (linha.get("placa") or "").strip().upper(),
                         (linha.get("modelo") or "").strip().upper(),
@@ -455,13 +556,13 @@ def importar_visitantes():
                     ))
                     cpfs_no_arquivo.add(cpf)
 
-                except Exception as e:
+                except Exception:
+                    logger.exception("Erro ao validar linha %s da importação", i)
                     erros += 1
-                    detalhes_erros.append(f"Linha {i}: {e}")
+                    detalhes_erros.append(f"Linha {i}: dados inválidos")
 
             if para_importar:
-                importar_visitantes_em_lotes(para_importar)
-                importados = len(para_importar)
+                importados = importar_visitantes_em_lotes(para_importar, usuario_id=session["usuario_id"])
 
             return render_template("importar_visitantes.html",
                                    importados=importados, duplicados=duplicados,
@@ -469,7 +570,7 @@ def importar_visitantes():
 
         except Exception as e:
             logger.exception("Erro ao processar CSV")
-            flash(f"Erro ao processar CSV: {e}", "erro")
+            flash("Não foi possível processar o arquivo CSV.", "erro")
             return redirect(url_for("visitantes.importar_visitantes"))
 
     return render_template("importar_visitantes.html",

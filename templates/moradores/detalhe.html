@@ -67,10 +67,12 @@
         {% if morador.ativo %}
         <form method="POST" action="{{ url_for('moradores.inativar', id=morador.id) }}"
               onsubmit="return confirm('Inativar este morador?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn-remover" type="submit">⛔ Inativar morador</button>
         </form>
         {% else %}
         <form method="POST" action="{{ url_for('moradores.ativar', id=morador.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn-principal" type="submit">✅ Reativar morador</button>
         </form>
         {% endif %}
