@@ -271,13 +271,20 @@ def resumo_painel():
         liberar(conn)
 
 
+TRANSICOES_ENCOMENDA = {
+    "recebida": {"aguardando_resposta", "cancelada"},
+    "aguardando_resposta": {"morador_em_casa", "retida_portaria", "cancelada"},
+    "morador_em_casa": {"entregue_na_porta", "retida_portaria", "cancelada"},
+    "retida_portaria": {"retirada", "cancelada"},
+    "retirada": set(),
+    "entregue_na_porta": set(),
+    "cancelada": set(),
+}
+
+
 def atualizar_status_encomenda(encomenda_id, status, retirado_por=None):
     tenant_id = _tenant_id()
-    permitidos = {
-        "morador_em_casa", "retida_portaria", "entregue_na_porta",
-        "retirada", "cancelada",
-    }
-    if status not in permitidos:
+    if status not in TRANSICOES_ENCOMENDA:
         raise ValueError("Status inválido.")
     retirado_por = (retirado_por or "").strip().upper()
     if status == "retirada" and not retirado_por:
@@ -286,6 +293,16 @@ def atualizar_status_encomenda(encomenda_id, status, retirado_por=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            cur.execute("SELECT status FROM encomendas WHERE id=%s AND condominio_id=%s FOR UPDATE", (encomenda_id, tenant_id))
+            atual = cur.fetchone()
+            if not atual:
+                raise ValueError("Encomenda não encontrada.")
+            status_atual = atual["status"]
+            if status == status_atual:
+                return False
+            if status not in TRANSICOES_ENCOMENDA.get(status_atual, set()):
+                raise ValueError("Transição de status não permitida.")
+
             cur.execute("""
                 UPDATE encomendas
                 SET status = %s,
@@ -295,9 +312,8 @@ def atualizar_status_encomenda(encomenda_id, status, retirado_por=None):
                     data_retirada = CASE WHEN %s = 'retirada' THEN CURRENT_TIMESTAMP ELSE data_retirada END,
                     retirado_por = CASE WHEN %s = 'retirada' THEN %s ELSE retirado_por END,
                     atualizado_em = CURRENT_TIMESTAMP
-                WHERE id = %s AND condominio_id = %s AND status <> 'cancelada'
-                  AND status NOT IN ('retirada', 'entregue_na_porta')
-            """, (status, status, status, status, retirado_por or None, encomenda_id, tenant_id))
+                WHERE id = %s AND condominio_id = %s AND status = %s
+            """, (status, status, status, status, retirado_por or None, encomenda_id, tenant_id, status_atual))
             alterou = cur.rowcount > 0
         conn.commit()
         return alterou
