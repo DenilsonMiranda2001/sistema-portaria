@@ -39,12 +39,6 @@
 <footer class="quick-submit"><span><b>Editando cadastro.</b> Revise os dados antes de salvar.</span><div class="quick-submit-actions"><a href="{{ url_for('visitantes.visitantes') }}">Cancelar</a><button class="btn-principal" type="submit">Salvar alterações</button></div></footer>
 </form>
 {% else %}<div class="estado-erro">Visitante não encontrado.</div>{% endif %}
-    {% else %}
-        <div class="estado-erro">Visitante não encontrado.</div>
-    {% endif %}
-
-    
-</div>
 
 <script>
 const TIPOS_VISITA = [
@@ -277,153 +271,13 @@ if (campoFoto) {
 }
 
 // ================= WEBCAM =================
-const btnAbrirCamera = document.getElementById("btnAbrirCamera");
-const btnCapturar = document.getElementById("btnCapturar");
-const btnFecharCamera = document.getElementById("btnFecharCamera");
-const btnNovaFoto = document.getElementById("btnNovaFoto");
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const cameraContainer = document.getElementById("camera-container");
-const previewContainer = document.getElementById("preview-container");
-const previewFoto = document.getElementById("preview-foto");
-const fotoWebcam = document.getElementById("foto_webcam");
-const inputFoto = document.getElementById("foto");
-
-let streamCamera = null;
-
-async function abrirCamera() {
-    try {
-        streamCamera = await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: { ideal: 640 },
-                height: { ideal: 480 },
-                facingMode: "user"
-            },
-            audio: false
-        });
-
-        video.srcObject = streamCamera;
-        cameraContainer.style.display = "block";
-        btnCapturar.style.display = "inline-flex";
-        btnFecharCamera.style.display = "inline-flex";
-        btnAbrirCamera.style.display = "none";
-        btnNovaFoto.style.display = "none";
-    } catch (erro) {
-        console.error("Erro ao abrir câmera:", erro);
-        alert("Não foi possível acessar a câmera. Verifique a permissão do navegador.");
-    }
-}
-
-function fecharCamera() {
-    if (streamCamera) {
-        streamCamera.getTracks().forEach(track => track.stop());
-        streamCamera = null;
-    }
-
-    video.srcObject = null;
-    cameraContainer.style.display = "none";
-    btnCapturar.style.display = "none";
-    btnFecharCamera.style.display = "none";
-    btnAbrirCamera.style.display = "inline-flex";
-}
-
-function capturarFoto() {
-    if (!video.srcObject) return;
-
-    const largura = video.videoWidth || 640;
-    const altura = video.videoHeight || 480;
-
-    canvas.width = largura;
-    canvas.height = altura;
-
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, largura, altura);
-
-    const imagemBase64 = canvas.toDataURL("image/jpeg", 0.92);
-
-    previewFoto.src = imagemBase64;
-    previewContainer.style.display = "block";
-    fotoWebcam.value = imagemBase64;
-
-    inputFoto.value = "";
-    btnNovaFoto.style.display = "inline-flex";
-
-    fecharCamera();
-}
-
-function forcarMaiusculo(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    el.addEventListener("input", function () {
-        this.value = this.value.toUpperCase();
-    });
-}
-
-["nome", "endereco", "tipo", "placa", "marca", "modelo", "observacao"]
-    .forEach(forcarMaiusculo);
-
-// ================= MODAL PREMIUM NO EDITAR =================
-
-btnAbrirCamera.addEventListener("click", function() {
-    abrirModalFotoEditar();
-});
-
-btnNovaFoto.addEventListener("click", function() {
-    fotoWebcam.value = "";
-    previewFoto.src = "";
-    previewContainer.style.display = "none";
-    abrirModalFotoEditar();
-});
-
-function abrirModalFotoEditar() {
-    visitanteFotoAtual = null; // não salva direto no banco
-    fotoCapturadaBase64 = null;
-
-    const modal = document.getElementById("modalFoto");
-    modal.style.display = "flex";
-
-    document.getElementById("etapa_camera").style.display = "flex";
-    document.getElementById("etapa_preview").style.display = "none";
-    document.getElementById("btnCapturarFoto").style.display = "inline-flex";
-    document.getElementById("btnSalvarFoto").style.display = "none";
-    document.getElementById("btnVoltarCamera").style.display = "none";
-
-    navigator.mediaDevices.getUserMedia({
-        video: {
-            width: { ideal: 720 },
-            height: { ideal: 540 },
-            facingMode: "user"
-        },
-        audio: false
-    })
-    .then(stream => {
-        streamWebcam = stream;
-        const video = document.getElementById("video_webcam");
-        video.srcObject = streamWebcam;
-    })
-    .catch(erro => {
-        alert("Não foi possível acessar a webcam.");
-        console.error(erro);
-        fecharModalFoto();
-    });
-}
-
-// SOBRESCREVE O SALVAR DO MODAL (somente para edição local)
-function registrarSalvarFotoEditar() {
-    window.salvarFotoVisitante = function() {
-        if (!fotoCapturadaBase64) return;
-
-        previewFoto.src = fotoCapturadaBase64;
-        previewContainer.style.display = "block";
-        fotoWebcam.value = fotoCapturadaBase64;
-
-        inputFoto.value = "";
-        btnNovaFoto.style.display = "inline-flex";
-
-        fecharModalFoto();
-    };
-}
+const btnAbrirCamera=document.getElementById("btnAbrirCamera"),btnCapturar=document.getElementById("btnCapturar"),btnFecharCamera=document.getElementById("btnFecharCamera"),btnNovaFoto=document.getElementById("btnNovaFoto");
+const video=document.getElementById("video"),canvas=document.getElementById("canvas"),cameraContainer=document.getElementById("camera-container"),previewContainer=document.getElementById("preview-container"),previewFoto=document.getElementById("preview-foto"),fotoWebcam=document.getElementById("foto_webcam"),inputFoto=document.getElementById("foto");
+let streamCamera=null;
+async function abrirCamera(){try{streamCamera=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},audio:false});video.srcObject=streamCamera;cameraContainer.style.display="block";btnCapturar.style.display="inline-flex";btnFecharCamera.style.display="inline-flex";btnAbrirCamera.style.display="none"}catch(e){alert("Não foi possível acessar a câmera. Verifique a permissão do navegador.")}}
+function fecharCamera(){if(streamCamera){streamCamera.getTracks().forEach(t=>t.stop());streamCamera=null}video.srcObject=null;cameraContainer.style.display="none";btnCapturar.style.display="none";btnFecharCamera.style.display="none";btnAbrirCamera.style.display="inline-flex"}
+function capturarFoto(){if(!video.srcObject)return;canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);fotoWebcam.value=canvas.toDataURL("image/jpeg",.9);previewFoto.src=fotoWebcam.value;previewContainer.style.display="block";inputFoto.value="";btnNovaFoto.style.display="inline-flex";fecharCamera()}
+btnAbrirCamera.addEventListener("click",abrirCamera);btnCapturar.addEventListener("click",capturarFoto);btnFecharCamera.addEventListener("click",fecharCamera);btnNovaFoto.addEventListener("click",()=>{fotoWebcam.value="";previewFoto.src="";previewContainer.style.display="none";abrirCamera()});window.addEventListener("beforeunload",fecharCamera);
 
 document.addEventListener("DOMContentLoaded", function () {
     const campoEndereco = document.getElementById("endereco");
@@ -463,7 +317,7 @@ document.addEventListener("DOMContentLoaded", function () {
             sugestaoEndereco.textContent = "";
         }
     });
-     registrarSalvarFotoEditar();
+
 });
 </script>
 {% endblock %}
