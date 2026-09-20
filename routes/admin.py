@@ -100,9 +100,13 @@ def inativar_usuario_rota(id):
         flash("Usuário não encontrado.", "erro")
         return redirect(url_for("admin.usuarios"))
 
-    inativar_usuario(id)
-    registrar_auditoria("usuario.inativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id)
-    flash("Usuário inativado com sucesso!", "sucesso")
+    try:
+        alterou = inativar_usuario(id)
+        if alterou:
+            registrar_auditoria("usuario.inativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id)
+            flash("Usuário inativado com sucesso!", "sucesso")
+    except ValueError as exc:
+        flash(str(exc), "erro")
     return redirect(url_for("admin.usuarios"))
 
 
