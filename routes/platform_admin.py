@@ -38,8 +38,7 @@ def criar_condominio():
         flash("O código deve usar apenas letras minúsculas, números e hífens.", "erro")
         return redirect(url_for("platform_admin.condominios"))
     try:
-        condominio_id, _ = criar_condominio_com_usuario(nome, slug)
-        registrar_auditoria("plataforma.condominio_criado", actor_tipo="platform_admin", actor_id=session["usuario_id"], entidade="condominio", entidade_id=condominio_id, detalhes={"slug": slug})
+        condominio_id, _ = criar_condominio_com_usuario(nome, slug, actor_id=session["usuario_id"])
         flash("Condomínio criado com sucesso.","sucesso")
     except Exception:
         flash("Não foi possível criar o condomínio. Verifique se o código já existe.","erro")
@@ -58,8 +57,7 @@ def criar_usuario_condominio(condominio_id):
         flash("Preencha os dados do usuário; a senha deve ter pelo menos 12 caracteres.","erro")
         return redirect(url_for("platform_admin.condominios"))
     try:
-        novo_usuario_id = criar_usuario_tenant(condominio_id, nome, usuario, generate_password_hash(senha), nivel)
-        registrar_auditoria("plataforma.usuario_tenant_criado", actor_tipo="platform_admin", actor_id=session["usuario_id"], condominio_id=condominio_id, entidade="usuario", entidade_id=novo_usuario_id, detalhes={"nivel": nivel})
+        novo_usuario_id = criar_usuario_tenant(condominio_id, nome, usuario, generate_password_hash(senha), nivel, session["usuario_id"])
         flash("Usuário do condomínio criado com sucesso.","sucesso")
     except ValueError as exc:
         flash(str(exc),"erro")
@@ -85,10 +83,9 @@ def editar_condominio(condominio_id):
         flash("Dados do condomínio inválidos.","erro")
         return redirect(url_for("platform_admin.detalhe_condominio",condominio_id=condominio_id))
     try:
-        if not atualizar_condominio(condominio_id,nome,slug):
+        if not atualizar_condominio(condominio_id,nome,slug,session["usuario_id"]):
             flash("Condomínio não encontrado.","erro")
         else:
-            registrar_auditoria("plataforma.condominio_atualizado",actor_tipo="platform_admin",actor_id=session["usuario_id"],entidade="condominio",entidade_id=condominio_id,detalhes={"slug":slug})
             flash("Condomínio atualizado.","sucesso")
     except Exception:
         flash("Não foi possível atualizar o condomínio. Verifique o código informado.","erro")
@@ -100,8 +97,7 @@ def editar_condominio(condominio_id):
 def status_condominio(condominio_id):
     ativo=request.form.get("ativo")=="1"
     try:
-        if definir_status_condominio(condominio_id,ativo):
-            registrar_auditoria("plataforma.condominio_status",actor_tipo="platform_admin",actor_id=session["usuario_id"],entidade="condominio",entidade_id=condominio_id,detalhes={"ativo":ativo})
+        if definir_status_condominio(condominio_id,ativo,session["usuario_id"]):
             flash("Status do condomínio atualizado.","sucesso")
     except ValueError as exc:
         flash(str(exc),"erro")
@@ -113,8 +109,7 @@ def status_condominio(condominio_id):
 def status_usuario_condominio(condominio_id,usuario_id):
     ativo=request.form.get("ativo")=="1"
     try:
-        if definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
-            registrar_auditoria("plataforma.usuario_tenant_status",actor_tipo="platform_admin",actor_id=session["usuario_id"],condominio_id=condominio_id,entidade="usuario",entidade_id=usuario_id,detalhes={"ativo":ativo})
+        if definir_status_usuario_tenant(condominio_id,usuario_id,ativo,session["usuario_id"]):
             flash("Status do usuário atualizado.","sucesso")
     except ValueError as exc:
         flash(str(exc),"erro")
