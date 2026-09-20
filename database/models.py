@@ -113,18 +113,29 @@ def listar_usuarios():
         liberar(conn)
 
 
-def buscar_usuario_por_id(usuario_id):
+def buscar_usuario_por_id(usuario_id, exigir_tenant=False):
+    tenant_id = _tenant_id() if exigir_tenant else None
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute(
-                """SELECT u.id, u.condominio_id, u.nome, u.usuario, u.nivel, u.ativo, u.criado_em,
-                          c.ativo AS condominio_ativo
-                   FROM usuarios u
-                   JOIN condominios c ON c.id = u.condominio_id
-                   WHERE u.id = %s""",
-                (usuario_id,)
-            )
+            if exigir_tenant:
+                cur.execute(
+                    """SELECT u.id, u.condominio_id, u.nome, u.usuario, u.nivel, u.ativo, u.criado_em,
+                              c.ativo AS condominio_ativo
+                       FROM usuarios u
+                       JOIN condominios c ON c.id = u.condominio_id
+                       WHERE u.id = %s AND u.condominio_id = %s""",
+                    (usuario_id, tenant_id)
+                )
+            else:
+                cur.execute(
+                    """SELECT u.id, u.condominio_id, u.nome, u.usuario, u.nivel, u.ativo, u.criado_em,
+                              c.ativo AS condominio_ativo
+                       FROM usuarios u
+                       JOIN condominios c ON c.id = u.condominio_id
+                       WHERE u.id = %s""",
+                    (usuario_id,)
+                )
             return cur.fetchone()
     finally:
         liberar(conn)
