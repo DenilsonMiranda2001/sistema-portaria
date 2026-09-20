@@ -1,4 +1,5 @@
 from database.connection import conectar, liberar
+from utils.audit import registrar_auditoria_cursor
 
 
 def listar_condominios_com_metricas():
@@ -45,12 +46,14 @@ def buscar_condominio_detalhe(condominio_id):
         liberar(conn)
 
 
-def atualizar_condominio(condominio_id,nome,slug):
+def atualizar_condominio(condominio_id,nome,slug,actor_id=None):
     conn=conectar()
     try:
         with conn.cursor() as cur:
             cur.execute("UPDATE condominios SET nome=%s,slug=%s WHERE id=%s RETURNING id",(nome,slug,condominio_id))
             row=cur.fetchone()
+            if row and actor_id:
+                registrar_auditoria_cursor(cur, "plataforma.condominio_atualizado", actor_tipo="platform_admin", actor_id=actor_id, entidade="condominio", entidade_id=condominio_id, detalhes={"slug": slug})
         conn.commit()
         return bool(row)
     except Exception:
@@ -59,7 +62,7 @@ def atualizar_condominio(condominio_id,nome,slug):
         liberar(conn)
 
 
-def definir_status_condominio(condominio_id,ativo):
+def definir_status_condominio(condominio_id,ativo,actor_id=None):
     conn=conectar()
     try:
         with conn.cursor() as cur:
@@ -76,6 +79,8 @@ def definir_status_condominio(condominio_id,ativo):
                     raise ValueError("Existem encomendas pendentes. Finalize ou cancele as encomendas antes de inativar o condomínio.")
             cur.execute("UPDATE condominios SET ativo=%s WHERE id=%s AND ativo IS DISTINCT FROM %s RETURNING id",(ativo,condominio_id,ativo))
             row=cur.fetchone()
+            if row and actor_id:
+                registrar_auditoria_cursor(cur, "plataforma.condominio_status", actor_tipo="platform_admin", actor_id=actor_id, entidade="condominio", entidade_id=condominio_id, detalhes={"ativo": ativo})
         conn.commit(); return bool(row)
     except Exception:
         conn.rollback(); raise
@@ -83,7 +88,7 @@ def definir_status_condominio(condominio_id,ativo):
         liberar(conn)
 
 
-def definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
+def definir_status_usuario_tenant(condominio_id,usuario_id,ativo,actor_id=None):
     conn=conectar()
     try:
         with conn.cursor() as cur:
@@ -97,6 +102,8 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
                     raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
             cur.execute("UPDATE usuarios SET ativo=%s WHERE id=%s AND condominio_id=%s RETURNING id",(ativo,usuario_id,condominio_id))
             row=cur.fetchone()
+            if row and actor_id:
+                registrar_auditoria_cursor(cur, "plataforma.usuario_tenant_status", actor_tipo="platform_admin", actor_id=actor_id, condominio_id=condominio_id, entidade="usuario", entidade_id=usuario_id, detalhes={"ativo": ativo})
         conn.commit(); return bool(row)
     except Exception:
         conn.rollback(); raise
@@ -104,7 +111,7 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
         liberar(conn)
 
 
-def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=None, usuario_senha_hash=None, nivel="admin"):
+def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=None, usuario_senha_hash=None, nivel="admin", actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -122,6 +129,10 @@ def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=No
                                VALUES(%s,%s,%s,%s,%s,TRUE) RETURNING id""",
                             (condominio_id, usuario_nome.upper(), usuario_login, usuario_senha_hash, nivel))
                 usuario_id = cur.fetchone()["id"]
+            if actor_id:
+                registrar_auditoria_cursor(cur, "plataforma.condominio_criado", actor_tipo="platform_admin", actor_id=actor_id, entidade="condominio", entidade_id=condominio_id, detalhes={"slug": slug})
+                if usuario_id:
+                    registrar_auditoria_cursor(cur, "plataforma.usuario_tenant_criado", actor_tipo="platform_admin", actor_id=actor_id, condominio_id=condominio_id, entidade="usuario", entidade_id=usuario_id, detalhes={"nivel": nivel})
         conn.commit()
         return condominio_id, usuario_id
     except Exception:
@@ -131,7 +142,7 @@ def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=No
         liberar(conn)
 
 
-def criar_usuario_tenant(condominio_id, nome, usuario, senha_hash, nivel):
+def criar_usuario_tenant(condominio_id, nome, usuario, senha_hash, nivel, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -145,6 +156,8 @@ def criar_usuario_tenant(condominio_id, nome, usuario, senha_hash, nivel):
                            VALUES(%s,%s,%s,%s,%s,TRUE) RETURNING id""",
                         (condominio_id, nome.upper(), usuario, senha_hash, nivel))
             usuario_id = cur.fetchone()["id"]
+            if actor_id:
+                registrar_auditoria_cursor(cur, "plataforma.usuario_tenant_criado", actor_tipo="platform_admin", actor_id=actor_id, condominio_id=condominio_id, entidade="usuario", entidade_id=usuario_id, detalhes={"nivel": nivel})
         conn.commit()
         return usuario_id
     except Exception:
