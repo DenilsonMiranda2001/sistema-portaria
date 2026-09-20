@@ -2,7 +2,7 @@
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<section class="compact-access-head"><div><span class="page-eyebrow">MORADORES</span><h1>{{ titulo }}</h1></div><a href="{{ url_for('moradores.listar') }}">Cancelar</a></section><div class="card-padrao resident-form-shell compact-form-page">
+<div class="card-padrao resident-form-shell compact-form-page">
 
     <form method="POST" autocomplete="off" class="form-cadastro-visitante compact-crud-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
