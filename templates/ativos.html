@@ -126,241 +126,61 @@
 const inputAtivo = document.getElementById("buscaAtivo");
 const listaAtivos = document.getElementById("listaAtivos");
 const mensagemAtivo = document.getElementById("mensagemAtivo");
-
+const csrfAtivo = {{ csrf_token()|tojson }};
 let ativosAtuais = [];
 let indiceSelecionadoAtivo = 0;
 
-// ==============================
-// MENSAGEM
-// ==============================
-function mostrarMensagemAtivo(texto, cor = "red") {
-    mensagemAtivo.innerHTML = `<p style="color:${cor}; font-weight:bold;">${texto}</p>`;
+function limparMensagemAtivo(){ mensagemAtivo.replaceChildren(); }
+function mostrarErroAtivo(texto){
+    mensagemAtivo.replaceChildren();
+    const p=document.createElement("p"); p.className="active-error"; p.textContent=texto; mensagemAtivo.appendChild(p);
 }
-
-function limparMensagemAtivo() {
-    mensagemAtivo.innerHTML = "";
+function textoVeiculo(v){ return [v.marca,v.modelo].filter(Boolean).join(" ") + (v.placa ? ((v.marca||v.modelo)?" - ":"")+v.placa : "") || "SEM VEÍCULO"; }
+function textoEntrada(valor){
+    if(!valor) return "—";
+    const d=new Date(valor); return Number.isNaN(d.getTime()) ? valor : d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
 }
-
-// ==============================
-// MONTA TEXTO DO VEÍCULO
-// ==============================
-function montarTextoVeiculo(v) {
-    if (!(v.marca || v.modelo || v.placa)) {
-        return "Sem veículo";
-    }
-
-    let partes = [];
-    if (v.marca) partes.push(v.marca);
-    if (v.modelo) partes.push(v.modelo);
-
-    let texto = partes.join(" ").trim();
-
-    if (v.placa) {
-        texto += (texto ? " - " : "") + v.placa;
-    }
-
-    return texto || "Sem veículo";
+function el(tag,cls,text){ const n=document.createElement(tag); if(cls)n.className=cls; if(text!==undefined)n.textContent=text; return n; }
+function info(label,valor){
+    const box=el("div","info-item"),l=el("span","label-ui",label),v=el("span","valor-ui",valor||"—"); box.append(l,v); return box;
 }
-
-// ==============================
-// FORMATA DATA/HORA
-// ==============================
-function formatarEntrada(dataEntrada) {
-    if (!dataEntrada) return "-";
-    return dataEntrada;
+function registrarSaida(v){
+    if(!confirm("Registrar saída de "+(v.nome||"visitante")+"?")) return;
+    const form=document.createElement("form"); form.method="POST"; form.action={{ url_for('visitantes.saida', id=0)|tojson }}.replace("/0","/"+encodeURIComponent(v.id));
+    const token=document.createElement("input"); token.type="hidden"; token.name="csrf_token"; token.value=csrfAtivo; form.appendChild(token); document.body.appendChild(form); form.submit();
 }
-
-// ==============================
-// RENDERIZAR LISTA DE ATIVOS
-// ==============================
-function renderizarAtivos(data) {
-    ativosAtuais = data;
-    listaAtivos.innerHTML = "";
-
-    if (!data || data.length === 0) {
-        listaAtivos.innerHTML = "<p>Nenhum visitante ativo encontrado.</p>";
-        return;
-    }
-
-    if (indiceSelecionadoAtivo < 0) indiceSelecionadoAtivo = 0;
-    if (indiceSelecionadoAtivo > data.length - 1) indiceSelecionadoAtivo = data.length - 1;
-
-    data.forEach((v, index) => {
-        const selecionado = index === indiceSelecionadoAtivo;
-
-        const estiloCard = selecionado
-            ? "display:flex; gap:15px; align-items:flex-start; flex-wrap:wrap; border:2px solid #007bff; background:#f4f9ff; cursor:pointer;"
-            : "display:flex; gap:15px; align-items:flex-start; flex-wrap:wrap; cursor:pointer;";
-
-        const fotoHtml = v.foto
-            ? `<img src="/static/fotos/${v.foto}"
-                    alt="Foto de ${v.nome}"
-                    style="width:90px; height:90px; object-fit:cover; border-radius:10px; border:1px solid #ddd;">`
-            : `<div style="
-                    width:90px;
-                    height:90px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    border-radius:10px;
-                    border:1px solid #ddd;
-                    background:#f8f9fa;
-                    color:#777;
-                    font-size:13px;
-                    text-align:center;
-                    padding:8px;
-                ">
-                    Sem foto
-               </div>`;
-
-        listaAtivos.innerHTML += `
-        <div
-            class="visitor-card ${selecionado ? "selecionado" : ""}"
-            data-index="${index}"
-            onclick="selecionarAtivo(${index})"
-        >
-            <div class="visitor-photo-wrap">
-                ${fotoHtml}
-            </div>
-
-            <div class="visitor-main">
-
-                <div class="card-visitante">
-                    <div class="info-grid">
-                        <div class="info-item destaque">
-                            <span class="label-ui">Nome</span>
-                            <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">CPF</span>
-                            <span class="valor-ui">${v.cpf || "-"}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">Destino</span>
-                            <span class="valor-ui">${v.endereco || "-"}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">Observação</span>
-                            <span class="valor-ui">${v.observacao || "-"}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="extras-grid">
-
-                    <div class="extra-card">
-                        <span class="label-ui">Tipo</span>
-                        <div class="badge-ui badge-tipo">
-                            🏷 ${(v.tipo || "SEM TIPO").toUpperCase()}
-                        </div>
-                    </div>
-
-                    <div class="extra-card">
-                        <span class="label-ui">Veículo</span>
-                        <div class="badge-ui badge-veiculo">
-                            🚗 ${montarTextoVeiculo(v)}
-                        </div>
-                    </div>
-
-                    <div class="extra-card">
-                        <span class="label-ui">Entrada</span>
-                        <div class="badge-ui badge-entrada">
-                            ⏰ ${formatarEntrada(v.data_entrada)}
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="card-actions">
-                    <form method="POST" action="/saida/${v.id}"
-                          onsubmit="event.stopPropagation(); return confirm('Registrar saída de ${(v.nome||'').replace(/'/g,'')}?')">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    `;
+function renderizarAtivos(data){
+    ativosAtuais=Array.isArray(data)?data:[]; listaAtivos.replaceChildren();
+    if(!ativosAtuais.length){ listaAtivos.appendChild(el("div","estado-vazio","Nenhum visitante ativo encontrado.")); return; }
+    indiceSelecionadoAtivo=Math.max(0,Math.min(indiceSelecionadoAtivo,ativosAtuais.length-1));
+    ativosAtuais.forEach((v,index)=>{
+        const card=el("div","visitor-card"+(index===indiceSelecionadoAtivo?" selecionado":"")); card.dataset.index=index;
+        const photoWrap=el("div","visitor-photo-wrap");
+        if(v.foto){ const img=document.createElement("img"); img.className="visitor-photo"; img.alt="Foto do visitante"; img.src="/static/fotos/"+encodeURIComponent(v.foto); photoWrap.appendChild(img); }
+        else photoWrap.appendChild(el("div","visitor-photo placeholder","Sem foto"));
+        const main=el("div","visitor-main"), details=el("div","card-visitante"), grid=el("div","info-grid");
+        const nome=info("Nome",(v.nome||"").toUpperCase()); nome.classList.add("destaque");
+        grid.append(nome,info("CPF",v.cpf),info("Destino",v.endereco),info("Morador / Unidade",[v.morador_nome,v.unidade_codigo].filter(Boolean).join(" · ")),info("Observação",v.observacao));
+        details.appendChild(grid);
+        const extras=el("div","extras-grid");
+        [["Tipo",(v.tipo||"SEM TIPO").toUpperCase(),"badge-tipo"],["Veículo",textoVeiculo(v),"badge-veiculo"],["Entrada",textoEntrada(v.data_entrada),"badge-entrada"]].forEach(([label,value,cls])=>{const box=el("div","extra-card");box.append(el("span","label-ui",label),el("div","badge-ui "+cls,value));extras.appendChild(box)});
+        const actions=el("div","card-actions"),btn=el("button","btn-principal btn-sm","Registrar saída");btn.type="button";btn.addEventListener("click",ev=>{ev.stopPropagation();registrarSaida(v)});actions.appendChild(btn);
+        main.append(details,extras,actions);card.append(photoWrap,main);card.addEventListener("click",()=>{indiceSelecionadoAtivo=index;renderizarAtivos(ativosAtuais)});listaAtivos.appendChild(card);
     });
 }
-
-// ==============================
-// SELECIONAR ITEM
-// ==============================
-function selecionarAtivo(index) {
-    indiceSelecionadoAtivo = index;
-    renderizarAtivos(ativosAtuais);
-}
-
-// ==============================
-// BUSCA INTELIGENTE
-// ==============================
-inputAtivo.addEventListener("input", function () {
-    const termo = inputAtivo.value.trim();
-    limparMensagemAtivo();
-
-    if (termo.length === 0) {
-        window.location.href = "/ativos";
-        return;
-    }
-
-    fetch(`/buscar_ativos_ajax?q=${encodeURIComponent(termo)}`)
-        .then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error("Erro ao buscar visitantes ativos.");
-            }
-            return data;
-        })
-        .then((data) => {
-            indiceSelecionadoAtivo = 0;
-            renderizarAtivos(data);
-        })
-        .catch((erro) => {
-            listaAtivos.innerHTML = `<p style="color:red;">${erro.message}</p>`;
-            console.error("Erro na busca:", erro);
-        });
+inputAtivo.addEventListener("input",()=>{
+    const termo=inputAtivo.value.trim(); limparMensagemAtivo();
+    if(!termo){ window.location.href={{ url_for('visitantes.ativos')|tojson }}; return; }
+    fetch({{ url_for('visitantes.buscar_ativos_ajax')|tojson }}+"?q="+encodeURIComponent(termo),{headers:{"Accept":"application/json"}})
+      .then(async res=>{const data=await res.json();if(!res.ok)throw new Error(data.mensagem||"Erro ao buscar visitantes ativos.");return data})
+      .then(data=>{indiceSelecionadoAtivo=0;renderizarAtivos(data)})
+      .catch(err=>{listaAtivos.replaceChildren();mostrarErroAtivo(err.message)});
 });
-
-// ==============================
-// TECLADO NA BUSCA
-// ==============================
-inputAtivo.addEventListener("keydown", function(event) {
-    if (ativosAtuais.length === 0) return;
-
-    if (event.key === "ArrowDown") {
-        event.preventDefault();
-        indiceSelecionadoAtivo = Math.min(indiceSelecionadoAtivo + 1, ativosAtuais.length - 1);
-        renderizarAtivos(ativosAtuais);
-        return;
-    }
-
-    if (event.key === "ArrowUp") {
-        event.preventDefault();
-        indiceSelecionadoAtivo = Math.max(indiceSelecionadoAtivo - 1, 0);
-        renderizarAtivos(ativosAtuais);
-        return;
-    }
-
-    if (event.key === "Enter") {
-        event.preventDefault();
-
-        const ativoSelecionado = ativosAtuais[indiceSelecionadoAtivo];
-        if (!ativoSelecionado) return;
-
-        const confirmar = confirm(`Registrar saída de ${ativoSelecionado.nome}?`);
-        if (confirmar) {
-            const form = document.createElement("form");
-            form.method = "POST";
-            form.action = `/saida/${ativoSelecionado.id}`;
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
+inputAtivo.addEventListener("keydown",event=>{
+    if(!ativosAtuais.length)return;
+    if(event.key==="ArrowDown"){event.preventDefault();indiceSelecionadoAtivo=Math.min(indiceSelecionadoAtivo+1,ativosAtuais.length-1);renderizarAtivos(ativosAtuais)}
+    else if(event.key==="ArrowUp"){event.preventDefault();indiceSelecionadoAtivo=Math.max(indiceSelecionadoAtivo-1,0);renderizarAtivos(ativosAtuais)}
+    else if(event.key==="Enter"){event.preventDefault();const v=ativosAtuais[indiceSelecionadoAtivo];if(v)registrarSaida(v)}
 });
 </script>
 {% endblock %}
