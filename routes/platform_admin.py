@@ -127,9 +127,12 @@ def editar_condominio(condominio_id):
 @platform_admin_required
 def status_condominio(condominio_id):
     ativo=request.form.get("ativo")=="1"
-    if definir_status_condominio(condominio_id,ativo):
-        registrar_auditoria("plataforma.condominio_status",actor_tipo="platform_admin",actor_id=session["usuario_id"],entidade="condominio",entidade_id=condominio_id,detalhes={"ativo":ativo})
-        flash("Status do condomínio atualizado.","sucesso")
+    try:
+        if definir_status_condominio(condominio_id,ativo):
+            registrar_auditoria("plataforma.condominio_status",actor_tipo="platform_admin",actor_id=session["usuario_id"],entidade="condominio",entidade_id=condominio_id,detalhes={"ativo":ativo})
+            flash("Status do condomínio atualizado.","sucesso")
+    except ValueError as exc:
+        flash(str(exc),"erro")
     return redirect(url_for("platform_admin.detalhe_condominio",condominio_id=condominio_id))
 
 
