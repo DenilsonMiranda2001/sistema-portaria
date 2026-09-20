@@ -31,7 +31,7 @@ def main():
             """, (tenant["id"], "ADMINISTRADOR GERAL", username, generate_password_hash(password)))
             user = cur.fetchone()
         conn.commit()
-        print(f"Administrator ready: id={user['id']} tenant={args.tenant_slug}")
+        print("Administrator bootstrap completed successfully.")
     except Exception:
         conn.rollback()
         raise
