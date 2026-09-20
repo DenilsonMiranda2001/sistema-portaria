@@ -646,6 +646,33 @@ def total_moradores():
         liberar(conn)
 
 
+def resumo_unidades():
+    tenant_id = _tenant_id()
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    COUNT(*) FILTER (WHERE ativo=TRUE)::int AS unidades_ativas,
+                    COUNT(*) FILTER (WHERE ativo=FALSE)::int AS unidades_inativas
+                FROM unidades WHERE condominio_id=%s
+            """, (tenant_id,))
+            unidades = cur.fetchone()
+            cur.execute("""
+                SELECT COUNT(*)::int AS sem_unidade
+                FROM moradores
+                WHERE condominio_id=%s AND ativo=TRUE AND unidade_id IS NULL
+            """, (tenant_id,))
+            moradores = cur.fetchone()
+            return {
+                "unidades_ativas": unidades["unidades_ativas"] if unidades else 0,
+                "unidades_inativas": unidades["unidades_inativas"] if unidades else 0,
+                "moradores_sem_unidade": moradores["sem_unidade"] if moradores else 0,
+            }
+    finally:
+        liberar(conn)
+
+
 # ──────────────────────────────────────────────────────────────
 # VISITANTES
 # ──────────────────────────────────────────────────────────────
