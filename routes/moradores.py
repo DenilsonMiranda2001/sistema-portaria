@@ -13,6 +13,7 @@ from database.models import (
     listar_unidades,
 )
 from utils.validators import limpar_cpf, validar_cpf
+from utils.audit import registrar_auditoria
 
 moradores_bp = Blueprint("moradores", __name__, url_prefix="/moradores")
 logger = logging.getLogger(__name__)
@@ -57,7 +58,8 @@ def novo():
                 return redirect(url_for("moradores.novo"))
 
         try:
-            cadastrar_morador_com_unidade(nome, cpf or None, telefone, email, unidade_id, nova_unidade, observacao)
+            morador_id = cadastrar_morador_com_unidade(nome, cpf or None, telefone, email, unidade_id, nova_unidade, observacao)
+            registrar_auditoria("morador.criado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="morador", entidade_id=morador_id)
             flash("Morador cadastrado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
         except ValueError as exc:
@@ -105,6 +107,7 @@ def editar(id):
 
         try:
             atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao, nova_unidade)
+            registrar_auditoria("morador.atualizado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="morador", entidade_id=id)
             flash("Morador atualizado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
         except ValueError as exc:
@@ -135,6 +138,7 @@ def inativar(id):
         return redirect(url_for("moradores.listar"))
 
     inativar_morador(id)
+    registrar_auditoria("morador.inativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="morador", entidade_id=id)
     flash(f"Morador {morador['nome']} inativado.", "sucesso")
     return redirect(url_for("moradores.listar"))
 
@@ -147,5 +151,6 @@ def ativar(id):
         return redirect(url_for("moradores.listar"))
 
     ativar_morador(id)
+    registrar_auditoria("morador.ativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="morador", entidade_id=id)
     flash(f"Morador {morador['nome']} reativado.", "sucesso")
     return redirect(url_for("moradores.listar"))
