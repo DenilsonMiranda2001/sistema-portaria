@@ -11,7 +11,7 @@
         <div class="visitor-photo-wrap">
             {% if visitante.foto %}
                 <img
-                    src="{{ url_for('static', filename='fotos/' + visitante.foto) }}"
+                    src="{{ url_for('visitantes.foto', id=visitante.id) }}"
                     alt="Foto de {{ visitante.nome }}"
                     class="visitor-photo"
                 >
