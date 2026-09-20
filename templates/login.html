@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso ao Sistema | Portaria Control</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+<style>
+.login-page{background:#0d1625}.login-container{max-width:none;min-height:100vh;border-radius:0;box-shadow:none;display:grid;grid-template-columns:minmax(380px,1.08fr) minmax(420px,.92fr)}.login-brand{position:relative;overflow:hidden;background:linear-gradient(145deg,#0e192a,#172945);display:flex;align-items:flex-end;padding:clamp(36px,6vw,88px)}.login-brand:after{content:"";position:absolute;width:420px;height:420px;border:1px solid rgba(255,255,255,.08);border-radius:50%;right:-160px;top:-130px;box-shadow:0 0 0 90px rgba(255,255,255,.018),0 0 0 180px rgba(255,255,255,.012)}.brand-content{position:relative;z-index:1;max-width:620px}.brand-content h1{font-size:clamp(44px,6vw,76px);letter-spacing:-.055em;line-height:.92;margin:18px 0 24px}.brand-subtitle{max-width:500px;font-size:17px;line-height:1.6;color:#aebbd0}.brand-badge{font-size:9px;letter-spacing:.2em}.brand-features{margin-top:46px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.brand-feature{align-items:flex-start;border-top:1px solid rgba(255,255,255,.12);padding-top:13px;font-size:11px;color:#aebbd0}.feature-icon{display:none}.login-panel{border-radius:0;display:flex;flex-direction:column;justify-content:center;padding:clamp(34px,7vw,100px);background:#f7f8fa}.login-header{margin-bottom:30px}.login-kicker{display:block;font-size:9px;font-weight:900;letter-spacing:.18em;color:#54729a;margin-bottom:10px}.login-header h2{font-size:32px;letter-spacing:-.04em;margin-bottom:8px}.login-form{max-width:460px}.login-input{height:52px;border-radius:10px;background:#fff;border-color:#dce2ea}.login-button{height:52px;border-radius:10px;background:#111d30;box-shadow:0 10px 22px rgba(17,29,48,.14)}.login-footer{max-width:460px}@media(max-width:850px){.login-container{grid-template-columns:1fr}.login-brand{min-height:280px;padding:38px 26px}.brand-content h1{font-size:48px}.brand-features{display:none}.login-panel{padding:42px 24px;min-height:calc(100vh - 280px)}}@media(max-width:480px){.login-brand{min-height:220px}.brand-content h1{font-size:40px}.brand-subtitle{font-size:14px}.login-panel{min-height:calc(100vh - 220px);padding:34px 18px}}
+</style></head>
 <body class="login-page">
     <div class="login-container">
         <div class="login-brand">
             <div class="brand-content">
-                <span class="brand-badge">PORTARIA INTELIGENTE</span>
+                <span class="brand-badge">CONTROLE OPERACIONAL</span>
                 <h1>Portaria Control</h1>
                 <p class="brand-subtitle">
-                    Controle moderno de acessos para portarias, condomínios e operações internas.
+                    Uma central segura para pessoas, acessos e rotina da portaria.
                 </p>
 
                 <div class="brand-features">
@@ -35,7 +37,7 @@
 
         <div class="login-panel">
             <div class="login-header">
-                <h2>Bem-vindo de volta</h2>
+                <span class="login-kicker">ACESSO RESTRITO</span><h2>Entre na operação</h2>
                 <p>Acesse sua conta para continuar no sistema.</p>
             </div>
 
