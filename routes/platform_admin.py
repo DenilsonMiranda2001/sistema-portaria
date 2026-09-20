@@ -45,7 +45,7 @@ def criar_condominio():
             cur.execute("INSERT INTO condominios(nome,slug,ativo) VALUES(%s,%s,TRUE) RETURNING id",(nome,slug))
             novo = cur.fetchone()
         conn.commit()
-        registrar_auditoria("plataforma.condominio_criado", entidade="condominio", entidade_id=novo["id"], detalhes={"slug": slug})
+        registrar_auditoria("plataforma.condominio_criado", actor_tipo="platform_admin", actor_id=session["usuario_id"], entidade="condominio", entidade_id=novo["id"], detalhes={"slug": slug})
         flash("Condomínio criado com sucesso.","sucesso")
     except Exception:
         conn.rollback()
@@ -86,7 +86,7 @@ def criar_usuario_condominio(condominio_id):
                         (condominio_id,nome.upper(),usuario,generate_password_hash(senha),nivel))
             novo_usuario = cur.fetchone()
         conn.commit()
-        registrar_auditoria("plataforma.usuario_tenant_criado", condominio_id=condominio_id, entidade="usuario", entidade_id=novo_usuario["id"], detalhes={"nivel": nivel})
+        registrar_auditoria("plataforma.usuario_tenant_criado", actor_tipo="platform_admin", actor_id=session["usuario_id"], condominio_id=condominio_id, entidade="usuario", entidade_id=novo_usuario["id"], detalhes={"nivel": nivel})
         flash("Usuário do condomínio criado com sucesso.","sucesso")
     except Exception:
         conn.rollback()
