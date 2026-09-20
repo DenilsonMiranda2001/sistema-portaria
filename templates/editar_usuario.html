@@ -20,6 +20,7 @@
             <h2>Editar Usuário</h2>
 
             <form method="POST" class="form-coluna">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="campo">
                     <label>Nome</label>
                     <input class="input-padrao" type="text" name="nome" value="{{ user['nome'] }}" required>
