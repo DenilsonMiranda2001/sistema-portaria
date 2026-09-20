@@ -44,6 +44,7 @@ def criar_lote(nome_entregador, transportadora, observacao, usuario_id):
                 usuario_id,
             ))
             lote = cur.fetchone()
+            registrar_auditoria_cursor(cur, "encomenda.lote_criado", usuario_id=usuario_id, condominio_id=tenant_id, entidade="lote_encomenda", entidade_id=lote["id"])
         conn.commit()
         return lote["id"]
     except Exception:
@@ -179,6 +180,7 @@ def adicionar_encomenda(lote_id, morador_id, unidade, nome_morador,
                 UPDATE lotes_encomendas SET status = 'em_triagem'
                 WHERE id = %s AND condominio_id = %s AND status = 'aberto'
             """, (lote_id, tenant_id))
+            registrar_auditoria_cursor(cur, "encomenda.criada", usuario_id=usuario_id, condominio_id=tenant_id, entidade="encomenda", entidade_id=nova["id"], detalhes={"lote_id": lote_id})
         conn.commit()
         nova["telefone"] = telefone
         return nova
