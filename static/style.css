@@ -2984,3 +2984,11 @@ body{background:var(--pc-ice)}
 @media(max-width:850px){.quick-access-grid{height:auto;max-height:none;grid-template-columns:1fr}.quick-photo{display:grid;height:auto}.quick-photo .photo-stage{height:150px!important}.quick-submit{position:sticky!important;bottom:8px!important}}
 
 .quick-submit-actions{display:flex;align-items:center;gap:7px}.quick-submit-actions>a{height:32px;display:inline-flex;align-items:center;padding:0 11px;border:1px solid #dce3eb;border-radius:7px;text-decoration:none;color:#657389;font-size:9px;font-weight:800;background:#fff}.quick-submit>span b{color:#344258}.quick-photo input[type=file]::file-selector-button{border:1px solid #d8e0e9;background:#fff;border-radius:6px;padding:5px 8px;margin-right:7px;font-size:8px;font-weight:800;color:#3f4f64;cursor:pointer}@media(max-width:560px){.quick-submit-actions{width:100%}.quick-submit-actions>a{display:none}.quick-submit-actions button{width:100%}}
+
+/* ===== Registration readability calibration ===== */
+.compact-access-head h1{font-size:23px!important}.compact-access-head>a{font-size:11px!important}
+.quick-section-title>span{font-size:9px!important}.quick-section-title strong{font-size:11px!important}.quick-section-title small{font-size:10px!important}
+.quick-fields label>span{font-size:9px!important;letter-spacing:.055em!important}.quick-fields .input-padrao{font-size:12px!important;height:35px!important;min-height:35px!important}.quick-fields .input-padrao::placeholder{font-size:11px!important;color:#8a9ab0!important}
+.photo-placeholder span{font-size:13px!important}.photo-placeholder small{font-size:10px!important}.photo-actions button{font-size:10px!important;height:34px!important}.file-compact>span{font-size:8px!important}.quick-photo input[type=file],.quick-photo input[type=file]::file-selector-button{font-size:9px!important}
+.quick-submit{min-height:44px}.quick-submit>span{font-size:9px!important}.quick-submit-actions>a,.quick-submit button{font-size:10px!important}.page-eyebrow{font-size:9px!important}
+@media(min-width:1100px){.quick-main{padding:14px 18px!important}.quick-fields{gap:6px 10px}.quick-divider{margin:9px 0!important}}
