@@ -354,6 +354,42 @@ def cadastrar_morador(nome, cpf, telefone, email, unidade_id, observacao):
         liberar(conn)
 
 
+
+def cadastrar_morador_com_unidade(nome, cpf, telefone, email, unidade_id, nova_unidade, observacao):
+    tenant_id = _tenant_id()
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            resolved_unidade_id = unidade_id or None
+            if resolved_unidade_id:
+                cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (resolved_unidade_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Unidade inválida para este condomínio.")
+            elif nova_unidade:
+                codigo = nova_unidade.strip().upper()
+                cur.execute("""
+                    INSERT INTO unidades (condominio_id, codigo, descricao)
+                    VALUES (%s, %s, NULL)
+                    ON CONFLICT (condominio_id, codigo) DO UPDATE SET codigo = EXCLUDED.codigo
+                    RETURNING id
+                """, (tenant_id, codigo))
+                resolved_unidade_id = cur.fetchone()["id"]
+            cur.execute("""
+                INSERT INTO moradores (condominio_id, nome, cpf, telefone, email, unidade_id, observacao, ativo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
+                RETURNING id
+            """, (tenant_id, (nome or "").strip().upper(), limpar_cpf(cpf) or None,
+                  (telefone or "").strip() or None, (email or "").strip().lower() or None,
+                  resolved_unidade_id, (observacao or "").strip().upper() or None))
+            novo = cur.fetchone()
+        conn.commit()
+        return novo["id"]
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+
 def listar_moradores(apenas_ativos=True):
     tenant_id = _tenant_id()
     conn = conectar()
