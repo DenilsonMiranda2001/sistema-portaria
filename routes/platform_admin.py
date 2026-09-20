@@ -3,6 +3,10 @@ from flask import Blueprint, flash, g, redirect, render_template, request, sessi
 import re
 from werkzeug.security import generate_password_hash
 from database.connection import conectar, liberar
+from database.platform import (
+    listar_condominios_com_metricas, buscar_condominio_detalhe,
+    atualizar_condominio, definir_status_condominio, definir_status_usuario_tenant,
+)
 from utils.audit import registrar_auditoria
 
 platform_admin_bp = Blueprint("platform_admin", __name__, url_prefix="/plataforma")
@@ -19,29 +23,8 @@ def platform_admin_required(view):
 @platform_admin_bp.get("/condominios")
 @platform_admin_required
 def condominios():
-    conn=conectar()
-    try:
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT c.id,c.nome,c.slug,c.ativo,c.criado_em,
-                       COUNT(u.id) AS total_usuarios,
-                       COUNT(u.id) FILTER (WHERE u.ativo = TRUE) AS usuarios_ativos,
-                       COUNT(u.id) FILTER (WHERE u.nivel = 'admin' AND u.ativo = TRUE) AS admins_ativos
-                FROM condominios c
-                LEFT JOIN usuarios u ON u.condominio_id = c.id
-                GROUP BY c.id,c.nome,c.slug,c.ativo,c.criado_em
-                ORDER BY c.nome
-            """)
-            dados=cur.fetchall()
-            cur.execute("""
-                SELECT COUNT(*) AS total,
-                       COUNT(*) FILTER (WHERE ativo = TRUE) AS ativos
-                FROM condominios
-            """)
-            resumo = cur.fetchone()
-        return render_template("platform_condominios.html", condominios=dados, resumo=resumo)
-    finally:
-        liberar(conn)
+    dados, resumo = listar_condominios_com_metricas()
+    return render_template("platform_condominios.html", condominios=dados, resumo=resumo)
 
 @platform_admin_bp.post("/condominios")
 @platform_admin_required
@@ -109,3 +92,52 @@ def criar_usuario_condominio(condominio_id):
     finally:
         liberar(conn)
     return redirect(url_for("platform_admin.condominios"))
+
+
+@platform_admin_bp.get("/condominios/<int:condominio_id>")
+@platform_admin_required
+def detalhe_condominio(condominio_id):
+    condominio, usuarios = buscar_condominio_detalhe(condominio_id)
+    if not condominio:
+        flash("Condomínio não encontrado.", "erro")
+        return redirect(url_for("platform_admin.condominios"))
+    return render_template("platform_condominio_detalhe.html", condominio=condominio, usuarios=usuarios)
+
+
+@platform_admin_bp.post("/condominios/<int:condominio_id>/editar")
+@platform_admin_required
+def editar_condominio(condominio_id):
+    nome=request.form.get("nome","").strip()
+    slug=request.form.get("slug","").strip().lower()
+    if not nome or len(nome)>160 or len(slug)>80 or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*",slug):
+        flash("Dados do condomínio inválidos.","erro")
+        return redirect(url_for("platform_admin.detalhe_condominio",condominio_id=condominio_id))
+    try:
+        if not atualizar_condominio(condominio_id,nome,slug):
+            flash("Condomínio não encontrado.","erro")
+        else:
+            registrar_auditoria("plataforma.condominio_atualizado",actor_tipo="platform_admin",actor_id=session["usuario_id"],entidade="condominio",entidade_id=condominio_id,detalhes={"slug":slug})
+            flash("Condomínio atualizado.","sucesso")
+    except Exception:
+        flash("Não foi possível atualizar o condomínio. Verifique o código informado.","erro")
+    return redirect(url_for("platform_admin.detalhe_condominio",condominio_id=condominio_id))
+
+
+@platform_admin_bp.post("/condominios/<int:condominio_id>/status")
+@platform_admin_required
+def status_condominio(condominio_id):
+    ativo=request.form.get("ativo")=="1"
+    if definir_status_condominio(condominio_id,ativo):
+        registrar_auditoria("plataforma.condominio_status",actor_tipo="platform_admin",actor_id=session["usuario_id"],entidade="condominio",entidade_id=condominio_id,detalhes={"ativo":ativo})
+        flash("Status do condomínio atualizado.","sucesso")
+    return redirect(url_for("platform_admin.detalhe_condominio",condominio_id=condominio_id))
+
+
+@platform_admin_bp.post("/condominios/<int:condominio_id>/usuarios/<int:usuario_id>/status")
+@platform_admin_required
+def status_usuario_condominio(condominio_id,usuario_id):
+    ativo=request.form.get("ativo")=="1"
+    if definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
+        registrar_auditoria("plataforma.usuario_tenant_status",actor_tipo="platform_admin",actor_id=session["usuario_id"],condominio_id=condominio_id,entidade="usuario",entidade_id=usuario_id,detalhes={"ativo":ativo})
+        flash("Status do usuário atualizado.","sucesso")
+    return redirect(url_for("platform_admin.detalhe_condominio",condominio_id=condominio_id))
