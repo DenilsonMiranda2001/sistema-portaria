@@ -26,6 +26,11 @@ app.config.from_object(Config)
 Config.validate()
 csrf = CSRFProtect(app)
 
+@app.context_processor
+def inject_csrf_meta():
+    from flask_wtf.csrf import generate_csrf
+    return {"global_csrf_token": generate_csrf}
+
 # Temporary compatibility gate: schema bootstrap remains enabled outside
 # production while migrations are introduced. Production must run migrations
 # explicitly before starting the web process.
