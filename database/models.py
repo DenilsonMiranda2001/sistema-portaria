@@ -14,6 +14,7 @@ def _tenant_id():
     return tenant_id
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.validators import limpar_cpf
+from utils.audit import registrar_auditoria_cursor
 
 logger = logging.getLogger(__name__)
 
@@ -889,7 +890,7 @@ def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100):
 # ──────────────────────────────────────────────────────────────
 
 def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=None,
-                      observacao=None, usuario_id=None, unidade_id=None, morador_id=None):
+                      observacao=None, usuario_id=None, unidade_id=None, morador_id=None, auditar=True):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -950,6 +951,8 @@ def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=Non
                 morador_id or None,
             ))
             nova_visita = cur.fetchone()
+            if auditar:
+                registrar_auditoria_cursor(cur, "visita.entrada", usuario_id=usuario_id, condominio_id=tenant_id, entidade="visitante", entidade_id=visitante_id, detalhes={"visita_id": nova_visita["id"]})
         conn.commit()
         logger.info("Entrada registrada: visitante=%s visita=%s", visitante_id, nova_visita["id"])
         return nova_visita["id"]
@@ -978,6 +981,8 @@ def registrar_saida(visitante_id, usuario_saida_id=None):
                 )
             """, (usuario_saida_id, tenant_id, tenant_id, visitante_id))
             alterou = cur.rowcount > 0
+            if alterou:
+                registrar_auditoria_cursor(cur, "visita.saida", usuario_id=usuario_saida_id, condominio_id=tenant_id, entidade="visitante", entidade_id=visitante_id)
         conn.commit()
         if alterou:
             logger.info("Saída registrada: visitante=%s", visitante_id)
