@@ -491,6 +491,10 @@ def importar_visitantes():
                         erros += 1
                         detalhes_erros.append(f"Linha {i}: Nome ou CPF ausente")
                         continue
+                    if not validar_cpf(cpf):
+                        erros += 1
+                        detalhes_erros.append(f"Linha {i}: CPF inválido")
+                        continue
 
                     if cpf in cpfs_existentes or cpf in cpfs_no_arquivo:
                         duplicados += 1
@@ -507,9 +511,10 @@ def importar_visitantes():
                     ))
                     cpfs_no_arquivo.add(cpf)
 
-                except Exception as e:
+                except Exception:
+                    logger.exception("Erro ao validar linha %s da importação", i)
                     erros += 1
-                    detalhes_erros.append(f"Linha {i}: {e}")
+                    detalhes_erros.append(f"Linha {i}: dados inválidos")
 
             if para_importar:
                 importar_visitantes_em_lotes(para_importar)
