@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_usuarios_tenant ON usuarios(condominio_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_usuarios_tenant_usuario ON usuarios(condominio_id, usuario) WHERE condominio_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_unidades_tenant ON unidades(condominio_id);
 CREATE INDEX IF NOT EXISTS idx_moradores_tenant ON moradores(condominio_id);
 CREATE INDEX IF NOT EXISTS idx_visitantes_tenant ON visitantes(condominio_id);
