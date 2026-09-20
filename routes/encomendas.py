@@ -145,8 +145,7 @@ def lote_detalhe(lote_id):
 @encomendas_bp.route("/lotes/<int:lote_id>/status", methods=["POST"])
 def status_lote(lote_id):
     status = request.form.get("status", "")
-    if atualizar_status_lote(lote_id, status):
-        registrar_auditoria("encomenda.lote_status", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="lote_encomenda", entidade_id=lote_id, detalhes={"status": status})
+    if atualizar_status_lote(lote_id, status, session["usuario_id"]):
         flash("Status do lote atualizado.", "sucesso")
     else:
         flash("Lote ou status inválido.", "erro")
@@ -161,10 +160,9 @@ def status_encomenda(encomenda_id):
         return redirect(_voltar_padrao())
     try:
         alterou = atualizar_status_encomenda(
-            encomenda_id, request.form.get("status", ""), request.form.get("retirado_por")
+            encomenda_id, request.form.get("status", ""), request.form.get("retirado_por"), session["usuario_id"]
         )
         if alterou:
-            registrar_auditoria("encomenda.status", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="encomenda", entidade_id=encomenda_id, detalhes={"status": request.form.get("status", "")})
             flash("Status da encomenda atualizado.", "sucesso")
         else:
             flash("A encomenda já está encerrada e não pode ser alterada.", "aviso")
