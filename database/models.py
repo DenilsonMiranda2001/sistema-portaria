@@ -80,6 +80,13 @@ def criar_usuario(nome, usuario, senha, nivel):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            login = (usuario or "").strip()
+            cur.execute("SELECT 1 FROM platform_admins WHERE usuario = %s", (login,))
+            if cur.fetchone():
+                return "existe"
+            cur.execute("SELECT 1 FROM usuarios WHERE usuario = %s", (login,))
+            if cur.fetchone():
+                return "existe"
             cur.execute("""
                 INSERT INTO usuarios (condominio_id, nome, usuario, senha, nivel, ativo)
                 VALUES (%s, %s, %s, %s, %s, TRUE)
@@ -87,7 +94,7 @@ def criar_usuario(nome, usuario, senha, nivel):
             """, (
                 tenant_id,
                 (nome or "").strip().upper(),
-                (usuario or "").strip(),
+                login,
                 generate_password_hash(senha),
                 (nivel or "funcionario").strip().lower(),
             ))
