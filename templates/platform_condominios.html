@@ -1,6 +1,67 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administração Geral | Portaria Control</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head><body>
-<main class="container"><h1>Administração Geral</h1><p>Gerencie os condomínios e os usuários iniciais de cada operação.</p>
-{% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="alert {{cat}}">{{msg}}</div>{% endfor %}{% endwith %}
-<section><h2>Novo condomínio</h2><form method="post" action="{{ url_for('platform_admin.criar_condominio') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input name="nome" placeholder="Nome do condomínio" required><input name="slug" placeholder="Código único" required><button type="submit">Criar condomínio</button></form></section>
-<section><h2>Condomínios</h2>{% for c in condominios %}<article><h3>{{c.nome}}</h3><p>Código: {{c.slug}} · {{'Ativo' if c.ativo else 'Inativo'}}</p><form method="post" action="{{ url_for('platform_admin.criar_usuario_condominio', condominio_id=c.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input name="nome" placeholder="Nome do usuário" required><input name="usuario" placeholder="Login" required><input type="password" name="senha" placeholder="Senha" required><select name="nivel"><option value="admin">Administração</option><option value="funcionario">Porteiro / Funcionário</option></select><button type="submit">Criar usuário</button></form></article>{% else %}<p>Nenhum condomínio cadastrado.</p>{% endfor %}</section>
-<form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Sair</button></form></main></body></html>
+{% extends "base.html" %}
+{% block title %}Administração Geral | Portaria Control{% endblock %}
+{% block content %}
+<div class="platform-admin">
+  <section class="platform-hero">
+    <div>
+      <span class="platform-eyebrow">PAINEL DA PLATAFORMA</span>
+      <h1>Administração Geral</h1>
+      <p>Gerencie condomínios e crie os acessos iniciais de cada operação.</p>
+    </div>
+    <div class="platform-user">
+      <span>Admin geral</span>
+      <strong>{{ session.get("usuario_nome", "Administrador") }}</strong>
+    </div>
+  </section>
+
+  <section class="platform-card platform-create">
+    <div class="platform-card-head">
+      <div><span class="platform-step">01</span><h2>Novo condomínio</h2></div>
+      <p>Cadastre uma nova operação com um identificador único.</p>
+    </div>
+    <form class="platform-grid-form" method="post" action="{{ url_for('platform_admin.criar_condominio') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label><span>Nome do condomínio</span><input name="nome" placeholder="Ex.: Residencial Brasília" required autocomplete="organization"></label>
+      <label><span>Código único</span><input name="slug" placeholder="ex.: residencial-brasilia" required autocomplete="off"></label>
+      <button class="platform-primary" type="submit">Criar condomínio</button>
+    </form>
+  </section>
+
+  <section class="platform-list">
+    <div class="platform-section-title">
+      <div><span class="platform-step">02</span><h2>Condomínios</h2></div>
+      <span class="platform-count">{{ condominios|length }} cadastrado{{ '' if condominios|length == 1 else 's' }}</span>
+    </div>
+    <div class="platform-condos">
+      {% for c in condominios %}
+      <article class="platform-condo">
+        <header>
+          <div class="platform-condo-icon">C</div>
+          <div><h3>{{ c.nome }}</h3><p>Código <strong>{{ c.slug }}</strong></p></div>
+          <span class="platform-status {{ 'is-active' if c.ativo else 'is-inactive' }}">{{ 'Ativo' if c.ativo else 'Inativo' }}</span>
+        </header>
+        <div class="platform-divider"></div>
+        <div class="platform-user-create">
+          <div><h4>Criar acesso</h4><p>Adicione a administração ou equipe de portaria deste condomínio.</p></div>
+          <form class="platform-user-form" method="post" action="{{ url_for('platform_admin.criar_usuario_condominio', condominio_id=c.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label><span>Nome</span><input name="nome" placeholder="Nome completo" required autocomplete="name"></label>
+            <label><span>Login</span><input name="usuario" placeholder="Usuário de acesso" required autocomplete="off"></label>
+            <label><span>Senha inicial</span><input type="password" name="senha" placeholder="Mínimo 8 caracteres" required autocomplete="new-password"></label>
+            <label><span>Perfil</span><select name="nivel"><option value="admin">Administração</option><option value="funcionario">Porteiro / Funcionário</option></select></label>
+            <button class="platform-secondary" type="submit">Criar usuário</button>
+          </form>
+        </div>
+      </article>
+      {% else %}
+      <div class="platform-empty"><strong>Nenhum condomínio cadastrado.</strong><span>Use o formulário acima para criar a primeira operação.</span></div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+<style>
+.platform-admin{max-width:1180px;margin:0 auto;padding:28px 0 60px;color:#172033}.platform-hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:28px}.platform-eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.14em;color:#52709c;margin-bottom:8px}.platform-hero h1{font-size:34px;line-height:1.1;margin:0 0 8px}.platform-hero p,.platform-card-head p,.platform-user-create p{margin:0;color:#687386}.platform-user{background:#fff;border:1px solid #dfe5ee;border-radius:14px;padding:12px 16px;min-width:180px;box-shadow:0 6px 20px rgba(25,39,63,.05)}.platform-user span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#8490a3}.platform-user strong{display:block;margin-top:3px}.platform-card,.platform-condo{background:#fff;border:1px solid #dfe5ee;border-radius:18px;box-shadow:0 10px 30px rgba(25,39,63,.06)}.platform-card{padding:24px;margin-bottom:30px}.platform-card-head,.platform-section-title{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px}.platform-card-head>div,.platform-section-title>div{display:flex;align-items:center;gap:10px}.platform-card h2,.platform-section-title h2{font-size:20px;margin:0}.platform-step{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#e9f0fb;color:#315b91;font-size:12px;font-weight:800}.platform-grid-form{display:grid;grid-template-columns:1.4fr 1fr auto;gap:14px;align-items:end}.platform-admin label span{display:block;font-size:12px;font-weight:700;color:#556174;margin:0 0 7px}.platform-admin input,.platform-admin select{width:100%;height:44px;border:1px solid #cfd7e3;border-radius:10px;background:#fff;padding:0 12px;font:inherit;color:#172033;box-sizing:border-box;outline:none}.platform-admin input:focus,.platform-admin select:focus{border-color:#5c7ead;box-shadow:0 0 0 3px rgba(92,126,173,.12)}.platform-primary,.platform-secondary{height:44px;border:0;border-radius:10px;padding:0 18px;font-weight:800;cursor:pointer}.platform-primary{background:#172033;color:#fff}.platform-secondary{background:#e9f0fb;color:#274e7f}.platform-count{font-size:12px;font-weight:700;color:#687386;background:#edf1f6;padding:7px 10px;border-radius:999px}.platform-condos{display:grid;gap:16px}.platform-condo{padding:22px}.platform-condo header{display:flex;align-items:center;gap:13px}.platform-condo-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#172033;color:#fff;font-weight:800}.platform-condo h3{margin:0 0 3px;font-size:18px}.platform-condo header p{margin:0;color:#788397;font-size:13px}.platform-status{margin-left:auto;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}.platform-status.is-active{background:#e8f6ee;color:#237746}.platform-status.is-inactive{background:#f3f4f6;color:#697386}.platform-divider{height:1px;background:#e8ecf2;margin:19px 0}.platform-user-create>div{margin-bottom:15px}.platform-user-create h4{margin:0 0 4px;font-size:15px}.platform-user-create p{font-size:13px}.platform-user-form{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr auto;gap:12px;align-items:end}.platform-empty{padding:35px;text-align:center;background:#fff;border:1px dashed #cfd7e3;border-radius:16px}.platform-empty span{display:block;color:#788397;margin-top:5px}.platform-admin .alert{margin-bottom:18px}
+@media(max-width:900px){.platform-grid-form,.platform-user-form{grid-template-columns:1fr 1fr}.platform-primary,.platform-secondary{width:100%}}
+@media(max-width:620px){.platform-admin{padding-top:16px}.platform-hero{align-items:flex-start;flex-direction:column}.platform-user{width:100%;box-sizing:border-box}.platform-hero h1{font-size:28px}.platform-card-head,.platform-section-title{align-items:flex-start}.platform-card-head{flex-direction:column}.platform-grid-form,.platform-user-form{grid-template-columns:1fr}.platform-card,.platform-condo{padding:18px}.platform-condo header{align-items:flex-start}.platform-status{white-space:nowrap}}
+</style>
+{% endblock %}
