@@ -81,13 +81,10 @@
                         <div class="card-actions card-actions-visitantes">
                             <a class="btn-principal btn-sm" href="/historico/{{ v.id }}" onclick="event.stopPropagation()">Histórico</a>
                             <a class="btn-principal btn-sm" href="/editar/{{ v.id }}" onclick="event.stopPropagation()">Editar</a>
-                            <a
-                                class="btn-remover btn-sm"
-                                href="/remover/{{ v.id }}"
-                                onclick="event.stopPropagation(); return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')"
-                            >
-                                Remover
-                            </a>
+                            <form method="POST" action="{{ url_for('visitantes.remover', id=v.id) }}" onclick="event.stopPropagation()" onsubmit="return confirm('Remover este visitante? O histórico de acessos será preservado.')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-remover btn-sm" type="submit">Remover</button>
+                            </form>
                         </div>
                     </div>
                 </div>
