@@ -691,10 +691,13 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
             if entrada:
                 unidade_id = entrada.get("unidade_id") or None
                 morador_id = entrada.get("morador_id") or None
+                destino_visita = (entrada.get("endereco") or "").strip().upper()
                 if unidade_id:
-                    cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (unidade_id, tenant_id))
-                    if not cur.fetchone():
+                    cur.execute("SELECT codigo FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (unidade_id, tenant_id))
+                    unidade = cur.fetchone()
+                    if not unidade:
                         raise ValueError("Unidade inválida para este condomínio.")
+                    destino_visita = unidade["codigo"] or destino_visita
                 if morador_id:
                     cur.execute("SELECT unidade_id FROM moradores WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (morador_id, tenant_id))
                     morador = cur.fetchone()
@@ -703,6 +706,10 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
                     if unidade_id and morador["unidade_id"] != unidade_id:
                         raise ValueError("O morador selecionado não pertence à unidade informada.")
                     unidade_id = unidade_id or morador["unidade_id"]
+                    if unidade_id and not destino_visita:
+                        cur.execute("SELECT codigo FROM unidades WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (unidade_id, tenant_id))
+                        unidade = cur.fetchone()
+                        destino_visita = (unidade["codigo"] if unidade else "") or destino_visita
                 cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (entrada.get("usuario_id"), tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Usuário de entrada inválido para este condomínio.")
@@ -712,7 +719,7 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
                          usuario_entrada_id, unidade_id, morador_id)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
-                    tenant_id, novo["id"], (entrada.get("endereco") or "").strip().upper(),
+                    tenant_id, novo["id"], destino_visita,
                     (placa or "").strip().upper(), (marca or "").strip().upper(),
                     (modelo or "").strip().upper(), (observacao or "").strip().upper(),
                     entrada.get("usuario_id"), unidade_id, morador_id,
