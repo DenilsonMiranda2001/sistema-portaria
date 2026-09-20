@@ -103,12 +103,19 @@ def cadastro():
 
         arquivo_foto = request.files.get("foto")
         if current_app.config.get("APP_ENV") == "production" and arquivo_foto and arquivo_foto.filename:
-            try:
-                nome_foto = save_image(arquivo_foto, g.tenant_id)
-                erro_foto = None
-            except (ValueError, RuntimeError):
-                logger.exception("Falha ao persistir foto do visitante")
-                nome_foto, erro_foto = None, "Não foi possível armazenar a foto com segurança."
+            storage_ready = all([
+                os.getenv("S3_ENDPOINT_URL"), os.getenv("S3_BUCKET"),
+                os.getenv("S3_ACCESS_KEY_ID"), os.getenv("S3_SECRET_ACCESS_KEY"),
+            ])
+            if not storage_ready:
+                nome_foto, erro_foto = None, "Upload de fotos está temporariamente indisponível."
+            else:
+                try:
+                    nome_foto = save_image(arquivo_foto, g.tenant_id)
+                    erro_foto = None
+                except (ValueError, RuntimeError):
+                    logger.exception("Falha ao persistir foto do visitante")
+                    nome_foto, erro_foto = None, "Não foi possível armazenar a foto com segurança."
         else:
             pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
             nome_foto, erro_foto = _salvar_foto(
