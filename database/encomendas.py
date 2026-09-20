@@ -165,7 +165,7 @@ def adicionar_encomenda(lote_id, morador_id, unidade, nome_morador,
                     codigo_rastreio, descricao, status, codigo_retirada,
                     observacao, usuario_criacao_id
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'aguardando_resposta',
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'retida_portaria',
                         %s, %s, %s)
                 RETURNING id, codigo_retirada
             """, (
