@@ -28,7 +28,7 @@
 
                     <div class="visitor-photo-wrap">
                         {% if v.foto %}
-                            <img src="{{ url_for('static', filename='fotos/' + v.foto) }}" class="visitor-photo">
+                            <img src="{{ url_for('visitantes.foto', id=v.id) }}" class="visitor-photo">
                         {% else %}
                             <div class="visitor-photo placeholder">Sem foto</div>
                         {% endif %}
@@ -156,7 +156,7 @@ function renderizarAtivos(data){
     ativosAtuais.forEach((v,index)=>{
         const card=el("div","visitor-card"+(index===indiceSelecionadoAtivo?" selecionado":"")); card.dataset.index=index;
         const photoWrap=el("div","visitor-photo-wrap");
-        if(v.foto){ const img=document.createElement("img"); img.className="visitor-photo"; img.alt="Foto do visitante"; img.src="/static/fotos/"+encodeURIComponent(v.foto); photoWrap.appendChild(img); }
+        if(v.foto_url){ const img=document.createElement("img"); img.className="visitor-photo"; img.alt="Foto do visitante"; img.src=v.foto_url; photoWrap.appendChild(img); }
         else photoWrap.appendChild(el("div","visitor-photo placeholder","Sem foto"));
         const main=el("div","visitor-main"), details=el("div","card-visitante"), grid=el("div","info-grid");
         const nome=info("Nome",(v.nome||"").toUpperCase()); nome.classList.add("destaque");
