@@ -149,10 +149,14 @@ def lote_detalhe(lote_id):
 @roles_required("admin", "funcionario")
 def status_lote(lote_id):
     status = request.form.get("status", "")
-    if atualizar_status_lote(lote_id, status, session["usuario_id"]):
-        flash("Status do lote atualizado.", "sucesso")
-    else:
-        flash("Lote ou status inválido.", "erro")
+    try:
+        alterou = atualizar_status_lote(lote_id, status, session["usuario_id"])
+        flash("Status do recebimento atualizado." if alterou else "Recebimento ou status inválido.", "sucesso" if alterou else "erro")
+    except ValueError as exc:
+        flash(str(exc), "erro")
+    except Exception:
+        logger.exception("Erro ao atualizar status do recebimento")
+        flash("Não foi possível atualizar o recebimento.", "erro")
     return redirect(url_for("encomendas.lote_detalhe", lote_id=lote_id))
 
 
