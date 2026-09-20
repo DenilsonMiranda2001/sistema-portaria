@@ -88,3 +88,53 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
         conn.rollback(); raise
     finally:
         liberar(conn)
+
+
+def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=None, usuario_senha_hash=None, nivel="admin"):
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("INSERT INTO condominios(nome,slug,ativo) VALUES(%s,%s,TRUE) RETURNING id", (nome, slug))
+            condominio_id = cur.fetchone()["id"]
+            usuario_id = None
+            if usuario_login:
+                cur.execute("SELECT 1 FROM platform_admins WHERE usuario=%s", (usuario_login,))
+                if cur.fetchone():
+                    raise ValueError("Este login é reservado pela plataforma.")
+                cur.execute("SELECT 1 FROM usuarios WHERE usuario=%s", (usuario_login,))
+                if cur.fetchone():
+                    raise ValueError("Este login já está em uso.")
+                cur.execute("""INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel,ativo)
+                               VALUES(%s,%s,%s,%s,%s,TRUE) RETURNING id""",
+                            (condominio_id, usuario_nome.upper(), usuario_login, usuario_senha_hash, nivel))
+                usuario_id = cur.fetchone()["id"]
+        conn.commit()
+        return condominio_id, usuario_id
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+
+
+def criar_usuario_tenant(condominio_id, nome, usuario, senha_hash, nivel):
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id FROM condominios WHERE id=%s AND ativo=TRUE FOR SHARE", (condominio_id,))
+            if not cur.fetchone():
+                raise ValueError("Condomínio não encontrado ou inativo.")
+            cur.execute("SELECT 1 FROM platform_admins WHERE usuario=%s", (usuario,))
+            if cur.fetchone():
+                raise ValueError("Este login é reservado pela plataforma.")
+            cur.execute("""INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel,ativo)
+                           VALUES(%s,%s,%s,%s,%s,TRUE) RETURNING id""",
+                        (condominio_id, nome.upper(), usuario, senha_hash, nivel))
+            usuario_id = cur.fetchone()["id"]
+        conn.commit()
+        return usuario_id
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
