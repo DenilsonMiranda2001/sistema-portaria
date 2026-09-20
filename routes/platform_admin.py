@@ -135,7 +135,10 @@ def status_condominio(condominio_id):
 @platform_admin_required
 def status_usuario_condominio(condominio_id,usuario_id):
     ativo=request.form.get("ativo")=="1"
-    if definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
-        registrar_auditoria("plataforma.usuario_tenant_status",actor_tipo="platform_admin",actor_id=session["usuario_id"],condominio_id=condominio_id,entidade="usuario",entidade_id=usuario_id,detalhes={"ativo":ativo})
-        flash("Status do usuário atualizado.","sucesso")
+    try:
+        if definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
+            registrar_auditoria("plataforma.usuario_tenant_status",actor_tipo="platform_admin",actor_id=session["usuario_id"],condominio_id=condominio_id,entidade="usuario",entidade_id=usuario_id,detalhes={"ativo":ativo})
+            flash("Status do usuário atualizado.","sucesso")
+    except ValueError as exc:
+        flash(str(exc),"erro")
     return redirect(url_for("platform_admin.detalhe_condominio",condominio_id=condominio_id))
