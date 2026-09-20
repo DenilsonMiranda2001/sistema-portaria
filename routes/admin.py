@@ -10,7 +10,8 @@ from database.models import (
     inativar_usuario,
     ativar_usuario,
     atualizar_senha_usuario,
-    resumo_unidades
+    resumo_unidades,
+    listar_auditoria_tenant
 )
 
 admin_bp = Blueprint("admin", __name__)
@@ -152,3 +153,8 @@ def alterar_senha_usuario(id):
         return redirect(url_for("admin.usuarios"))
 
     return render_template("alterar_senha_usuario.html", user=user)
+
+@admin_bp.route("/auditoria")
+@roles_required("admin")
+def auditoria():
+    return render_template("auditoria.html", eventos=listar_auditoria_tenant(250))
