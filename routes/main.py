@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, g, redirect, url
 
 from database.models import (
     total_visitantes_ativos,
+    listar_visitantes_ativos_resumo,
     total_entradas_hoje,
     total_saidas_hoje,
     total_visitantes_cadastrados,
@@ -31,6 +32,7 @@ def index():
         ultima_nome=ultima_nome,
         ultima_hora=ultima_hora,
         ultimas_entradas=ultimas_entradas_dashboard(5),
+        visitantes_ativos_resumo=listar_visitantes_ativos_resumo(6),
     )
 
 
