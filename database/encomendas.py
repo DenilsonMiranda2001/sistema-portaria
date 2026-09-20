@@ -129,7 +129,7 @@ def adicionar_encomenda(lote_id, morador_id, unidade, nome_morador,
                 cur.execute("""
                     SELECT m.id, m.nome, m.telefone, m.unidade_id, u.codigo AS unidade
                     FROM moradores m
-                    LEFT JOIN unidades u ON u.id = m.unidade_id
+                    LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
                     WHERE m.id = %s AND m.condominio_id = %s AND m.ativo = TRUE
                 """, (morador_id, tenant_id))
                 morador = cur.fetchone()
@@ -139,6 +139,10 @@ def adicionar_encomenda(lote_id, morador_id, unidade, nome_morador,
                 unidade = morador["unidade"] or unidade
                 unidade_id = morador["unidade_id"]
                 telefone = morador["telefone"]
+
+            cur.execute("SELECT 1 FROM lotes_encomendas WHERE id = %s AND condominio_id = %s AND status IN ('aberto','em_triagem')", (lote_id, tenant_id))
+            if not cur.fetchone():
+                raise ValueError("Lote não encontrado ou já encerrado.")
 
             unidade = (unidade or "").strip().upper()
             if not unidade:
@@ -177,6 +181,7 @@ def adicionar_encomenda(lote_id, morador_id, unidade, nome_morador,
 
 
 def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=()):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -184,8 +189,8 @@ def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=
                 SELECT e.*, l.transportadora, l.nome_entregador, l.status AS lote_status,
                        m.telefone
                 FROM encomendas e
-                JOIN lotes_encomendas l ON l.id = e.lote_id
-                LEFT JOIN moradores m ON m.id = e.morador_id
+                JOIN lotes_encomendas l ON l.id = e.lote_id AND l.condominio_id = e.condominio_id
+                LEFT JOIN moradores m ON m.id = e.morador_id AND m.condominio_id = e.condominio_id
                 WHERE e.condominio_id = %s {where}
                 ORDER BY {order}
             """, (tenant_id, *params))
