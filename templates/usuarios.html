@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Usuários do Sistema</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -16,7 +17,10 @@
 
             <div class="acoes-topo">
                 <a class="btn-topo btn-voltar" href="{{ url_for('main.index') }}">Voltar</a>
-                <a class="btn-topo btn-sair" href="{{ url_for('auth.logout') }}">Sair</a>
+                <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn-topo btn-sair" type="submit">Sair</button>
+                </form>
             </div>
         </div>
 
@@ -45,7 +49,7 @@
 
                 <div class="campo">
                     <label for="senha">Senha</label>
-                    <input class="input-padrao" type="password" id="senha" name="senha" required>
+                    <input class="input-padrao" type="password" id="senha" name="senha" minlength="12" autocomplete="new-password" required>
                 </div>
 
                 <div class="campo">
@@ -89,8 +93,8 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="status-badge {% if u['ativo'] == 1 %}status-ativo{% else %}status-inativo{% endif %}">
-                                    {% if u["ativo"] == 1 %}Ativo{% else %}Inativo{% endif %}
+                                <span class="status-badge {% if u['ativo'] %}status-ativo{% else %}status-inativo{% endif %}">
+                                    {% if u["ativo"] %}Ativo{% else %}Inativo{% endif %}
                                 </span>
                             </td>
                             <td>
@@ -98,12 +102,18 @@
                                     <a class="link-btn" href="{{ url_for('admin.editar_usuario', id=u['id']) }}">Editar</a>
                                     <a class="link-btn" href="{{ url_for('admin.alterar_senha_usuario', id=u['id']) }}">Senha</a>
 
-                                    {% if u["ativo"] == 1 %}
+                                    {% if u["ativo"] %}
                                         {% if session.get("usuario_id") != u["id"] %}
-                                            <a class="link-btn" href="{{ url_for('admin.inativar_usuario_rota', id=u['id']) }}">Inativar</a>
+                                            <form method="post" action="{{ url_for('admin.inativar_usuario_rota', id=u['id']) }}" style="display:inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="link-btn" type="submit">Inativar</button>
+                                            </form>
                                         {% endif %}
                                     {% else %}
-                                        <a class="link-btn" href="{{ url_for('admin.ativar_usuario_rota', id=u['id']) }}">Ativar</a>
+                                        <form method="post" action="{{ url_for('admin.ativar_usuario_rota', id=u['id']) }}" style="display:inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="link-btn" type="submit">Ativar</button>
+                                        </form>
                                     {% endif %}
                                 </div>
                             </td>
