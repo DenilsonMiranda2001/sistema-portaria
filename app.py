@@ -1,6 +1,6 @@
 import logging
 import os
-from flask import Flask, session, redirect, url_for, request
+from flask import Flask, jsonify, session, redirect, url_for, request
 
 from config import Config
 from routes.admin import admin_bp
@@ -10,17 +10,22 @@ from routes.auth import auth_bp
 from routes.moradores import moradores_bp
 from routes.encomendas import encomendas_bp
 from database.models import criar_tabelas
+from database.connection import verificar_conexao
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
 )
 
 app = Flask(__name__)
 app.config.from_object(Config)
-app.config["UPLOAD_FOLDER"] = os.path.join("static", "fotos")
+Config.validate()
 
-criar_tabelas()
+# Temporary compatibility gate: schema bootstrap remains enabled outside
+# production while migrations are introduced. Production must run migrations
+# explicitly before starting the web process.
+if Config.APP_ENV != "production":
+    criar_tabelas()
 
 app.register_blueprint(main_bp)
 app.register_blueprint(visitantes_bp)
@@ -29,7 +34,8 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(moradores_bp)
 app.register_blueprint(encomendas_bp)
 
-ROTAS_PUBLICAS = {"auth.login", "auth.logout", "static"}
+ROTAS_PUBLICAS = {"auth.login", "auth.logout", "static", "healthz", "readyz"}
+
 
 @app.before_request
 def verificar_login():
@@ -40,5 +46,30 @@ def verificar_login():
         return redirect(url_for("auth.login"))
 
 
+@app.after_request
+def security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(self), microphone=(), geolocation=()")
+    if Config.APP_ENV == "production":
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    return response
+
+
+@app.get("/healthz")
+def healthz():
+    return jsonify(status="ok"), 200
+
+
+@app.get("/readyz")
+def readyz():
+    try:
+        return (jsonify(status="ready"), 200) if verificar_conexao() else (jsonify(status="not_ready"), 503)
+    except Exception:
+        app.logger.exception("Readiness database check failed")
+        return jsonify(status="not_ready"), 503
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=Config.APP_ENV == "development")
