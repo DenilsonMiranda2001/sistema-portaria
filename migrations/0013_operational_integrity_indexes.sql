@@ -16,6 +16,19 @@ CREATE INDEX IF NOT EXISTS idx_moradores_tenant_ativos_unidade
 CREATE INDEX IF NOT EXISTS idx_visitantes_tenant_nome
     ON visitantes(condominio_id, nome);
 
+-- Preflight before adding the concurrency invariant. Never hide historical corruption.
+DO $
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM visitas
+        WHERE data_saida IS NULL
+        GROUP BY condominio_id, visitante_id
+        HAVING COUNT(*) > 1
+    ) THEN
+        RAISE EXCEPTION 'Invariant violation: duplicate open visits exist; reconcile them before migration 0013';
+    END IF;
+END $;
+
 -- Database-level guarantee: one visitor cannot have two simultaneous open visits
 -- inside the same condominium, even under concurrent requests.
 CREATE UNIQUE INDEX IF NOT EXISTS uq_visita_aberta_visitante_tenant
