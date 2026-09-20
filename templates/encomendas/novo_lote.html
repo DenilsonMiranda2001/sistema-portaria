@@ -6,7 +6,7 @@
 <div class="compact-list-toolbar"><strong>Recebimento</strong><span class="enc-context-label">Registre a entrega recebida na central</span></div>
 <form class="card enc-form" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="enc-form-grid">
         <label><span>Transportadora *</span>
             <select name="transportadora" required autofocus>
