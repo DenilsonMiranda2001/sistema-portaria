@@ -31,3 +31,11 @@ def test_desktop_registration_uses_full_viewport_pattern():
     assert ".quick-access-form{height:calc(100vh - 194px)" in css
     assert "max-width:none!important" in css
     assert "compact-crud-form" in resident
+
+
+def test_registration_uses_professional_readable_control_sizes():
+    css = Path("static/style.css").read_text(encoding="utf-8")
+    assert "height:40px!important" in css
+    assert "font-size:14px!important" in css
+    assert "font-size:13px!important;letter-spacing:.045em!important" in css
+    assert "height:38px!important" in css
