@@ -156,12 +156,13 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                UPDATE usuarios SET nome = %s, usuario = %s, nivel = %s WHERE id = %s
+                UPDATE usuarios SET nome = %s, usuario = %s, nivel = %s WHERE id = %s AND condominio_id = %s
             """, (
                 (nome or "").strip().upper(),
                 (usuario or "").strip(),
                 (nivel or "funcionario").strip().lower(),
                 usuario_id,
+                tenant_id,
             ))
         conn.commit()
     except Exception:
@@ -177,8 +178,8 @@ def atualizar_senha_usuario(usuario_id, nova_senha):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE usuarios SET senha = %s WHERE id = %s",
-                (generate_password_hash(nova_senha), usuario_id)
+                "UPDATE usuarios SET senha = %s WHERE id = %s AND condominio_id = %s",
+                (generate_password_hash(nova_senha), usuario_id, tenant_id)
             )
         conn.commit()
     except Exception:
@@ -193,7 +194,7 @@ def inativar_usuario(usuario_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE usuarios SET ativo = FALSE WHERE id = %s", (usuario_id,))
+            cur.execute("UPDATE usuarios SET ativo = FALSE WHERE id = %s AND condominio_id = %s", (usuario_id, tenant_id))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -207,7 +208,7 @@ def ativar_usuario(usuario_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s", (usuario_id,))
+            cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s AND condominio_id = %s", (usuario_id,))
         conn.commit()
     except Exception:
         conn.rollback()
