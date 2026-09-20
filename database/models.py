@@ -326,6 +326,10 @@ def cadastrar_morador(nome, cpf, telefone, email, unidade_id, observacao):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if unidade_id:
+                cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (unidade_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Unidade inválida para este condomínio.")
             cur.execute("""
                 INSERT INTO moradores (condominio_id, nome, cpf, telefone, email, unidade_id, observacao, ativo)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
@@ -429,6 +433,10 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if unidade_id:
+                cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (unidade_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Unidade inválida para este condomínio.")
             cur.execute("""
                 UPDATE moradores
                 SET nome = %s, cpf = %s, telefone = %s, email = %s,
@@ -874,12 +882,12 @@ def registrar_saida(visitante_id, usuario_saida_id=None):
             cur.execute("""
                 UPDATE visitas
                 SET data_saida = CURRENT_TIMESTAMP, usuario_saida_id = %s
-                WHERE id = (
+                WHERE condominio_id = %s AND id = (
                     SELECT id FROM visitas
                     WHERE condominio_id = %s AND visitante_id = %s AND data_saida IS NULL
                     ORDER BY data_entrada DESC LIMIT 1
                 )
-            """, (usuario_saida_id, tenant_id, visitante_id))
+            """, (usuario_saida_id, tenant_id, tenant_id, visitante_id))
         conn.commit()
         logger.info("Saída registrada: visitante=%s", visitante_id)
     except Exception:
