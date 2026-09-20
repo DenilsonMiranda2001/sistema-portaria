@@ -1,5 +1,6 @@
 import logging
 import os
+import uuid
 from flask import Flask, jsonify, session, redirect, url_for, request, g
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -51,6 +52,7 @@ ROTAS_PUBLICAS = {"auth.login", "auth.logout", "static", "healthz", "readyz"}
 
 @app.before_request
 def verificar_login():
+    g.request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
     load_identity()
     endpoint = request.endpoint or ""
     if endpoint in ROTAS_PUBLICAS or endpoint.startswith("static"):
@@ -63,6 +65,8 @@ def verificar_login():
 
 @app.after_request
 def security_headers(response):
+    response.headers.setdefault("X-Request-ID", getattr(g, "request_id", uuid.uuid4().hex))
+    response.headers.setdefault("Cache-Control", "no-store")
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -85,6 +89,24 @@ def readyz():
     except Exception:
         app.logger.exception("Readiness database check failed")
         return jsonify(status="not_ready"), 503
+
+
+
+
+@app.errorhandler(403)
+def forbidden(_error):
+    return jsonify(error="forbidden", request_id=getattr(g, "request_id", None)), 403
+
+
+@app.errorhandler(404)
+def not_found(_error):
+    return jsonify(error="not_found", request_id=getattr(g, "request_id", None)), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    app.logger.error("Unhandled request error request_id=%s", getattr(g, "request_id", None), exc_info=error)
+    return jsonify(error="internal_error", request_id=getattr(g, "request_id", None)), 500
 
 
 if __name__ == "__main__":
