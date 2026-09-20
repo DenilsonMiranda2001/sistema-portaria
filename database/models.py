@@ -1009,10 +1009,10 @@ def historico_visitante(visitante_id):
                     m.nome AS morador_nome,
                     u.codigo AS unidade_codigo
                 FROM visitas vi
-                LEFT JOIN usuarios ue ON vi.usuario_entrada_id = ue.id
-                LEFT JOIN usuarios us ON vi.usuario_saida_id = us.id
-                LEFT JOIN moradores m ON vi.morador_id = m.id
-                LEFT JOIN unidades u ON vi.unidade_id = u.id
+                LEFT JOIN usuarios ue ON vi.usuario_entrada_id = ue.id AND ue.condominio_id = vi.condominio_id
+                LEFT JOIN usuarios us ON vi.usuario_saida_id = us.id AND us.condominio_id = vi.condominio_id
+                LEFT JOIN moradores m ON vi.morador_id = m.id AND m.condominio_id = vi.condominio_id
+                LEFT JOIN unidades u ON vi.unidade_id = u.id AND u.condominio_id = vi.condominio_id
                 WHERE vi.condominio_id = %s AND vi.visitante_id = %s
                 ORDER BY vi.data_entrada DESC
             """, (tenant_id, visitante_id))
@@ -1124,8 +1124,8 @@ def ultimas_entradas_dashboard(limite=5):
                        m.nome AS morador_nome, u.codigo AS unidade_codigo
                 FROM visitas vi
                 JOIN visitantes v ON v.id = vi.visitante_id AND v.condominio_id = vi.condominio_id
-                LEFT JOIN moradores m ON vi.morador_id = m.id
-                LEFT JOIN unidades u ON vi.unidade_id = u.id
+                LEFT JOIN moradores m ON vi.morador_id = m.id AND m.condominio_id = vi.condominio_id
+                LEFT JOIN unidades u ON vi.unidade_id = u.id AND u.condominio_id = vi.condominio_id
                 WHERE vi.condominio_id = %s
                 ORDER BY vi.data_entrada DESC LIMIT %s
             """, (tenant_id, limite))
