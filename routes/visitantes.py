@@ -130,10 +130,14 @@ def cadastro():
             flash(erro_foto, "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
-        visitante_id = cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao)
-        registrar_entrada(
-            visitante_id, endereco, placa, marca, modelo, observacao,
-            session["usuario_id"], unidade_id, morador_id
+        cadastrar_visitante(
+            nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao,
+            entrada={
+                "endereco": endereco,
+                "usuario_id": session["usuario_id"],
+                "unidade_id": unidade_id,
+                "morador_id": morador_id,
+            },
         )
 
         flash("Visitante cadastrado e entrada registrada com sucesso!", "sucesso")
