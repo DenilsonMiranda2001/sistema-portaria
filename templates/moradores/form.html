@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}{{ titulo }}<style>.resident-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}.resident-heading h1{margin:4px 0 6px}.resident-heading p{margin:0;color:var(--pc-muted)}.resident-form-shell{padding:22px}.resident-form-shell .card-bloco{border:0;border-top:1px solid var(--pc-line);border-radius:0;padding:22px 0;margin:0;background:transparent;box-shadow:none}.resident-form-shell .card-bloco:first-of-type{border-top:0;padding-top:4px}.resident-form-shell .card-bloco h3{font-size:14px;letter-spacing:-.01em}.resident-form-shell .acao-formulario{border-top:1px solid var(--pc-line);padding-top:20px}@media(max-width:650px){.resident-heading{align-items:flex-start;flex-direction:column}.resident-form-shell{padding:16px}}</style>{% endblock %}
+{% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<section class="page-heading resident-heading"><div><span class="page-eyebrow">MORADORES</span><h1>{{ titulo }}</h1><p>Dados pessoais e vínculo da unidade em um único fluxo.</p></div><a class="btn-secundario" href="{{ url_for('moradores.listar') }}">Voltar</a></section><div class="card-padrao resident-form-shell">
+<section class="compact-access-head"><div><span class="page-eyebrow">MORADORES</span><h1>{{ titulo }}</h1></div><a href="{{ url_for('moradores.listar') }}">Cancelar</a></section><div class="card-padrao resident-form-shell compact-form-page">
 
-    <form method="POST" autocomplete="off" class="form-cadastro-visitante">
+    <form method="POST" autocomplete="off" class="form-cadastro-visitante compact-crud-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="card-bloco">
