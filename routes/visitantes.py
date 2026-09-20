@@ -40,6 +40,7 @@ from utils.validators import (
 from utils.imagem import salvar_foto_webcam
 from utils.storage import save_image
 from utils.endereco import formatar_endereco_condominio
+from utils.audit import registrar_auditoria
 
 visitantes_bp = Blueprint("visitantes", __name__)
 logger = logging.getLogger(__name__)
@@ -131,7 +132,7 @@ def cadastro():
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
         try:
-            cadastrar_visitante(
+            visitante_id = cadastrar_visitante(
                 nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao,
                 entrada={
                     "endereco": endereco,
@@ -148,6 +149,7 @@ def cadastro():
             flash("Não foi possível concluir o cadastro do visitante.", "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
+        registrar_auditoria("visitante.criado_com_entrada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=visitante_id)
         flash("Visitante cadastrado e entrada registrada com sucesso!", "sucesso")
         return redirect(url_for("visitantes.ativos"))
 
@@ -218,6 +220,7 @@ def entrada():
             logger.exception("Erro ao registrar entrada")
             flash("Não foi possível registrar a entrada.", "erro")
             return redirect(url_for("visitantes.entrada"))
+        registrar_auditoria("visita.entrada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=visitante["id"])
         flash("Entrada registrada com sucesso!", "sucesso")
         return redirect(url_for("visitantes.ativos"))
 
@@ -235,6 +238,7 @@ def saida(id):
     if not alterou:
         flash("Não há visita ativa para este visitante.", "aviso")
         return redirect(url_for("visitantes.ativos"))
+    registrar_auditoria("visita.saida", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=id)
     flash("Saída registrada com sucesso!", "sucesso")
     return redirect(url_for("visitantes.ativos"))
 
@@ -283,6 +287,7 @@ def editar(id):
             nome_foto = visitante["foto"]
 
         atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao)
+        registrar_auditoria("visitante.atualizado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=id)
         flash("Cadastro atualizado com sucesso!", "sucesso")
         return redirect(url_for("visitantes.visitantes"))
 
@@ -297,6 +302,7 @@ def remover(id):
         return redirect(url_for("visitantes.visitantes"))
 
     remover_visitante(id)
+    registrar_auditoria("visitante.removido", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=id)
     flash("Visitante removido com sucesso!", "sucesso")
     return redirect(url_for("visitantes.visitantes"))
 
