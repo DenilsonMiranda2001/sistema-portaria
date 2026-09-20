@@ -6,7 +6,7 @@ from database.connection import conectar, liberar
 
 
 def _ip_hash():
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+    ip = (request.remote_addr or "").strip()
     salt = os.getenv("AUDIT_IP_SALT", "")
     return hashlib.sha256((salt + ip).encode("utf-8")).hexdigest() if ip else None
 
