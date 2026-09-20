@@ -888,8 +888,11 @@ def registrar_saida(visitante_id, usuario_saida_id=None):
                     ORDER BY data_entrada DESC LIMIT 1
                 )
             """, (usuario_saida_id, tenant_id, tenant_id, visitante_id))
+            alterou = cur.rowcount > 0
         conn.commit()
-        logger.info("Saída registrada: visitante=%s", visitante_id)
+        if alterou:
+            logger.info("Saída registrada: visitante=%s", visitante_id)
+        return alterou
     except Exception:
         conn.rollback()
         raise
