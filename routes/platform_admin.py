@@ -1,5 +1,6 @@
 from functools import wraps
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
+import re
 from werkzeug.security import generate_password_hash
 from database.connection import conectar, liberar
 
@@ -8,7 +9,8 @@ platform_admin_bp = Blueprint("platform_admin", __name__, url_prefix="/plataform
 def platform_admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
-        if not session.get("is_platform_admin"):
+        user = getattr(g, "current_user", None)
+        if not user or user.get("nivel") != "platform_admin":
             return redirect(url_for("auth.login"))
         return view(*args, **kwargs)
     return wrapped
@@ -33,6 +35,9 @@ def criar_condominio():
     if not nome or not slug:
         flash("Informe nome e código do condomínio.","erro")
         return redirect(url_for("platform_admin.condominios"))
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
+        flash("O código deve usar apenas letras minúsculas, números e hífens.", "erro")
+        return redirect(url_for("platform_admin.condominios"))
     conn=conectar()
     try:
         with conn.cursor() as cur:
@@ -56,8 +61,8 @@ def criar_usuario_condominio(condominio_id):
     nivel=request.form.get("nivel","funcionario").strip().lower()
     if nivel not in ("admin","funcionario"):
         nivel="funcionario"
-    if not nome or not usuario or len(senha)<8:
-        flash("Preencha os dados do usuário; a senha deve ter pelo menos 8 caracteres.","erro")
+    if not nome or not usuario or len(senha)<12:
+        flash("Preencha os dados do usuário; a senha deve ter pelo menos 12 caracteres.","erro")
         return redirect(url_for("platform_admin.condominios"))
     conn=conectar()
     try:
@@ -65,6 +70,14 @@ def criar_usuario_condominio(condominio_id):
             cur.execute("SELECT id FROM condominios WHERE id=%s AND ativo=TRUE",(condominio_id,))
             if not cur.fetchone():
                 flash("Condomínio não encontrado ou inativo.","erro")
+                return redirect(url_for("platform_admin.condominios"))
+            cur.execute("SELECT 1 FROM platform_admins WHERE usuario=%s", (usuario,))
+            if cur.fetchone():
+                flash("Este login é reservado pela plataforma.", "erro")
+                return redirect(url_for("platform_admin.condominios"))
+            cur.execute("SELECT 1 FROM usuarios WHERE usuario=%s", (usuario,))
+            if cur.fetchone():
+                flash("Este login já está em uso.", "erro")
                 return redirect(url_for("platform_admin.condominios"))
             cur.execute("""INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel,ativo)
                            VALUES(%s,%s,%s,%s,%s,TRUE)""",
