@@ -118,7 +118,11 @@ def buscar_usuario_por_id(usuario_id):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, condominio_id, nome, usuario, nivel, ativo, criado_em FROM usuarios WHERE id = %s",
+                """SELECT u.id, u.condominio_id, u.nome, u.usuario, u.nivel, u.ativo, u.criado_em,
+                          c.ativo AS condominio_ativo
+                   FROM usuarios u
+                   JOIN condominios c ON c.id = u.condominio_id
+                   WHERE u.id = %s""",
                 (usuario_id,)
             )
             return cur.fetchone()
