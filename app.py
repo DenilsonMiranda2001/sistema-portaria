@@ -1,6 +1,7 @@
 import logging
 import os
-from flask import Flask, jsonify, session, redirect, url_for, request
+from flask import Flask, jsonify, session, redirect, url_for, request, g
+from flask_wtf.csrf import CSRFProtect
 
 from config import Config
 from routes.admin import admin_bp
@@ -21,6 +22,7 @@ logging.basicConfig(
 app = Flask(__name__)
 app.config.from_object(Config)
 Config.validate()
+csrf = CSRFProtect(app)
 
 # Temporary compatibility gate: schema bootstrap remains enabled outside
 # production while migrations are introduced. Production must run migrations
@@ -44,7 +46,7 @@ def verificar_login():
     endpoint = request.endpoint or ""
     if endpoint in ROTAS_PUBLICAS or endpoint.startswith("static"):
         return
-    if not getattr(__import__("flask").g, "current_user", None):
+    if not getattr(g, "current_user", None):
         return redirect(url_for("auth.login"))
 
 
