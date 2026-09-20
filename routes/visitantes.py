@@ -38,7 +38,7 @@ from utils.validators import (
     EXTENSOES_FOTO_PERMITIDAS,
 )
 from utils.imagem import salvar_foto_webcam
-from utils.storage import save_image
+from utils.storage import save_image, save_webcam_image
 from utils.endereco import formatar_endereco_condominio
 from utils.audit import registrar_auditoria
 from utils.authz import roles_required
@@ -70,13 +70,13 @@ def _storage_ready():
 
 
 def _save_photo_production(arquivo_foto, foto_webcam_b64):
-    if foto_webcam_b64:
-        return None, "Captura por webcam está temporariamente indisponível até o armazenamento privado ser configurado."
-    if not arquivo_foto or not arquivo_foto.filename:
+    if not foto_webcam_b64 and (not arquivo_foto or not arquivo_foto.filename):
         return None, None
     if not _storage_ready():
-        return None, "Upload de fotos está temporariamente indisponível."
+        return None, "Armazenamento privado de fotos não está configurado."
     try:
+        if foto_webcam_b64:
+            return save_webcam_image(foto_webcam_b64, g.tenant_id), None
         return save_image(arquivo_foto, g.tenant_id), None
     except (ValueError, RuntimeError):
         logger.exception("Falha ao persistir foto do visitante")
