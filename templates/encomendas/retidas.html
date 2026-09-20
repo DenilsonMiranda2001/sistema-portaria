@@ -3,7 +3,7 @@
 {% block title %}Encomendas Retidas{% endblock %}
 {% block content %}
 {{ subnav('retidas') }}
-<div class="enc-header"><div><h2>Retidas na portaria</h2><p>Confirme a retirada com identificação de quem recebeu.</p></div></div>
+<div class="compact-list-toolbar"><strong>Aguardando retirada</strong><span class="enc-context-label">Confirme a identidade de quem retirar</span></div>
 <form class="card enc-busca" method="get">
     <input name="q" value="{{ termo }}" autofocus placeholder="Buscar por unidade, morador, código de retirada ou rastreio">
     <button class="btn enc-btn enc-btn-primary">Buscar</button>
@@ -15,6 +15,6 @@
     <div class="enc-meta"><span><b>{{ encomenda.codigo_retirada }}</b></span><span>{{ encomenda.transportadora }} · Lote #{{ encomenda.lote_id }}</span><span>Desde {{ encomenda.data_chegada.strftime('%d/%m/%Y %H:%M') }}</span></div>
     {{ acoes(encomenda, 'retidas') }}
 </article>
-{% else %}<div class="card enc-vazio">Nenhuma encomenda retida encontrada.</div>{% endfor %}
+{% else %}<div class="card enc-vazio">Nenhuma encomenda aguardando retirada.</div>{% endfor %}
 </div>
 {% endblock %}
