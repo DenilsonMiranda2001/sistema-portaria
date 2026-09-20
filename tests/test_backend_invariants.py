@@ -70,3 +70,15 @@ def test_hot_operational_queries_have_tenant_scoped_indexes():
     assert "idx_visitas_tenant_abertas" in migration
     assert "idx_encomendas_tenant_custodia" in migration
     assert "idx_moradores_tenant_ativos_unidade" in migration
+
+
+def test_entry_lock_precedes_active_visit_check():
+    source = Path("database/models.py").read_text(encoding="utf-8")
+    block = source[source.index("def registrar_entrada"):source.index("def registrar_saida")]
+    assert block.index("FOR UPDATE") < block.index("data_saida IS NULL")
+
+
+def test_applied_migrations_are_forward_only():
+    verification = Path("migrations/0014_verify_live_access_invariant.sql").read_text(encoding="utf-8")
+    assert "pg_indexes" in verification
+    assert "uq_visita_aberta_visitante_tenant" in verification
