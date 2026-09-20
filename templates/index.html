@@ -115,11 +115,8 @@ function limparMensagem() {
 }
 
 function mostrarEstadoInicial() {
-    lista.innerHTML = `
-        <div class="estado-vazio-inicial">
-            🔎 Comece digitando CPF, nome ou placa para buscar visitantes.
-        </div>
-    `;
+    lista.replaceChildren();
+    const vazio=document.createElement("div");vazio.className="estado-vazio-inicial";vazio.textContent="Comece digitando CPF, nome ou placa para buscar visitantes.";lista.appendChild(vazio);
 }
 
 function atualizarCampoEstado(id, campo, valor) {
@@ -402,7 +399,7 @@ input.addEventListener("input", function () {
             .catch((erro) => {
                 resultadosAtuais = [];
                 indiceSelecionado = 0;
-                lista.innerHTML = `<div class="estado-erro">${erro.message}</div>`;
+                lista.replaceChildren(); const erroBox=document.createElement("div");erroBox.className="estado-erro";erroBox.textContent=erro.message;lista.appendChild(erroBox);
                 console.error("Erro na busca:", erro);
             });
     }, 400);
