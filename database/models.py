@@ -698,7 +698,7 @@ def cpf_ja_cadastrado(cpf, visitante_id=None):
 
 
 def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
-                       endereco=None, entrada=None):
+                       endereco=None, entrada=None, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -757,6 +757,8 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
                     entrada.get("usuario_id"), unidade_id, morador_id,
                 ))
                 registrar_auditoria_cursor(cur, "visitante.criado_com_entrada", usuario_id=entrada.get("usuario_id"), condominio_id=tenant_id, entidade="visitante", entidade_id=novo["id"])
+            elif usuario_id:
+                registrar_auditoria_cursor(cur, "visitante.criado", usuario_id=usuario_id, condominio_id=tenant_id, entidade="visitante", entidade_id=novo["id"])
         conn.commit()
         return novo["id"]
     except Exception:
