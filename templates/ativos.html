@@ -113,6 +113,7 @@
                         <div class="card-actions">
                             <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}"
                                   onsubmit="return confirm('Registrar saída de {{ v.nome }}?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
                             </form>
                         </div>
@@ -283,6 +284,7 @@ function renderizarAtivos(data) {
                 <div class="card-actions">
                     <form method="POST" action="/saida/${v.id}"
                           onsubmit="event.stopPropagation(); return confirm('Registrar saída de ${(v.nome||'').replace(/'/g,'')}?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
                     </form>
                 </div>
