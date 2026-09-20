@@ -99,7 +99,7 @@ def inativar_usuario_rota(id):
         return redirect(url_for("admin.usuarios"))
 
     inativar_usuario(id)
-    registrar_auditoria("usuario.inativado", "usuario", id)
+    registrar_auditoria("usuario.inativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id)
     flash("Usuário inativado com sucesso!", "sucesso")
     return redirect(url_for("admin.usuarios"))
 
@@ -114,7 +114,7 @@ def ativar_usuario_rota(id):
         return redirect(url_for("admin.usuarios"))
 
     ativar_usuario(id)
-    registrar_auditoria("usuario.ativado", "usuario", id)
+    registrar_auditoria("usuario.ativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id)
     flash("Usuário ativado com sucesso!", "sucesso")
     return redirect(url_for("admin.usuarios"))
 
