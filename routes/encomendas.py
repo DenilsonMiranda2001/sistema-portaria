@@ -18,9 +18,11 @@ from database.encomendas import (
 )
 from database.models import listar_moradores
 from utils.audit import registrar_auditoria
+from utils.authz import roles_required
 
 
 encomendas_bp = Blueprint("encomendas", __name__, url_prefix="/encomendas")
+encomendas_bp.before_request(roles_required("admin", "funcionario")(lambda: None))
 logger = logging.getLogger(__name__)
 TRANSPORTADORAS = ("Shopee", "Mercado Livre", "Correios", "Amazon", "Outra")
 
