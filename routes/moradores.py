@@ -61,8 +61,7 @@ def novo():
                 return redirect(url_for("moradores.novo"))
 
         try:
-            morador_id = cadastrar_morador_com_unidade(nome, cpf or None, telefone, email, unidade_id, nova_unidade, observacao)
-            registrar_auditoria("morador.criado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="morador", entidade_id=morador_id)
+            morador_id = cadastrar_morador_com_unidade(nome, cpf or None, telefone, email, unidade_id, nova_unidade, observacao, session["usuario_id"])
             flash("Morador cadastrado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
         except ValueError as exc:
@@ -110,8 +109,7 @@ def editar(id):
                 return redirect(url_for("moradores.editar", id=id))
 
         try:
-            atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao, nova_unidade)
-            registrar_auditoria("morador.atualizado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="morador", entidade_id=id)
+            atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao, nova_unidade, session["usuario_id"])
             flash("Morador atualizado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
         except ValueError as exc:
