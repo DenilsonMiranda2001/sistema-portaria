@@ -12,9 +12,9 @@ def test_title_blocks_do_not_swallow_styles_or_content():
 def test_registration_layout_has_single_responsive_form_system():
     source = Path("templates/cadastro.html").read_text(encoding="utf-8")
     css = Path("static/style.css").read_text(encoding="utf-8")
-    assert "access-form-shell" in source
-    assert ".form-cadastro-visitante{display:grid" in css
-    assert "grid-template-columns:1fr 1fr" in css
+    assert "quick-access-form" in source
+    assert "quick-access-grid" in source
+    assert ".quick-access-grid" in css
     assert "@media(max-width:760px)" in css
 
 
@@ -30,7 +30,7 @@ def test_desktop_registration_uses_full_viewport_pattern():
     resident = Path("templates/moradores/form.html").read_text(encoding="utf-8")
     assert ".quick-access-form{height:calc(100vh - 194px)" in css
     assert "max-width:none!important" in css
-    assert "compact-crud-form" in resident
+    assert "resident-quick-form" in resident
 
 
 def test_registration_uses_professional_readable_control_sizes():
