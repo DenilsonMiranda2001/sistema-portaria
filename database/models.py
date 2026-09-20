@@ -201,11 +201,18 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            login = (usuario or "").strip()
+            cur.execute("SELECT 1 FROM platform_admins WHERE usuario = %s", (login,))
+            if cur.fetchone():
+                return "existe"
+            cur.execute("SELECT 1 FROM usuarios WHERE usuario = %s AND id <> %s", (login, usuario_id))
+            if cur.fetchone():
+                return "existe"
             cur.execute("""
                 UPDATE usuarios SET nome = %s, usuario = %s, nivel = %s WHERE id = %s AND condominio_id = %s
             """, (
                 (nome or "").strip().upper(),
-                (usuario or "").strip(),
+                login,
                 (nivel or "funcionario").strip().lower(),
                 usuario_id,
                 tenant_id,
