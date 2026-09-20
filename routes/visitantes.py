@@ -41,8 +41,10 @@ from utils.imagem import salvar_foto_webcam
 from utils.storage import save_image
 from utils.endereco import formatar_endereco_condominio
 from utils.audit import registrar_auditoria
+from utils.authz import roles_required
 
 visitantes_bp = Blueprint("visitantes", __name__)
+visitantes_bp.before_request(roles_required("admin", "funcionario")(lambda: None))
 logger = logging.getLogger(__name__)
 
 
