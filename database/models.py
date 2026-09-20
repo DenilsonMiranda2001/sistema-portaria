@@ -802,6 +802,18 @@ def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=Non
                 tenant_id,
             ))
 
+            if unidade_id:
+                cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (unidade_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Unidade inválida para este condomínio.")
+            if morador_id:
+                cur.execute("SELECT 1 FROM moradores WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (morador_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Morador inválido para este condomínio.")
+            cur.execute("SELECT 1 FROM visitantes WHERE id = %s AND condominio_id = %s", (visitante_id, tenant_id))
+            if not cur.fetchone():
+                raise ValueError("Visitante inválido para este condomínio.")
+
             cur.execute("""
                 INSERT INTO visitas
                     (condominio_id, visitante_id, endereco, placa, marca, modelo, observacao,
