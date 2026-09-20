@@ -2,133 +2,31 @@
 {% block title %}Início{% endblock %}
 
 {% block content %}
-
-<div class="card-padrao">
-    <div class="header-secao">
-        <h2>🚪 Controle de Acesso</h2>
-        <p class="texto-ajuda">
-            Digite CPF, nome ou placa para localizar o visitante e registrar a entrada.
-        </p>
-    </div>
-
-    <div class="busca-box">
-        <input
-            type="text"
-            id="busca"
-            class="input-padrao busca-input"
-            placeholder="Buscar visitante..."
-            autofocus
-            autocomplete="off"
-        >
-    </div>
-
+<section class="command-hero">
+  <div class="command-copy"><span class="page-eyebrow">CENTRAL OPERACIONAL</span><h1>Acesso sem atrito.<br><em>Controle em tempo real.</em></h1><p>Encontre o visitante por nome, CPF ou placa e conduza a entrada em poucos segundos.</p></div>
+  <div class="command-clock"><span>AGORA</span><strong id="pcClock">--:--</strong><small>Central ativa</small></div>
+</section>
+<section class="command-grid">
+  <div class="command-search">
+    <div class="command-search-head"><span>01</span><div><strong>Localizar visitante</strong><small>Pesquisa inteligente no cadastro da operação</small></div></div>
+    <div class="command-input-wrap"><span class="search-symbol"></span><input type="text" id="busca" class="input-padrao busca-input" placeholder="Nome, CPF ou placa" autofocus autocomplete="off"><kbd>ENTER</kbd></div>
     <div id="mensagem" class="mensagem-box"></div>
-
-    <div id="lista" class="lista-resultados">
-        <div class="estado-vazio-inicial">
-            🔎 Aguardando busca...
-        </div>
-    </div>
-</div>
-
-<div class="painel-resumo">
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">🚨</span>
-            <h3>Ativos agora</h3>
-        </div>
-        <p id="ativos" class="valor-destaque contador" data-valor="{{ total_ativos }}">0</p>
-    </div>
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">📅</span>
-            <h3>Entradas hoje</h3>
-        </div>
-        <p id="entradas" class="valor-destaque contador" data-valor="{{ entradas_hoje }}">0</p>
-    </div>
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">🚪</span>
-            <h3>Saídas hoje</h3>
-        </div>
-        <p id="saidas" class="valor-destaque contador" data-valor="{{ saidas_hoje }}">0</p>
-    </div>
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">👥</span>
-            <h3>Moradores</h3>
-        </div>
-        <p id="moradores" class="valor-destaque contador" data-valor="{{ total_moradores }}">0</p>
-    </div>
-
-    <div class="card-mini hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">👤</span>
-            <h3>Cadastrados</h3>
-        </div>
-        <p id="cadastrados" class="valor-destaque contador" data-valor="{{ total_cadastrados }}">0</p>
-    </div>
-
-    <div class="card-mini destaque hover-anim">
-        <div class="card-topo">
-            <span class="card-icon">🕒</span>
-            <h3>Última entrada</h3>
-        </div>
-        <p id="ultima_nome" class="nome-destaque">{{ ultima_nome }}</p>
-        <small id="ultima_hora" class="hora-destaque">{{ ultima_hora }}</small>
-    </div>
-
-</div>
-
+    <div id="lista" class="lista-resultados"><div class="estado-vazio-inicial"><strong>Pronto para uma nova entrada</strong><span>Comece digitando para localizar um cadastro.</span></div></div>
+  </div>
+  <aside class="command-metrics">
+    <div class="metric-feature"><span>NO CONDOMÍNIO</span><strong id="ativos" class="contador" data-valor="{{ total_ativos }}">0</strong><small>Acessos ativos agora</small><a href="{{ url_for('visitantes.ativos') }}">Ver operação →</a></div>
+    <div class="metric-pair"><div><span>ENTRADAS HOJE</span><strong id="entradas" class="contador" data-valor="{{ entradas_hoje }}">0</strong></div><div><span>SAÍDAS HOJE</span><strong id="saidas" class="contador" data-valor="{{ saidas_hoje }}">0</strong></div></div>
+    <div class="metric-pair muted"><div><span>MORADORES</span><strong id="moradores" class="contador" data-valor="{{ total_moradores }}">0</strong></div><div><span>VISITANTES</span><strong id="cadastrados" class="contador" data-valor="{{ total_cadastrados }}">0</strong></div></div>
+    <div class="last-access"><span>ÚLTIMA ENTRADA</span><strong id="ultima_nome">{{ ultima_nome }}</strong><small id="ultima_hora">{{ ultima_hora }}</small></div>
+  </aside>
+</section>
 {% if ultimas_entradas %}
-<div class="card-padrao" style="margin-top:16px;">
-    <div class="header-secao">
-        <h2>🕒 Últimas entradas</h2>
-    </div>
-    <table class="tabela-padrao">
-        <thead>
-            <tr>
-                <th>Foto</th>
-                <th>Visitante</th>
-                <th>Destino</th>
-                <th>Morador / Unidade</th>
-                <th>Hora</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for e in ultimas_entradas %}
-            <tr>
-                <td>
-                    {% if e.foto %}
-                        <img src="{{ url_for('static', filename='fotos/' ~ e.foto) }}"
-                             class="foto-tabela" alt="Foto">
-                    {% else %}
-                        <div class="foto-tabela placeholder-sm">—</div>
-                    {% endif %}
-                </td>
-                <td><strong>{{ e.nome }}</strong></td>
-                <td>{{ e.endereco or '—' }}</td>
-                <td>
-                    {% if e.morador_nome %}
-                        {{ e.morador_nome }}
-                        {% if e.unidade_codigo %}
-                            <span class="badge-unidade">{{ e.unidade_codigo }}</span>
-                        {% endif %}
-                    {% else %}
-                        <span class="texto-muted">—</span>
-                    {% endif %}
-                </td>
-                <td>{{ e.data_entrada.strftime('%H:%M') if e.data_entrada else '—' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<section class="recent-flow"><div class="recent-flow-head"><div><span class="page-eyebrow">MOVIMENTO RECENTE</span><h2>Últimas entradas</h2></div><a href="{{ url_for('visitantes.ativos') }}">Acessos ativos</a></div><div class="recent-table"><table class="tabela-padrao"><thead><tr><th>Visitante</th><th>Destino</th><th>Morador / Unidade</th><th>Horário</th></tr></thead><tbody>{% for e in ultimas_entradas %}<tr><td><div class="person-cell"><span class="person-initial">{{ e.nome[:1]|upper }}</span><strong>{{ e.nome }}</strong></div></td><td>{{ e.endereco or '—' }}</td><td>{% if e.morador_nome %}{{ e.morador_nome }} {% if e.unidade_codigo %}<span class="badge-unidade">{{ e.unidade_codigo }}</span>{% endif %}{% else %}<span class="texto-muted">—</span>{% endif %}</td><td><strong>{{ e.data_entrada.strftime('%H:%M') if e.data_entrada else '—' }}</strong></td></tr>{% endfor %}</tbody></table></div></section>
 {% endif %}
+<style>
+.command-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:18px 0 32px}.command-copy h1{font-size:clamp(38px,5vw,68px);line-height:.98;letter-spacing:-.06em;margin:8px 0 16px;max-width:850px;color:#111b2c}.command-copy h1 em{font-style:normal;color:#6d7d93;font-weight:500}.command-copy p{max-width:650px;margin:0;color:#788396;font-size:14px;line-height:1.6}.command-clock{min-width:150px;text-align:right;padding-bottom:5px}.command-clock span,.command-clock strong,.command-clock small{display:block}.command-clock span{font-size:8px;letter-spacing:.18em;font-weight:900;color:#8290a5}.command-clock strong{font-size:38px;letter-spacing:-.05em;margin:3px 0}.command-clock small{font-size:10px;color:#8b95a5}.command-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(290px,.65fr);gap:18px;align-items:start}.command-search,.command-metrics>div,.recent-flow{background:#fff;border:1px solid #e2e7ee;border-radius:18px;box-shadow:0 14px 40px rgba(19,31,50,.045)}.command-search{padding:24px;min-height:410px}.command-search-head{display:flex;gap:13px;align-items:center;margin-bottom:20px}.command-search-head>span{width:32px;height:32px;border-radius:9px;background:#111d30;color:#fff;display:grid;place-items:center;font-size:9px;font-weight:900}.command-search-head strong,.command-search-head small{display:block}.command-search-head strong{font-size:14px}.command-search-head small{font-size:10px;color:#8b95a5;margin-top:3px}.command-input-wrap{height:62px;border:1px solid #d8dee7;border-radius:14px;display:flex;align-items:center;padding:0 16px;gap:12px;background:#fafbfd;transition:.18s}.command-input-wrap:focus-within{background:#fff;border-color:#8aa2c0;box-shadow:0 0 0 4px rgba(63,111,174,.08)}.command-input-wrap input{border:0!important;box-shadow:none!important;background:transparent!important;font-size:17px!important;height:auto!important;padding:0!important}.command-input-wrap kbd{font:800 8px/1 sans-serif;color:#8994a5;border:1px solid #dce2e9;border-radius:6px;padding:6px;background:#fff}.search-symbol{width:14px;height:14px;border:2px solid #60718a;border-radius:50%;position:relative}.search-symbol:after{content:"";position:absolute;width:6px;height:2px;background:#60718a;right:-5px;bottom:-2px;transform:rotate(45deg)}.estado-vazio-inicial{min-height:230px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#8691a2!important;background:transparent!important;border:0!important}.estado-vazio-inicial:before{content:"";width:42px;height:42px;border-radius:50%;border:1px solid #dfe5ec;margin-bottom:14px;box-shadow:inset 0 0 0 10px #f8f9fb}.estado-vazio-inicial strong,.estado-vazio-inicial span{display:block}.estado-vazio-inicial strong{color:#46546a;font-size:13px}.estado-vazio-inicial span{font-size:11px;margin-top:5px}.command-metrics{display:grid;gap:12px}.metric-feature{padding:24px;background:#111d30!important;color:#fff!important;border-color:#111d30!important}.metric-feature span,.metric-feature strong,.metric-feature small{display:block}.metric-feature span,.metric-pair span,.last-access>span{font-size:8px;letter-spacing:.15em;font-weight:900;color:#8290a5}.metric-feature strong{font-size:58px;letter-spacing:-.06em;line-height:1;margin:12px 0 4px}.metric-feature small{font-size:10px;color:#8594aa}.metric-feature a{display:inline-block;margin-top:25px;color:#fff;text-decoration:none;font-size:10px;font-weight:800}.metric-pair{display:grid!important;grid-template-columns:1fr 1fr;padding:0!important;overflow:hidden}.metric-pair>div{padding:19px}.metric-pair>div+div{border-left:1px solid #e6eaf0}.metric-pair strong{display:block;font-size:27px;letter-spacing:-.04em;margin-top:8px}.metric-pair.muted{background:#f8f9fb}.last-access{padding:18px}.last-access strong,.last-access small{display:block}.last-access strong{font-size:12px;margin-top:8px}.last-access small{font-size:10px;color:#8a95a6;margin-top:3px}.recent-flow{margin-top:18px;padding:22px}.recent-flow-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}.recent-flow-head h2{margin:4px 0 0;font-size:20px}.recent-flow-head a{font-size:10px;font-weight:800;color:#506987;text-decoration:none}.person-cell{display:flex;align-items:center;gap:10px}.person-initial{width:30px;height:30px;border-radius:9px;background:#edf2f7;display:grid;place-items:center;font-size:10px;font-weight:900;color:#48617e}@media(max-width:900px){.command-grid{grid-template-columns:1fr}.command-metrics{grid-template-columns:1.2fr 1fr}.metric-feature{grid-row:span 2}}@media(max-width:650px){.command-hero{align-items:flex-start;padding-top:6px}.command-copy h1{font-size:39px}.command-clock{display:none}.command-search{padding:16px;min-height:350px}.command-metrics{grid-template-columns:1fr}.metric-feature{grid-row:auto}.recent-flow{padding:16px;overflow:hidden}.recent-table{overflow-x:auto}.command-input-wrap kbd{display:none}}
+</style>
+<script>setInterval(()=>{const e=document.getElementById('pcClock');if(e)e.textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})},1000);</script>
 
 <script>
 const MARCAS = [
