@@ -22,7 +22,7 @@
     <form class="platform-grid-form" method="post" action="{{ url_for('platform_admin.criar_condominio') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label><span>Nome do condomínio</span><input name="nome" placeholder="Ex.: Residencial Brasília" required autocomplete="organization"></label>
-      <label><span>Código único</span><input name="slug" placeholder="ex.: residencial-brasilia" required autocomplete="off"></label>
+      <label><span>Código único</span><input name="slug" placeholder="ex.: residencial-brasilia" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" maxlength="80" required autocomplete="off"></label>
       <button class="platform-primary" type="submit">Criar condomínio</button>
     </form>
   </section>
@@ -47,7 +47,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label><span>Nome</span><input name="nome" placeholder="Nome completo" required autocomplete="name"></label>
             <label><span>Login</span><input name="usuario" placeholder="Usuário de acesso" required autocomplete="off"></label>
-            <label><span>Senha inicial</span><input type="password" name="senha" placeholder="Mínimo 12 caracteres" required autocomplete="new-password"></label>
+            <label><span>Senha inicial</span><input type="password" name="senha" placeholder="Mínimo 12 caracteres" minlength="12" required autocomplete="new-password"></label>
             <label><span>Perfil</span><select name="nivel"><option value="admin">Administração</option><option value="funcionario">Porteiro / Funcionário</option></select></label>
             <button class="platform-secondary" type="submit">Criar usuário</button>
           </form>
