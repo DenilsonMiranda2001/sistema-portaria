@@ -104,7 +104,7 @@ def buscar_usuario_por_id(usuario_id):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, nome, usuario, nivel, ativo, criado_em FROM usuarios WHERE id = %s",
+                "SELECT id, condominio_id, nome, usuario, nivel, ativo, criado_em FROM usuarios WHERE id = %s",
                 (usuario_id,)
             )
             return cur.fetchone()
@@ -117,7 +117,7 @@ def buscar_usuario(usuario):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, nome, usuario, senha, nivel, ativo FROM usuarios WHERE usuario = %s",
+                "SELECT id, condominio_id, nome, usuario, senha, nivel, ativo FROM usuarios WHERE usuario = %s",
                 ((usuario or "").strip(),)
             )
             return cur.fetchone()
