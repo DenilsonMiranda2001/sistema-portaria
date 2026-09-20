@@ -19,11 +19,12 @@ jobs:
         run: python -m compileall -q .
       - name: Unit tests
         run: pytest -q
-      - name: Secret/runtime hygiene
+      - name: Dependency integrity
+        run: pip check
+      - name: Repository hygiene
         run: |
-          test ! -f .env
-          test -z "$(find . -path './.git' -prune -o -name '*.db' -print)"
-          test -z "$(find . -path './.git' -prune -o -type d -name '__pycache__' -print)"
+          test -z "$(git ls-files | grep -E '(^|/)\.env$|(^|/)venv/|(^|/)__pycache__/|\.pyc$|\.sqlite3?$|\.db$|^static/fotos/' || true)"
+          test -z "$(git grep -IlE '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|aws_secret_access_key[[:space:]]*=)' -- . ':!*.example' || true)"
       - name: Production config must fail closed without secret
         env:
           APP_ENV: production
