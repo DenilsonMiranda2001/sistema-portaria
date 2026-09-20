@@ -84,9 +84,11 @@ def criar_usuario(nome, usuario, senha, nivel, actor_id=None):
             login = (usuario or "").strip()
             cur.execute("SELECT 1 FROM platform_admins WHERE usuario = %s", (login,))
             if cur.fetchone():
+                conn.rollback()
                 return "existe"
             cur.execute("SELECT 1 FROM usuarios WHERE usuario = %s", (login,))
             if cur.fetchone():
+                conn.rollback()
                 return "existe"
             cur.execute("""
                 INSERT INTO usuarios (condominio_id, nome, usuario, senha, nivel, ativo)
@@ -210,9 +212,11 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
             login = (usuario or "").strip()
             cur.execute("SELECT 1 FROM platform_admins WHERE usuario = %s", (login,))
             if cur.fetchone():
+                conn.rollback()
                 return "existe"
             cur.execute("SELECT 1 FROM usuarios WHERE usuario = %s AND id <> %s", (login, usuario_id))
             if cur.fetchone():
+                conn.rollback()
                 return "existe"
             cur.execute("""
                 UPDATE usuarios SET nome = %s, usuario = %s, nivel = %s WHERE id = %s AND condominio_id = %s
@@ -264,6 +268,7 @@ def inativar_usuario(usuario_id, actor_id=None):
             cur.execute("SELECT nivel,ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE", (usuario_id, tenant_id))
             alvo = cur.fetchone()
             if not alvo or not alvo["ativo"]:
+                conn.rollback()
                 return False
             if alvo["nivel"] == "admin":
                 cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin' AND ativo=TRUE", (tenant_id,))
