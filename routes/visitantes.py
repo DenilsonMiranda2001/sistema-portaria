@@ -63,6 +63,24 @@ def _salvar_foto(arquivo_foto, foto_webcam_b64, pasta_fotos):
     return None, None
 
 
+def _storage_ready():
+    return all([os.getenv("S3_ENDPOINT_URL"), os.getenv("S3_BUCKET"), os.getenv("S3_ACCESS_KEY_ID"), os.getenv("S3_SECRET_ACCESS_KEY")])
+
+
+def _save_photo_production(arquivo_foto, foto_webcam_b64):
+    if foto_webcam_b64:
+        return None, "Captura por webcam está temporariamente indisponível até o armazenamento privado ser configurado."
+    if not arquivo_foto or not arquivo_foto.filename:
+        return None, None
+    if not _storage_ready():
+        return None, "Upload de fotos está temporariamente indisponível."
+    try:
+        return save_image(arquivo_foto, g.tenant_id), None
+    except (ValueError, RuntimeError):
+        logger.exception("Falha ao persistir foto do visitante")
+        return None, "Não foi possível armazenar a foto com segurança."
+
+
 # ──────────────────────────────────────────────────────────────
 # CADASTRO
 # ──────────────────────────────────────────────────────────────
@@ -102,27 +120,12 @@ def cadastro():
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
         arquivo_foto = request.files.get("foto")
-        if current_app.config.get("APP_ENV") == "production" and arquivo_foto and arquivo_foto.filename:
-            storage_ready = all([
-                os.getenv("S3_ENDPOINT_URL"), os.getenv("S3_BUCKET"),
-                os.getenv("S3_ACCESS_KEY_ID"), os.getenv("S3_SECRET_ACCESS_KEY"),
-            ])
-            if not storage_ready:
-                nome_foto, erro_foto = None, "Upload de fotos está temporariamente indisponível."
-            else:
-                try:
-                    nome_foto = save_image(arquivo_foto, g.tenant_id)
-                    erro_foto = None
-                except (ValueError, RuntimeError):
-                    logger.exception("Falha ao persistir foto do visitante")
-                    nome_foto, erro_foto = None, "Não foi possível armazenar a foto com segurança."
+        foto_webcam = request.form.get("foto_webcam", "").strip()
+        if current_app.config.get("APP_ENV") == "production":
+            nome_foto, erro_foto = _save_photo_production(arquivo_foto, foto_webcam)
         else:
             pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
-            nome_foto, erro_foto = _salvar_foto(
-                arquivo_foto,
-                request.form.get("foto_webcam", "").strip(),
-                pasta_fotos,
-            )
+            nome_foto, erro_foto = _salvar_foto(arquivo_foto, foto_webcam, pasta_fotos)
         if erro_foto:
             flash(erro_foto, "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
@@ -237,12 +240,13 @@ def editar(id):
             flash(f"CPF já cadastrado para outro visitante: {existente['nome']}.", "erro")
             return redirect(url_for("visitantes.editar", id=id))
 
-        pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
-        nome_foto, erro_foto = _salvar_foto(
-            request.files.get("foto"),
-            request.form.get("foto_webcam", "").strip(),
-            pasta_fotos,
-        )
+        arquivo_foto = request.files.get("foto")
+        foto_webcam = request.form.get("foto_webcam", "").strip()
+        if current_app.config.get("APP_ENV") == "production":
+            nome_foto, erro_foto = _save_photo_production(arquivo_foto, foto_webcam)
+        else:
+            pasta_fotos = os.path.join(current_app.root_path, "static", "fotos")
+            nome_foto, erro_foto = _salvar_foto(arquivo_foto, foto_webcam, pasta_fotos)
         if erro_foto:
             flash(erro_foto, "erro")
             return redirect(url_for("visitantes.editar", id=id))
@@ -380,7 +384,7 @@ def entrada_ajax():
 
     except Exception as e:
         logger.exception("Erro em /entrada_ajax")
-        return jsonify({"status": "erro", "mensagem": str(e)}), 500
+        return jsonify({"status": "erro", "mensagem": "Não foi possível concluir a operação."}), 500
 
 
 @visitantes_bp.route("/atualizar_observacao_ajax", methods=["POST"])
@@ -405,6 +409,9 @@ def atualizar_foto_ajax():
             return jsonify({"status": "erro", "mensagem": "ID não informado."}), 400
         if not foto_base64:
             return jsonify({"status": "erro", "mensagem": "Nenhuma imagem enviada."}), 400
+
+        if current_app.config.get("APP_ENV") == "production":
+            return jsonify({"status": "erro", "mensagem": "Captura por webcam está temporariamente indisponível até o armazenamento privado ser configurado."}), 503
 
         pasta = os.path.join(current_app.root_path, "static", "fotos")
         os.makedirs(pasta, exist_ok=True)
@@ -486,7 +493,7 @@ def importar_visitantes():
 
         except Exception as e:
             logger.exception("Erro ao processar CSV")
-            flash(f"Erro ao processar CSV: {e}", "erro")
+            flash("Não foi possível processar o arquivo CSV.", "erro")
             return redirect(url_for("visitantes.importar_visitantes"))
 
     return render_template("importar_visitantes.html",
