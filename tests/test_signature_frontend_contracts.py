@@ -11,7 +11,7 @@ def test_signature_dashboard_preserves_operational_contracts():
 
 def test_visitor_registration_keeps_secure_form_and_camera_contracts():
     source = Path("templates/cadastro.html").read_text(encoding="utf-8")
-    assert "access-form-shell" in source
+    assert "quick-access-form" in source\n    assert "quick-access-grid" in source
     assert 'name="csrf_token"' in source
     for element_id in ("btnAbrirCamera", "btnCapturar", "btnFecharCamera", "foto_webcam"):
         assert f'id="{element_id}"' in source
