@@ -4,6 +4,7 @@ from datetime import datetime
 
 from database.connection import conectar, liberar
 from database.models import _tenant_id
+from utils.audit import registrar_auditoria_cursor
 
 
 STATUS_FINAIS = ("retirada", "entregue_na_porta", "cancelada")
@@ -92,7 +93,7 @@ def listar_lotes():
         liberar(conn)
 
 
-def atualizar_status_lote(lote_id, status):
+def atualizar_status_lote(lote_id, status, usuario_id=None):
     tenant_id = _tenant_id()
     if status not in ("concluido", "cancelado"):
         return False
@@ -111,6 +112,8 @@ def atualizar_status_lote(lote_id, status):
                     WHERE lote_id = %s AND condominio_id = %s
                       AND status NOT IN ('retirada', 'entregue_na_porta', 'cancelada')
                 """, (lote_id, tenant_id))
+            if alterou and usuario_id:
+                registrar_auditoria_cursor(cur, "encomenda.lote_status", usuario_id=usuario_id, condominio_id=tenant_id, entidade="lote_encomenda", entidade_id=lote_id, detalhes={"status": status})
         conn.commit()
         return alterou
     except Exception:
@@ -282,7 +285,7 @@ TRANSICOES_ENCOMENDA = {
 }
 
 
-def atualizar_status_encomenda(encomenda_id, status, retirado_por=None):
+def atualizar_status_encomenda(encomenda_id, status, retirado_por=None, usuario_id=None):
     tenant_id = _tenant_id()
     if status not in TRANSICOES_ENCOMENDA:
         raise ValueError("Status inválido.")
@@ -315,6 +318,8 @@ def atualizar_status_encomenda(encomenda_id, status, retirado_por=None):
                 WHERE id = %s AND condominio_id = %s AND status = %s
             """, (status, status, status, status, retirado_por or None, encomenda_id, tenant_id, status_atual))
             alterou = cur.rowcount > 0
+            if alterou and usuario_id:
+                registrar_auditoria_cursor(cur, "encomenda.status", usuario_id=usuario_id, condominio_id=tenant_id, entidade="encomenda", entidade_id=encomenda_id, detalhes={"status": status})
         conn.commit()
         return alterou
     except Exception:
