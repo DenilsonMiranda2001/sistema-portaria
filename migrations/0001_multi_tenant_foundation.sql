@@ -18,6 +18,20 @@ ALTER TABLE visitas ADD COLUMN IF NOT EXISTS condominio_id INTEGER REFERENCES co
 ALTER TABLE lotes_encomendas ADD COLUMN IF NOT EXISTS condominio_id INTEGER REFERENCES condominios(id) ON DELETE RESTRICT;
 ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS condominio_id INTEGER REFERENCES condominios(id) ON DELETE RESTRICT;
 
+-- New development environment: create one explicit tenant for bootstrap.
+-- Existing environments remain nullable until data is mapped deliberately.
+INSERT INTO condominios (nome, slug)
+SELECT 'Condomínio Inicial', 'condominio-inicial'
+WHERE NOT EXISTS (SELECT 1 FROM condominios);
+
+UPDATE usuarios SET condominio_id = (SELECT id FROM condominios ORDER BY id LIMIT 1) WHERE condominio_id IS NULL;
+UPDATE unidades SET condominio_id = (SELECT id FROM condominios ORDER BY id LIMIT 1) WHERE condominio_id IS NULL;
+UPDATE moradores SET condominio_id = (SELECT id FROM condominios ORDER BY id LIMIT 1) WHERE condominio_id IS NULL;
+UPDATE visitantes SET condominio_id = (SELECT id FROM condominios ORDER BY id LIMIT 1) WHERE condominio_id IS NULL;
+UPDATE visitas SET condominio_id = (SELECT id FROM condominios ORDER BY id LIMIT 1) WHERE condominio_id IS NULL;
+UPDATE lotes_encomendas SET condominio_id = (SELECT id FROM condominios ORDER BY id LIMIT 1) WHERE condominio_id IS NULL;
+UPDATE encomendas SET condominio_id = (SELECT id FROM condominios ORDER BY id LIMIT 1) WHERE condominio_id IS NULL;
+
 CREATE TABLE IF NOT EXISTS audit_logs (
     id BIGSERIAL PRIMARY KEY,
     condominio_id INTEGER REFERENCES condominios(id) ON DELETE RESTRICT,
