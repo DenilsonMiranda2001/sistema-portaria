@@ -27,6 +27,9 @@ def criar_lote(nome_entregador, transportadora, observacao, usuario_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM usuarios WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (usuario_id, tenant_id))
+            if not cur.fetchone():
+                raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("""
                 INSERT INTO lotes_encomendas
                     (condominio_id, nome_entregador, transportadora, observacao, usuario_criacao_id)
@@ -123,6 +126,9 @@ def adicionar_encomenda(lote_id, morador_id, unidade, nome_morador,
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM usuarios WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (usuario_id, tenant_id))
+            if not cur.fetchone():
+                raise ValueError("Usuário inválido para este condomínio.")
             telefone = None
             unidade_id = None
             if morador_id:
