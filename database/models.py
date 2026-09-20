@@ -208,7 +208,7 @@ def ativar_usuario(usuario_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s AND condominio_id = %s", (usuario_id,))
+            cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s AND condominio_id = %s", (usuario_id, tenant_id))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -258,7 +258,7 @@ def buscar_unidade_por_id(unidade_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, codigo, descricao, ativo FROM unidades WHERE id = %s", (unidade_id,))
+            cur.execute("SELECT id, codigo, descricao, ativo FROM unidades WHERE id = %s AND condominio_id = %s", (unidade_id, tenant_id))
             return cur.fetchone()
     finally:
         liberar(conn)
@@ -380,7 +380,7 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
                 UPDATE moradores
                 SET nome = %s, cpf = %s, telefone = %s, email = %s,
                     unidade_id = %s, observacao = %s
-                WHERE id = %s
+                WHERE id = %s AND condominio_id = %s
             """, (
                 (nome or "").strip().upper(),
                 limpar_cpf(cpf) or None,
@@ -389,6 +389,7 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
                 unidade_id or None,
                 (observacao or "").strip().upper() or None,
                 morador_id,
+                tenant_id,
             ))
         conn.commit()
     except Exception:
@@ -403,7 +404,7 @@ def inativar_morador(morador_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE moradores SET ativo = FALSE WHERE id = %s", (morador_id,))
+            cur.execute("UPDATE moradores SET ativo = FALSE WHERE id = %s AND condominio_id = %s", (morador_id, tenant_id))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -417,7 +418,7 @@ def ativar_morador(morador_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE moradores SET ativo = TRUE WHERE id = %s", (morador_id,))
+            cur.execute("UPDATE moradores SET ativo = TRUE WHERE id = %s AND condominio_id = %s", (morador_id, tenant_id))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -471,7 +472,7 @@ def total_moradores():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) AS total FROM moradores WHERE ativo = TRUE")
+            cur.execute("SELECT COUNT(*) AS total FROM moradores WHERE condominio_id = %s AND ativo = TRUE", (tenant_id,))
             r = cur.fetchone()
             return r["total"] if r else 0
     finally:
@@ -599,7 +600,7 @@ def listar_visitantes_paginado(pagina=1, por_pagina=20):
                 FROM visitantes ORDER BY id DESC LIMIT %s OFFSET %s
             """, (por_pagina, offset))
             visitantes = cur.fetchall()
-            cur.execute("SELECT COUNT(*) AS total FROM visitantes")
+            cur.execute("SELECT COUNT(*) AS total FROM visitantes WHERE condominio_id = %s", (tenant_id,))
             total = cur.fetchone()["total"]
         return visitantes, total
     finally:
@@ -646,7 +647,7 @@ def remover_visitante(visitante_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM visitantes WHERE id = %s", (visitante_id,))
+            cur.execute("DELETE FROM visitantes WHERE id = %s AND condominio_id = %s", (visitante_id, tenant_id))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -660,7 +661,7 @@ def atualizar_foto_visitante(visitante_id, nome_arquivo):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE visitantes SET foto = %s WHERE id = %s", (nome_arquivo, visitante_id))
+            cur.execute("UPDATE visitantes SET foto = %s WHERE id = %s AND condominio_id = %s", (nome_arquivo, visitante_id, tenant_id))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -675,8 +676,8 @@ def atualizar_observacao_visitante(visitante_id, observacao):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE visitantes SET observacao = %s WHERE id = %s",
-                ((observacao or "").strip().upper(), visitante_id)
+                "UPDATE visitantes SET observacao = %s WHERE id = %s AND condominio_id = %s",
+                ((observacao or "").strip().upper(), visitante_id, tenant_id)
             )
         conn.commit()
     except Exception:
@@ -691,7 +692,7 @@ def listar_cpfs_visitantes():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT cpf FROM visitantes")
+            cur.execute("SELECT cpf FROM visitantes WHERE condominio_id = %s", (tenant_id,))
             return {row["cpf"] for row in cur.fetchall() if row["cpf"]}
     finally:
         liberar(conn)
@@ -906,7 +907,7 @@ def total_visitantes_ativos():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) AS total FROM visitas WHERE data_saida IS NULL")
+            cur.execute("SELECT COUNT(*) AS total FROM visitas WHERE condominio_id = %s AND data_saida IS NULL", (tenant_id,))
             r = cur.fetchone()
             return r["total"] if r else 0
     finally:
@@ -918,7 +919,7 @@ def total_entradas_hoje():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) AS total FROM visitas WHERE DATE(data_entrada) = CURRENT_DATE")
+            cur.execute("SELECT COUNT(*) AS total FROM visitas WHERE condominio_id = %s AND DATE(data_entrada) = CURRENT_DATE", (tenant_id,))
             r = cur.fetchone()
             return r["total"] if r else 0
     finally:
@@ -930,7 +931,7 @@ def total_saidas_hoje():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) AS total FROM visitas WHERE DATE(data_saida) = CURRENT_DATE")
+            cur.execute("SELECT COUNT(*) AS total FROM visitas WHERE condominio_id = %s AND DATE(data_saida) = CURRENT_DATE", (tenant_id,))
             r = cur.fetchone()
             return r["total"] if r else 0
     finally:
