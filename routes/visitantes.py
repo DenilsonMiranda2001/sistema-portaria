@@ -414,9 +414,12 @@ def entrada_ajax():
             visitante_id, endereco, placa, marca, modelo, observacao,
             session["usuario_id"], unidade_id, morador_id
         )
+        registrar_auditoria("visita.entrada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=visitante_id)
         return jsonify({"status": "ok"})
 
-    except Exception as e:
+    except ValueError as exc:
+        return jsonify({"status": "erro", "mensagem": str(exc)}), 400
+    except Exception:
         logger.exception("Erro em /entrada_ajax")
         return jsonify({"status": "erro", "mensagem": "Não foi possível concluir a operação."}), 500
 
@@ -430,6 +433,7 @@ def atualizar_observacao_ajax():
         return jsonify({"status": "erro", "mensagem": "ID não informado."}), 400
 
     atualizar_observacao_visitante(visitante_id, observacao)
+    registrar_auditoria("visitante.observacao_atualizada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=visitante_id)
     return jsonify({"status": "ok", "mensagem": "Observação atualizada."})
 
 
