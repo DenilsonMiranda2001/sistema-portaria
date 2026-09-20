@@ -7,7 +7,6 @@ from database.platform import (
     atualizar_condominio, definir_status_condominio, definir_status_usuario_tenant,
     criar_condominio_com_usuario, criar_usuario_tenant,
 )
-from utils.audit import registrar_auditoria
 
 platform_admin_bp = Blueprint("platform_admin", __name__, url_prefix="/plataforma")
 
