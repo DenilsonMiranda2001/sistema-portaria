@@ -22,10 +22,16 @@ def _login_rate_limited():
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            cur.execute("DELETE FROM login_attempts WHERE janela_inicio < CURRENT_TIMESTAMP - INTERVAL '2 days'")
             cur.execute("""SELECT bloqueado_ate > CURRENT_TIMESTAMP AS bloqueado
                            FROM login_attempts WHERE chave=%s""", (_login_key(),))
             row = cur.fetchone()
-            return bool(row and row["bloqueado"])
+        conn.commit()
+        return bool(row and row["bloqueado"])
+    except Exception:
+        conn.rollback()
+        logger.exception("Failed to evaluate login rate limit")
+        return True
     finally:
         liberar(conn)
 
