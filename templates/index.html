@@ -334,15 +334,15 @@ function renderizarResultados(data, termo) {
         const arrival=document.createElement("select");arrival.id="tipo_chegada_"+v.id;arrival.className="input-padrao";
         [["VEICULO","Veículo"],["PEDESTRE","Pedestre"]].forEach(([val,label])=>{const o=document.createElement("option");o.value=val;o.textContent=label;o.selected=estado.tipoChegada===val;arrival.appendChild(o)});
         const vehicleFields=node("div","home-entry-vehicle");
-        const plate=document.createElement("input");plate.className="input-padrao";plate.placeholder="Placa";plate.value=estado.placa||"";
-        const brand=document.createElement("input");brand.className="input-padrao";brand.placeholder="Marca";brand.value=estado.marca||"";
-        const model=document.createElement("input");model.className="input-padrao";model.placeholder="Modelo";model.value=estado.modelo||"";
+        const plate=document.createElement("input");plate.id="placa_"+v.id;plate.className="input-padrao";plate.placeholder="Placa";plate.value=estado.placa||"";
+        const brand=document.createElement("input");brand.id="marca_"+v.id;brand.className="input-padrao";brand.placeholder="Marca";brand.value=estado.marca||"";
+        const model=document.createElement("input");model.id="modelo_"+v.id;model.className="input-padrao";model.placeholder="Modelo";model.value=estado.modelo||"";
         [[plate,"placa"],[brand,"marca"],[model,"modelo"]].forEach(([input,campo])=>input.addEventListener("input",()=>{input.value=input.value.toUpperCase();atualizarCampoEstado(v.id,campo,input.value)}));
         vehicleFields.append(plate,brand,model);if(estado.tipoChegada==="PEDESTRE")vehicleFields.hidden=true;
         arrival.addEventListener("change",()=>{estado.tipoChegada=arrival.value;if(arrival.value==="PEDESTRE"){estado.placa=estado.marca=estado.modelo="";vehicleFields.hidden=true}else vehicleFields.hidden=false});
         vehicle.append(arrival,vehicleFields);
         dest.appendChild(node("span","label-ui","Destino"));
-        const row=node("div","home-entry-destination"),address=document.createElement("input");address.className="input-padrao input-destino-compacto";address.placeholder="Unidade ou destino";address.value=estado.endereco||"";
+        const row=node("div","home-entry-destination"),address=document.createElement("input");address.id="endereco_"+v.id;address.className="input-padrao input-destino-compacto";address.placeholder="Unidade ou destino";address.value=estado.endereco||"";
         address.addEventListener("input",()=>atualizarCampoEstado(v.id,"endereco",address.value));
         const enter=node("button","btn-principal","Registrar entrada");enter.type="button";enter.addEventListener("click",()=>registrarEntrada(v.id));row.append(address,enter);dest.appendChild(row);
         if(estado.ultimoEndereco){const last=node("button","home-last-destination","Último destino: "+estado.ultimoEndereco);last.type="button";last.addEventListener("click",()=>{address.value=estado.ultimoEndereco;atualizarCampoEstado(v.id,"endereco",estado.ultimoEndereco);address.focus()});dest.appendChild(last)}
