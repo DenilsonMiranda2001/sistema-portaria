@@ -844,6 +844,9 @@ def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=Non
             cur.execute("SELECT 1 FROM visitantes WHERE id = %s AND condominio_id = %s", (visitante_id, tenant_id))
             if not cur.fetchone():
                 raise ValueError("Visitante inválido para este condomínio.")
+            cur.execute("SELECT 1 FROM visitas WHERE condominio_id = %s AND visitante_id = %s AND data_saida IS NULL", (tenant_id, visitante_id))
+            if cur.fetchone():
+                raise ValueError("Este visitante já possui uma entrada ativa.")
 
             cur.execute("""
                 INSERT INTO visitas
