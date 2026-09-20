@@ -1028,6 +1028,12 @@ def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=Non
             if cur.fetchone():
                 raise ValueError("Este visitante já possui uma entrada ativa.")
 
+            # Lock the visitor row so concurrent entry attempts serialize before the
+            # database unique partial index provides the final integrity barrier.
+            cur.execute("SELECT id FROM visitantes WHERE id=%s AND condominio_id=%s FOR UPDATE", (visitante_id, tenant_id))
+            if not cur.fetchone():
+                raise ValueError("Visitante inválido para este condomínio.")
+
             cur.execute("""
                 INSERT INTO visitas
                     (condominio_id, visitante_id, endereco, placa, marca, modelo, observacao,
