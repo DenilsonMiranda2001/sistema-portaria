@@ -727,21 +727,23 @@ def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=Non
                 SET placa = COALESCE(NULLIF(%s,''), placa),
                     marca  = COALESCE(NULLIF(%s,''), marca),
                     modelo = COALESCE(NULLIF(%s,''), modelo)
-                WHERE id = %s
+                WHERE id = %s AND condominio_id = %s
             """, (
                 (placa or "").strip().upper(),
                 (marca or "").strip().upper(),
                 (modelo or "").strip().upper(),
                 visitante_id,
+                tenant_id,
             ))
 
             cur.execute("""
                 INSERT INTO visitas
-                    (visitante_id, endereco, placa, marca, modelo, observacao,
+                    (condominio_id, visitante_id, endereco, placa, marca, modelo, observacao,
                      usuario_entrada_id, unidade_id, morador_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
+                tenant_id,
                 visitante_id,
                 (endereco or "").strip().upper(),
                 (placa or "").strip().upper(),
@@ -773,10 +775,10 @@ def registrar_saida(visitante_id, usuario_saida_id=None):
                 SET data_saida = CURRENT_TIMESTAMP, usuario_saida_id = %s
                 WHERE id = (
                     SELECT id FROM visitas
-                    WHERE visitante_id = %s AND data_saida IS NULL
+                    WHERE condominio_id = %s AND visitante_id = %s AND data_saida IS NULL
                     ORDER BY data_entrada DESC LIMIT 1
                 )
-            """, (usuario_saida_id, visitante_id))
+            """, (usuario_saida_id, tenant_id, visitante_id))
         conn.commit()
         logger.info("Saída registrada: visitante=%s", visitante_id)
     except Exception:
