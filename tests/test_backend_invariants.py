@@ -17,3 +17,19 @@ def test_visit_workflows_validate_actor_and_resident_unit():
 def test_resident_atomic_workflows_reject_inactive_unit_reuse():
     source = Path("database/models.py").read_text(encoding="utf-8")
     assert source.count("Esta unidade existe, mas está inativa.") >= 2
+
+
+def test_visitor_profile_address_is_separate_from_visit_destination():
+    models = Path("database/models.py").read_text(encoding="utf-8")
+    migration = Path("migrations/0011_visitor_profile_address.sql").read_text(encoding="utf-8")
+    routes = Path("routes/visitantes.py").read_text(encoding="utf-8")
+    assert "ADD COLUMN IF NOT EXISTS endereco TEXT" in migration
+    assert "endereco=None, entrada=None" in models
+    assert 'endereco=endereco' in routes
+    assert '"endereco": ""' in routes
+
+
+def test_central_package_reception_is_default():
+    source = Path("database/encomendas.py").read_text(encoding="utf-8")
+    assert "'retida_portaria'" in source
+    assert "retirada" in source
