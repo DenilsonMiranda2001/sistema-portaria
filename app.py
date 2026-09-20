@@ -11,6 +11,7 @@ from routes.moradores import moradores_bp
 from routes.encomendas import encomendas_bp
 from database.models import criar_tabelas
 from database.connection import verificar_conexao
+from utils.authz import load_identity
 
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO").upper(),
@@ -39,10 +40,11 @@ ROTAS_PUBLICAS = {"auth.login", "auth.logout", "static", "healthz", "readyz"}
 
 @app.before_request
 def verificar_login():
+    load_identity()
     endpoint = request.endpoint or ""
     if endpoint in ROTAS_PUBLICAS or endpoint.startswith("static"):
         return
-    if "usuario_id" not in session:
+    if not getattr(__import__("flask").g, "current_user", None):
         return redirect(url_for("auth.login"))
 
 
