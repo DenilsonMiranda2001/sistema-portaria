@@ -66,7 +66,8 @@ def verificar_login():
 @app.after_request
 def security_headers(response):
     response.headers.setdefault("X-Request-ID", getattr(g, "request_id", uuid.uuid4().hex))
-    response.headers.setdefault("Cache-Control", "no-store")
+    if request.endpoint != "static":
+        response.headers.setdefault("Cache-Control", "no-store")
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
