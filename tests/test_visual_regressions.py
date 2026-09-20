@@ -39,3 +39,16 @@ def test_registration_uses_professional_readable_control_sizes():
     assert "font-size:14px!important" in css
     assert "font-size:13px!important;letter-spacing:.045em!important" in css
     assert "height:38px!important" in css
+
+
+def test_core_operator_screens_avoid_redundant_page_heroes():
+    base = Path("templates/base.html").read_text(encoding="utf-8")
+    home = Path("templates/index.html").read_text(encoding="utf-8")
+    cadastro = Path("templates/cadastro.html").read_text(encoding="utf-8")
+    visitors = Path("templates/visitantes.html").read_text(encoding="utf-8")
+    residents = Path("templates/moradores/lista.html").read_text(encoding="utf-8")
+    assert ">Início</a>" in base
+    assert "command-hero" not in home
+    assert "compact-access-head" not in cadastro
+    assert "compact-list-toolbar" in visitors
+    assert "compact-list-toolbar" in residents
