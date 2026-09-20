@@ -358,7 +358,7 @@ def buscar_ajax():
         "placa": v.get("placa") or "",
         "modelo": v.get("modelo") or "",
         "marca": v.get("marca") or "",
-        "foto": v.get("foto") or "",
+        "foto_url": url_for("visitantes.foto", id=v["id"]) if v.get("foto") else "",
         "observacao": v.get("observacao") or "",
         "ultimo_endereco": v.get("ultimo_endereco") or "",
     } for v in resultados])
@@ -397,7 +397,7 @@ def buscar_ativos_ajax():
         "placa": v.get("placa") or "",
         "modelo": v.get("modelo") or "",
         "marca": v.get("marca") or "",
-        "foto": v.get("foto") or "",
+        "foto_url": url_for("visitantes.foto", id=v["id"]) if v.get("foto") else "",
         "observacao": v.get("observacao") or "",
         "morador_nome": v.get("morador_nome") or "",
         "unidade_codigo": v.get("unidade_codigo") or "",
