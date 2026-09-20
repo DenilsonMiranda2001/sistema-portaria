@@ -47,7 +47,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label><span>Nome</span><input name="nome" placeholder="Nome completo" required autocomplete="name"></label>
             <label><span>Login</span><input name="usuario" placeholder="Usuário de acesso" required autocomplete="off"></label>
-            <label><span>Senha inicial</span><input type="password" name="senha" placeholder="Mínimo 8 caracteres" required autocomplete="new-password"></label>
+            <label><span>Senha inicial</span><input type="password" name="senha" placeholder="Mínimo 12 caracteres" required autocomplete="new-password"></label>
             <label><span>Perfil</span><select name="nivel"><option value="admin">Administração</option><option value="funcionario">Porteiro / Funcionário</option></select></label>
             <button class="platform-secondary" type="submit">Criar usuário</button>
           </form>
