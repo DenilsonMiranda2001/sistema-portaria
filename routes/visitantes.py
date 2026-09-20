@@ -130,15 +130,23 @@ def cadastro():
             flash(erro_foto, "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
-        cadastrar_visitante(
-            nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao,
-            entrada={
-                "endereco": endereco,
-                "usuario_id": session["usuario_id"],
-                "unidade_id": unidade_id,
-                "morador_id": morador_id,
-            },
-        )
+        try:
+            cadastrar_visitante(
+                nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao,
+                entrada={
+                    "endereco": endereco,
+                    "usuario_id": session["usuario_id"],
+                    "unidade_id": unidade_id,
+                    "morador_id": morador_id,
+                },
+            )
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("visitantes.cadastro", cpf=cpf))
+        except Exception:
+            logger.exception("Erro ao cadastrar visitante e registrar entrada")
+            flash("Não foi possível concluir o cadastro do visitante.", "erro")
+            return redirect(url_for("visitantes.cadastro", cpf=cpf))
 
         flash("Visitante cadastrado e entrada registrada com sucesso!", "sucesso")
         return redirect(url_for("visitantes.ativos"))
