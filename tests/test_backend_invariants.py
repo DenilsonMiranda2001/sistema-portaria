@@ -54,3 +54,17 @@ def test_login_identity_invariant_migration_exists():
     migration = Path("migrations/0012_login_identity_invariant.sql").read_text(encoding="utf-8")
     assert "JOIN platform_admins" in migration
     assert "duplicate tenant login" in migration
+
+
+def test_open_visit_uniqueness_is_enforced_at_database_level():
+    migration = Path("migrations/0013_operational_integrity_indexes.sql").read_text(encoding="utf-8")
+    assert "HAVING COUNT(*) > 1" in migration
+    assert "uq_visita_aberta_visitante_tenant" in migration
+    assert "WHERE data_saida IS NULL" in migration
+
+
+def test_hot_operational_queries_have_tenant_scoped_indexes():
+    migration = Path("migrations/0013_operational_integrity_indexes.sql").read_text(encoding="utf-8")
+    assert "idx_visitas_tenant_abertas" in migration
+    assert "idx_encomendas_tenant_custodia" in migration
+    assert "idx_moradores_tenant_ativos_unidade" in migration
