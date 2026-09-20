@@ -1,15 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}Visitantes Ativos{% endblock %}
+{% block title %}Visitantes Ativos<style>.active-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}.active-heading h1{margin:4px 0 6px}.active-heading p{margin:0;color:var(--pc-muted)}.live-indicator{display:flex;align-items:center;gap:8px;background:#edf8f2;color:#2f7650;border:1px solid #d6ebdf;padding:8px 11px;border-radius:999px;font-size:11px;font-weight:800}.live-indicator i{width:7px;height:7px;border-radius:50%;background:#52b47d}.active-workspace{padding:20px}.active-workspace .busca-box{margin-bottom:18px}@media(max-width:650px){.active-heading{align-items:flex-start;flex-direction:column}}</style>{% endblock %}
 
 {% block content %}
 
-<div class="card-padrao">
-    <div class="header-secao">
-        <h2>🚨 Visitantes Ativos</h2>
-        <p class="texto-ajuda">
-            Busque por nome, CPF ou placa para localizar rapidamente quem está no condomínio.
-        </p>
-    </div>
+<section class="page-heading active-heading"><div><span class="page-eyebrow">TEMPO REAL</span><h1>Acessos ativos</h1><p>Pessoas que estão no condomínio neste momento. Localize e registre a saída com rapidez.</p></div><span class="live-indicator"><i></i>Operação ao vivo</span></section><div class="card-padrao active-workspace">
 
     <div class="busca-box">
         <input
@@ -24,7 +18,7 @@
 
     <div id="mensagemAtivo" class="mensagem-box"></div>
 
-    <a class="link-voltar" href="/">⬅ Voltar</a>
+    
 
 
     <div id="listaAtivos" class="lista-resultados">
@@ -85,14 +79,13 @@
                             <div class="extra-card">
                                 <span class="label-ui">Tipo de visita</span>
                                 <div class="badge-ui badge-tipo">
-                                    🏷 {{ (v.tipo or 'Sem tipo')|upper }}
+                                    {{ (v.tipo or 'Sem tipo')|upper }}
                                 </div>
                             </div>
 
                             <div class="extra-card">
                                 <span class="label-ui">Veículo desta entrada</span>
                                 <div class="badge-ui badge-veiculo">
-                                    🚗
                                     {% if v.marca or v.modelo or v.placa %}
                                         {{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} - {{ v.placa }}{% endif %}
                                     {% else %}
@@ -104,7 +97,7 @@
                             <div class="extra-card">
                                 <span class="label-ui">Horário de entrada</span>
                                 <div class="badge-ui badge-entrada">
-                                    ⏰ {{ v.data_entrada }}
+                                    {{ v.data_entrada }}
                                 </div>
                             </div>
 
@@ -114,7 +107,7 @@
                             <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}"
                                   onsubmit="return confirm('Registrar saída de {{ v.nome }}?')">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
+                                <button class="btn-principal btn-sm" type="submit">Registrar saída</button>
                             </form>
                         </div>
 
