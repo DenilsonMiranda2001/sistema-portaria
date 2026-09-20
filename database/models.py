@@ -673,6 +673,26 @@ def resumo_unidades():
         liberar(conn)
 
 
+def listar_auditoria_tenant(limite=200):
+    tenant_id = _tenant_id()
+    limite = max(1, min(int(limite or 200), 500))
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT a.id, a.acao, a.entidade, a.entidade_id, a.detalhes, a.criado_em,
+                       COALESCE(u.nome, CASE WHEN a.actor_tipo='platform_admin' THEN 'ADMINISTRAÇÃO DA PLATAFORMA' END, 'SISTEMA') AS ator
+                FROM audit_logs a
+                LEFT JOIN usuarios u ON u.id=a.usuario_id AND u.condominio_id=a.condominio_id
+                WHERE a.condominio_id=%s
+                ORDER BY a.criado_em DESC, a.id DESC
+                LIMIT %s
+            """, (tenant_id, limite))
+            return cur.fetchall()
+    finally:
+        liberar(conn)
+
+
 # ──────────────────────────────────────────────────────────────
 # VISITANTES
 # ──────────────────────────────────────────────────────────────
