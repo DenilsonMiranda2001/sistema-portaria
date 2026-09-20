@@ -304,6 +304,7 @@ def atualizar_status_encomenda(encomenda_id, status, retirado_por=None, usuario_
                 raise ValueError("Encomenda não encontrada.")
             status_atual = atual["status"]
             if status == status_atual:
+                conn.rollback()
                 return False
             if status not in TRANSICOES_ENCOMENDA.get(status_atual, set()):
                 raise ValueError("Transição de status não permitida.")
