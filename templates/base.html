@@ -61,7 +61,10 @@
                         <span>{{ session.get("usuario_tipo", "").capitalize() }}</span>
                     </div>
                 </div>
-                <a class="btn btn-sair" href="{{ url_for('auth.logout') }}">Sair</a>
+                <form method="post" action="{{ url_for('auth.logout') }}" class="logout-form">
+                    <input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}">
+                    <button class="btn btn-sair" type="submit">Sair</button>
+                </form>
             </div>
         </div>
     </header>
@@ -197,7 +200,7 @@ function salvarFotoVisitante() {
     const body = new URLSearchParams();
     body.append("id", visitanteFotoAtual);
     body.append("foto", imagemFinal);
-    fetch("/atualizar_foto_ajax", { method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: body.toString() })
+    fetch("/atualizar_foto_ajax", { method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded", "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content}, body: body.toString() })
         .then(r => r.json())
         .then(data => {
             if (data.status === "ok") {
