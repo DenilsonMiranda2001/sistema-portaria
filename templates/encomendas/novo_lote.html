@@ -3,7 +3,7 @@
 {% block title %}Novo Lote de Encomendas{% endblock %}
 {% block content %}
 {{ subnav('novo') }}
-<div class="enc-header"><div><h2>Novo lote</h2><p>Registre a chegada do entregador e siga para o modo rajada.</p></div></div>
+<div class="compact-list-toolbar"><strong>Recebimento</strong><span class="enc-context-label">Registre a entrega recebida na central</span></div>
 <form class="card enc-form" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
@@ -19,7 +19,7 @@
     <label><span>Observação</span><textarea name="observacao" rows="3"></textarea></label>
     <div class="enc-form-acoes">
         <a class="btn enc-btn" href="{{ url_for('encomendas.lotes') }}">Cancelar</a>
-        <button class="btn btn-submit" type="submit">Criar lote e adicionar pacotes</button>
+        <button class="btn btn-submit" type="submit">Iniciar recebimento</button>
     </div>
 </form>
 {% endblock %}
