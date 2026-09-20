@@ -1,11 +1,13 @@
 import hashlib
 import json
 import os
-from flask import request
+from flask import has_request_context, request
 from database.connection import conectar, liberar
 
 
 def _ip_hash():
+    if not has_request_context():
+        return None
     ip = (request.remote_addr or "").strip()
     salt = os.getenv("AUDIT_IP_SALT", "")
     return hashlib.sha256((salt + ip).encode("utf-8")).hexdigest() if ip else None
