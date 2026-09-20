@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, session
+from utils.authz import roles_required
 
 from database.models import (
     criar_usuario,
@@ -17,10 +18,8 @@ def admin_obrigatorio():
 
 
 @admin_bp.route("/usuarios", methods=["GET", "POST"])
+@roles_required("admin")
 def usuarios():
-    if not admin_obrigatorio():
-        flash("Acesso permitido apenas para administradores.", "erro")
-        return redirect(url_for("main.index"))
 
     if request.method == "POST":
         nome = request.form.get("nome", "").strip()
@@ -49,10 +48,8 @@ def usuarios():
 
 
 @admin_bp.route("/usuarios/editar/<int:id>", methods=["GET", "POST"])
+@roles_required("admin")
 def editar_usuario(id):
-    if not admin_obrigatorio():
-        flash("Acesso permitido apenas para administradores.", "erro")
-        return redirect(url_for("main.index"))
 
     user = buscar_usuario_por_id(id)
 
@@ -84,11 +81,9 @@ def editar_usuario(id):
     return render_template("editar_usuario.html", user=user)
 
 
-@admin_bp.route("/usuarios/inativar/<int:id>")
+@admin_bp.route("/usuarios/inativar/<int:id>", methods=["POST"])
+@roles_required("admin")
 def inativar_usuario_rota(id):
-    if not admin_obrigatorio():
-        flash("Acesso permitido apenas para administradores.", "erro")
-        return redirect(url_for("main.index"))
 
     if session.get("usuario_id") == id:
         flash("Você não pode inativar seu próprio usuário.", "erro")
@@ -104,11 +99,9 @@ def inativar_usuario_rota(id):
     return redirect(url_for("admin.usuarios"))
 
 
-@admin_bp.route("/usuarios/ativar/<int:id>")
+@admin_bp.route("/usuarios/ativar/<int:id>", methods=["POST"])
+@roles_required("admin")
 def ativar_usuario_rota(id):
-    if not admin_obrigatorio():
-        flash("Acesso permitido apenas para administradores.", "erro")
-        return redirect(url_for("main.index"))
 
     user = buscar_usuario_por_id(id)
     if not user:
@@ -120,10 +113,8 @@ def ativar_usuario_rota(id):
     return redirect(url_for("admin.usuarios"))
 
 @admin_bp.route("/usuarios/senha/<int:id>", methods=["GET", "POST"])
+@roles_required("admin")
 def alterar_senha_usuario(id):
-    if not admin_obrigatorio():
-        flash("Acesso permitido apenas para administradores.", "erro")
-        return redirect(url_for("main.index"))
 
     user = buscar_usuario_por_id(id)
 
