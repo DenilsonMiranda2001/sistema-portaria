@@ -3,13 +3,10 @@
 {% block title %}Lotes de Encomendas{% endblock %}
 {% block content %}
 {{ subnav('lotes') }}
-<div class="enc-header">
-    <div><h2>Lotes de encomendas</h2><p>Triagens registradas pela portaria.</p></div>
-    <a class="btn btn-submit" href="{{ url_for('encomendas.novo_lote') }}">+ Novo lote</a>
-</div>
+<div class="compact-list-toolbar"><strong>Recebimentos</strong><a class="btn-principal" href="{{ url_for('encomendas.novo_lote') }}">Novo recebimento</a></div>
 <div class="card enc-tabela-wrap">
 <table class="tabela-padrao">
-    <thead><tr><th>Lote / chegada</th><th>Transportadora</th><th>Entregador</th><th>Total</th><th>Pendentes</th><th>Retidas</th><th>Retiradas</th><th>Status</th></tr></thead>
+    <thead><tr><th>Lote / chegada</th><th>Transportadora</th><th>Entregador</th><th>Total</th><th>Aguardando</th><th>Em custódia</th><th>Retiradas</th><th>Status</th></tr></thead>
     <tbody>
     {% for lote in lotes %}
     <tr>
