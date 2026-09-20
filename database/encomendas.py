@@ -8,7 +8,7 @@ from utils.audit import registrar_auditoria_cursor
 
 
 STATUS_FINAIS = ("retirada", "entregue_na_porta", "cancelada")
-STATUS_PENDENTES = ("recebida", "aguardando_resposta", "morador_em_casa", "retida_portaria")
+STATUS_PENDENTES = ("retida_portaria",)
 
 
 def _codigo_retirada(cur):
@@ -79,8 +79,7 @@ def listar_lotes():
             cur.execute("""
                 SELECT l.*,
                        COUNT(e.id)::int AS total,
-                       COUNT(e.id) FILTER (WHERE e.status IN
-                           ('recebida','aguardando_resposta','morador_em_casa'))::int AS pendentes,
+                       COUNT(e.id) FILTER (WHERE e.status = 'retida_portaria')::int AS pendentes,
                        COUNT(e.id) FILTER (WHERE e.status = 'retida_portaria')::int AS retidas,
                        COUNT(e.id) FILTER (WHERE e.status = 'retirada')::int AS retiradas
                 FROM lotes_encomendas l
@@ -228,7 +227,7 @@ def listar_encomendas(filtro=None, termo=None, lote_id=None, transportadora=None
     if filtro == "hoje":
         clausulas.append("e.data_chegada::date = CURRENT_DATE")
     elif filtro == "pendentes":
-        clausulas.append("e.status IN ('recebida','aguardando_resposta','morador_em_casa','retida_portaria')")
+        clausulas.append("e.status = 'retida_portaria'")
     elif filtro == "retidas":
         clausulas.append("e.status = 'retida_portaria'")
     elif filtro == "retiradas":
@@ -262,7 +261,7 @@ def resumo_painel():
             cur.execute("""
                 SELECT
                     COUNT(*) FILTER (WHERE data_chegada::date = CURRENT_DATE)::int AS recebidas_hoje,
-                    COUNT(*) FILTER (WHERE status IN ('recebida','aguardando_resposta'))::int AS aguardando,
+                    COUNT(*) FILTER (WHERE status = 'retida_portaria')::int AS aguardando,
                     COUNT(*) FILTER (WHERE status = 'retida_portaria')::int AS retidas,
                     COUNT(*) FILTER (WHERE status = 'retirada'
                                       AND data_retirada::date = CURRENT_DATE)::int AS retiradas_hoje,
