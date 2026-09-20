@@ -291,8 +291,7 @@ def editar(id):
         if not nome_foto:
             nome_foto = visitante["foto"]
 
-        atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao)
-        registrar_auditoria("visitante.atualizado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=id)
+        atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao, session["usuario_id"])
         flash("Cadastro atualizado com sucesso!", "sucesso")
         return redirect(url_for("visitantes.visitantes"))
 
@@ -472,7 +471,7 @@ def atualizar_foto_ajax():
         if not nome_arquivo:
             return jsonify({"status": "erro", "mensagem": "Falha ao salvar imagem."}), 400
 
-        atualizar_foto_visitante(visitante_id, nome_arquivo)
+        atualizar_foto_visitante(visitante_id, nome_arquivo, session["usuario_id"])
         return jsonify({"status": "ok", "mensagem": "Foto atualizada.", "foto": nome_arquivo})
 
     except Exception:
@@ -542,8 +541,7 @@ def importar_visitantes():
                     detalhes_erros.append(f"Linha {i}: dados inválidos")
 
             if para_importar:
-                importar_visitantes_em_lotes(para_importar)
-                importados = len(para_importar)
+                importados = importar_visitantes_em_lotes(para_importar, usuario_id=session["usuario_id"])
 
             return render_template("importar_visitantes.html",
                                    importados=importados, duplicados=duplicados,
