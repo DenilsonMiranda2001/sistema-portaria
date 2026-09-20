@@ -10,7 +10,7 @@ def load_identity():
         g.tenant_id = None
         return
     user = buscar_usuario_por_id(user_id)
-    if not user or not user.get("ativo"):
+    if not user or not user.get("ativo") or not user.get("condominio_ativo"):
         session.clear()
         g.current_user = None
         g.tenant_id = None
