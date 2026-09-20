@@ -36,3 +36,33 @@ def test_csv_import_preserves_address_and_has_csrf():
     assert "formatar_endereco_condominio" in route
     assert "condominio_id, nome, cpf, endereco, tipo" in model
     assert 'name="csrf_token"' in template
+
+
+def test_ajax_mutations_carry_csrf_tokens():
+    home = Path("templates/index.html").read_text(encoding="utf-8")
+    active = Path("templates/ativos.html").read_text(encoding="utf-8")
+    assert 'body.append("csrf_token"' in home
+    assert 'token.name="csrf_token"' in active
+
+
+def test_visitor_photos_use_authorized_route_not_public_static_paths():
+    for name in ("ativos.html", "visitantes.html", "editar.html", "historico.html"):
+        source = Path("templates", name).read_text(encoding="utf-8")
+        assert "static/fotos/" not in source
+    routes = Path("routes/visitantes.py").read_text(encoding="utf-8")
+    assert '@visitantes_bp.route("/foto/<int:id>")' in routes
+    assert "presigned_image_url" in routes
+
+
+def test_tenant_admin_has_queryable_audit_trail():
+    routes = Path("routes/admin.py").read_text(encoding="utf-8")
+    model = Path("database/models.py").read_text(encoding="utf-8")
+    assert '@admin_bp.route("/auditoria")' in routes
+    assert '@roles_required("admin")' in routes[routes.index('@admin_bp.route("/auditoria")'):]
+    assert "WHERE a.condominio_id=%s" in model
+
+
+def test_login_limiter_has_continuous_retention_and_fails_closed():
+    auth = Path("routes/auth.py").read_text(encoding="utf-8")
+    assert "DELETE FROM login_attempts" in auth
+    assert "return True" in auth[auth.index("def _login_rate_limited"):auth.index("def _record_failed_login")]
