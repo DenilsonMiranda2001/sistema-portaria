@@ -1,6 +1,17 @@
 import logging
 from pathlib import Path
 from database.connection import conectar, liberar
+
+
+def _tenant_id():
+    # Imported lazily so database helpers remain importable in CLI/migration contexts.
+    from flask import g, has_request_context
+    if not has_request_context():
+        return None
+    tenant_id = getattr(g, "tenant_id", None)
+    if tenant_id is None:
+        raise RuntimeError("Authenticated request has no tenant context")
+    return tenant_id
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.validators import limpar_cpf
 
@@ -65,14 +76,16 @@ def criar_tabelas():
 # ──────────────────────────────────────────────────────────────
 
 def criar_usuario(nome, usuario, senha, nivel):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO usuarios (nome, usuario, senha, nivel, ativo)
-                VALUES (%s, %s, %s, %s, TRUE)
+                INSERT INTO usuarios (condominio_id, nome, usuario, senha, nivel, ativo)
+                VALUES (%s, %s, %s, %s, %s, TRUE)
                 RETURNING id
             """, (
+                tenant_id,
                 (nome or "").strip().upper(),
                 (usuario or "").strip(),
                 generate_password_hash(senha),
@@ -90,6 +103,7 @@ def criar_usuario(nome, usuario, senha, nivel):
 
 
 def listar_usuarios():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -198,6 +212,7 @@ def ativar_usuario(usuario_id):
 # ──────────────────────────────────────────────────────────────
 
 def listar_unidades():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -269,6 +284,7 @@ def cadastrar_morador(nome, cpf, telefone, email, unidade_id, observacao):
 
 
 def listar_moradores(apenas_ativos=True):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -289,6 +305,7 @@ def listar_moradores(apenas_ativos=True):
 
 
 def buscar_moradores(termo):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -323,6 +340,7 @@ def buscar_moradores(termo):
 
 
 def buscar_morador_por_id(morador_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -392,6 +410,7 @@ def ativar_morador(morador_id):
 
 
 def cpf_morador_ja_cadastrado(cpf, morador_id=None):
+    tenant_id = _tenant_id()
     cpf = limpar_cpf(cpf)
     if not cpf:
         return None
@@ -411,6 +430,7 @@ def cpf_morador_ja_cadastrado(cpf, morador_id=None):
 
 
 def buscar_moradores_ajax(termo):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -430,6 +450,7 @@ def buscar_moradores_ajax(termo):
 
 
 def total_moradores():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -445,6 +466,7 @@ def total_moradores():
 # ──────────────────────────────────────────────────────────────
 
 def cpf_ja_cadastrado(cpf, visitante_id=None):
+    tenant_id = _tenant_id()
     cpf = limpar_cpf(cpf)
     if not cpf:
         return None
@@ -492,6 +514,7 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao)
 
 
 def buscar_visitantes(termo):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -519,6 +542,7 @@ def buscar_visitantes(termo):
 
 
 def buscar_um_por_cpf(cpf):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -532,6 +556,7 @@ def buscar_um_por_cpf(cpf):
 
 
 def buscar_visitante_por_id(visitante_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -545,6 +570,7 @@ def buscar_visitante_por_id(visitante_id):
 
 
 def listar_visitantes_paginado(pagina=1, por_pagina=20):
+    tenant_id = _tenant_id()
     conn = conectar()
     offset = (pagina - 1) * por_pagina
     try:
@@ -638,6 +664,7 @@ def atualizar_observacao_visitante(visitante_id, observacao):
 
 
 def listar_cpfs_visitantes():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -740,6 +767,7 @@ def registrar_saida(visitante_id, usuario_saida_id=None):
 
 
 def visitantes_ativos():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -760,6 +788,7 @@ def visitantes_ativos():
 
 
 def buscar_ativos(termo):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -782,6 +811,7 @@ def buscar_ativos(termo):
 
 
 def historico_visitante(visitante_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -831,6 +861,7 @@ def atualizar_visita_ativa(visitante_id, endereco):
 # ──────────────────────────────────────────────────────────────
 
 def total_visitantes_cadastrados():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -842,6 +873,7 @@ def total_visitantes_cadastrados():
 
 
 def total_visitantes_ativos():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -853,6 +885,7 @@ def total_visitantes_ativos():
 
 
 def total_entradas_hoje():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -864,6 +897,7 @@ def total_entradas_hoje():
 
 
 def total_saidas_hoje():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -875,6 +909,7 @@ def total_saidas_hoje():
 
 
 def ultima_entrada():
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -893,6 +928,7 @@ def ultima_entrada():
 
 
 def ultimas_entradas_dashboard(limite=5):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
