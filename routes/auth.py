@@ -10,12 +10,13 @@ def login():
     if request.method == "POST":
         usuario = request.form.get("usuario", "").strip()
         senha = request.form.get("senha", "")
+        condominio_slug = request.form.get("condominio", "").strip().lower()
 
-        if not usuario or not senha:
-            flash("Preencha usuário e senha.", "erro")
+        if not usuario or not senha or not condominio_slug:
+            flash("Preencha condomínio, usuário e senha.", "erro")
             return redirect(url_for("auth.login"))
 
-        user = buscar_usuario(usuario)
+        user = buscar_usuario(usuario, condominio_slug)
 
         # Keep authentication failures intentionally indistinguishable.
         if not user or not verificar_senha(user, senha):
