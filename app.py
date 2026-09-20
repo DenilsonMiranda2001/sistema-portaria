@@ -6,6 +6,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from routes.admin import admin_bp
+from routes.platform_admin import platform_admin_bp
 from routes.main import main_bp
 from routes.visitantes import visitantes_bp
 from routes.auth import auth_bp
@@ -41,6 +42,7 @@ app.register_blueprint(main_bp)
 app.register_blueprint(visitantes_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(platform_admin_bp)
 app.register_blueprint(moradores_bp)
 app.register_blueprint(encomendas_bp)
 
