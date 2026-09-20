@@ -16,3 +16,10 @@ def test_registration_layout_has_single_responsive_form_system():
     assert ".form-cadastro-visitante{display:grid" in css
     assert "grid-template-columns:1fr 1fr" in css
     assert "@media(max-width:760px)" in css
+
+
+def test_front_desk_density_stays_compact():
+    css = Path("static/style.css").read_text(encoding="utf-8")
+    assert "font-size:clamp(24px,2vw,30px)!important" in css
+    assert "min-height:40px!important" in css
+    assert "padding:18px 20px!important" in css
