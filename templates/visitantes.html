@@ -29,7 +29,7 @@
                     <div class="visitor-photo-wrap">
                         {% if v.foto %}
                             <img
-                                src="{{ url_for('static', filename='fotos/' + v.foto) }}"
+                                src="{{ url_for('visitantes.foto', id=v.id) }}"
                                 class="visitor-photo"
                                 alt="Foto de {{ v.nome }}"
                             >
@@ -258,8 +258,8 @@ function renderizarListaBusca(data) {
     data.forEach((v, index) => {
         const selecionado = index === indiceSelecionado;
 
-        const fotoHtml = v.foto
-            ? `<img src="/static/fotos/${v.foto}" alt="Foto de ${v.nome}" class="visitor-photo">`
+        const fotoHtml = v.foto_url
+            ? `<img src="${v.foto_url}" alt="Foto do visitante" class="visitor-photo">`
             : `<div class="visitor-photo placeholder">Sem foto</div>`;
 
         lista.innerHTML += `
