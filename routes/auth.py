@@ -1,16 +1,15 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for
 import hashlib
 import logging
-import time
-from collections import defaultdict, deque
+
 
 from database.models import buscar_usuario, buscar_platform_admin, verificar_senha
+from database.connection import conectar, liberar
 
 auth_bp = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)
-_LOGIN_WINDOW = 15 * 60
-_LOGIN_LIMIT = 10
-_login_attempts = defaultdict(deque)
+LOGIN_WINDOW_MINUTES = 15
+LOGIN_LIMIT = 10
 
 
 def _login_key():
@@ -20,19 +19,54 @@ def _login_key():
 
 
 def _login_rate_limited():
-    now = time.monotonic()
-    bucket = _login_attempts[_login_key()]
-    while bucket and now - bucket[0] > _LOGIN_WINDOW:
-        bucket.popleft()
-    return len(bucket) >= _LOGIN_LIMIT
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT bloqueado_ate > CURRENT_TIMESTAMP AS bloqueado FROM login_attempts WHERE chave=%s", (_login_key(),))
+            row = cur.fetchone()
+            return bool(row and row["bloqueado"])
+    finally:
+        liberar(conn)
 
 
 def _record_failed_login():
-    _login_attempts[_login_key()].append(time.monotonic())
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO login_attempts(chave,tentativas,janela_inicio,bloqueado_ate)
+                VALUES(%s,1,CURRENT_TIMESTAMP,NULL)
+                ON CONFLICT(chave) DO UPDATE SET
+                    tentativas = CASE
+                        WHEN login_attempts.janela_inicio < CURRENT_TIMESTAMP - INTERVAL '15 minutes' THEN 1
+                        ELSE login_attempts.tentativas + 1 END,
+                    janela_inicio = CASE
+                        WHEN login_attempts.janela_inicio < CURRENT_TIMESTAMP - INTERVAL '15 minutes' THEN CURRENT_TIMESTAMP
+                        ELSE login_attempts.janela_inicio END,
+                    bloqueado_ate = CASE
+                        WHEN (CASE WHEN login_attempts.janela_inicio < CURRENT_TIMESTAMP - INTERVAL '15 minutes' THEN 1 ELSE login_attempts.tentativas + 1 END) >= %s
+                        THEN CURRENT_TIMESTAMP + INTERVAL '15 minutes'
+                        ELSE login_attempts.bloqueado_ate END
+            """, (_login_key(), LOGIN_LIMIT))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        logger.exception("Failed to persist login attempt")
+    finally:
+        liberar(conn)
 
 
 def _clear_login_failures():
-    _login_attempts.pop(_login_key(), None)
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM login_attempts WHERE chave=%s", (_login_key(),))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        logger.exception("Failed to clear login attempts")
+    finally:
+        liberar(conn)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
