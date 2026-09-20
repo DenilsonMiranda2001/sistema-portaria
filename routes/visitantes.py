@@ -429,8 +429,7 @@ def atualizar_observacao_ajax():
     if not visitante_id:
         return jsonify({"status": "erro", "mensagem": "ID não informado."}), 400
 
-    atualizar_observacao_visitante(visitante_id, observacao)
-    registrar_auditoria("visitante.observacao_atualizada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=visitante_id)
+    atualizar_observacao_visitante(visitante_id, observacao, session["usuario_id"])
     return jsonify({"status": "ok", "mensagem": "Observação atualizada."})
 
 
