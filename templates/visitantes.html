@@ -3,14 +3,7 @@
 
 {% block content %}
 
-<section class="page-heading visitor-heading">
-    <div>
-        <span class="page-eyebrow">CADASTROS</span>
-        <h1>Visitantes</h1>
-        <p>Localize pessoas e veículos cadastrados sem sair do fluxo operacional.</p>
-    </div>
-    <a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">Novo visitante</a>
-</section>
+<div class="compact-list-toolbar"><strong>Visitantes</strong><a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">Novo visitante</a></div>
 <div class="card-padrao visitor-directory">
 
     <div class="busca-box">
