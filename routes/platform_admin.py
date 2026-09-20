@@ -3,6 +3,7 @@ from flask import Blueprint, flash, g, redirect, render_template, request, sessi
 import re
 from werkzeug.security import generate_password_hash
 from database.connection import conectar, liberar
+from utils.audit import registrar_auditoria
 
 platform_admin_bp = Blueprint("platform_admin", __name__, url_prefix="/plataforma")
 
@@ -42,8 +43,9 @@ def criar_condominio():
     try:
         with conn.cursor() as cur:
             cur.execute("INSERT INTO condominios(nome,slug,ativo) VALUES(%s,%s,TRUE) RETURNING id",(nome,slug))
-            cur.fetchone()
+            novo = cur.fetchone()
         conn.commit()
+        registrar_auditoria("plataforma.condominio_criado", entidade="condominio", entidade_id=novo["id"], detalhes={"slug": slug})
         flash("Condomínio criado com sucesso.","sucesso")
     except Exception:
         conn.rollback()
@@ -80,9 +82,11 @@ def criar_usuario_condominio(condominio_id):
                 flash("Este login já está em uso.", "erro")
                 return redirect(url_for("platform_admin.condominios"))
             cur.execute("""INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel,ativo)
-                           VALUES(%s,%s,%s,%s,%s,TRUE)""",
+                           VALUES(%s,%s,%s,%s,%s,TRUE) RETURNING id""",
                         (condominio_id,nome.upper(),usuario,generate_password_hash(senha),nivel))
+            novo_usuario = cur.fetchone()
         conn.commit()
+        registrar_auditoria("plataforma.usuario_tenant_criado", condominio_id=condominio_id, entidade="usuario", entidade_id=novo_usuario["id"], detalhes={"nivel": nivel})
         flash("Usuário do condomínio criado com sucesso.","sucesso")
     except Exception:
         conn.rollback()
