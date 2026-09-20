@@ -1,11 +1,17 @@
 from functools import wraps
 from flask import abort, g, redirect, session, url_for
-from database.models import buscar_usuario_por_id
+from database.models import buscar_usuario_por_id, buscar_platform_admin_por_id
 
 
 def load_identity():
     if session.get("is_platform_admin"):
-        g.current_user = {"id": session.get("usuario_id"), "nome": session.get("usuario_nome"), "nivel": "platform_admin", "ativo": True}
+        admin = buscar_platform_admin_por_id(session.get("usuario_id"))
+        if not admin:
+            session.clear()
+            g.current_user = None
+            g.tenant_id = None
+            return
+        g.current_user = {"id": admin["id"], "nome": admin["nome"], "nivel": "platform_admin", "ativo": admin["ativo"]}
         g.tenant_id = None
         return
     user_id = session.get("usuario_id")
