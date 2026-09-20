@@ -459,9 +459,9 @@ def atualizar_foto_ajax():
         atualizar_foto_visitante(visitante_id, nome_arquivo)
         return jsonify({"status": "ok", "mensagem": "Foto atualizada.", "foto": nome_arquivo})
 
-    except Exception as e:
+    except Exception:
         logger.exception("Erro em /atualizar_foto_ajax")
-        return jsonify({"status": "erro", "mensagem": str(e)}), 500
+        return jsonify({"status": "erro", "mensagem": "Não foi possível atualizar a foto."}), 500
 
 
 # ──────────────────────────────────────────────────────────────
