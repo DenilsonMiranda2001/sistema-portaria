@@ -87,8 +87,15 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo):
     conn=conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("""UPDATE usuarios SET ativo=%s WHERE id=%s AND condominio_id=%s
-                           AND ativo IS DISTINCT FROM %s RETURNING id""",(ativo,usuario_id,condominio_id,ativo))
+            cur.execute("SELECT id,nivel,ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE",(usuario_id,condominio_id))
+            alvo=cur.fetchone()
+            if not alvo or alvo["ativo"] == ativo:
+                return False
+            if not ativo and alvo["nivel"] == "admin":
+                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin' AND ativo=TRUE",(condominio_id,))
+                if cur.fetchone()["total"] <= 1:
+                    raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
+            cur.execute("UPDATE usuarios SET ativo=%s WHERE id=%s AND condominio_id=%s RETURNING id",(ativo,usuario_id,condominio_id))
             row=cur.fetchone()
         conn.commit(); return bool(row)
     except Exception:
