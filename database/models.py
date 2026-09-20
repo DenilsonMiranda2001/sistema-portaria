@@ -381,7 +381,7 @@ def cadastrar_morador(nome, cpf, telefone, email, unidade_id, observacao):
 
 
 
-def cadastrar_morador_com_unidade(nome, cpf, telefone, email, unidade_id, nova_unidade, observacao):
+def cadastrar_morador_com_unidade(nome, cpf, telefone, email, unidade_id, nova_unidade, observacao, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -414,6 +414,8 @@ def cadastrar_morador_com_unidade(nome, cpf, telefone, email, unidade_id, nova_u
                   (telefone or "").strip() or None, (email or "").strip().lower() or None,
                   resolved_unidade_id, (observacao or "").strip().upper() or None))
             novo = cur.fetchone()
+            if usuario_id:
+                registrar_auditoria_cursor(cur, "morador.criado", usuario_id=usuario_id, condominio_id=tenant_id, entidade="morador", entidade_id=novo["id"])
         conn.commit()
         return novo["id"]
     except Exception:
@@ -496,7 +498,7 @@ def buscar_morador_por_id(morador_id):
         liberar(conn)
 
 
-def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observacao, nova_unidade=None):
+def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observacao, nova_unidade=None, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -538,6 +540,8 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
             ))
             if cur.rowcount == 0:
                 raise ValueError("Morador não encontrado neste condomínio.")
+            if usuario_id:
+                registrar_auditoria_cursor(cur, "morador.atualizado", usuario_id=usuario_id, condominio_id=tenant_id, entidade="morador", entidade_id=morador_id)
         conn.commit()
     except Exception:
         conn.rollback()
