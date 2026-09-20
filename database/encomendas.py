@@ -106,12 +106,9 @@ def atualizar_status_lote(lote_id, status, usuario_id=None):
             """, (status, lote_id, tenant_id))
             alterou = cur.rowcount > 0
             if alterou and status == "cancelado":
-                cur.execute("""
-                    UPDATE encomendas
-                    SET status = 'cancelada', atualizado_em = CURRENT_TIMESTAMP
-                    WHERE lote_id = %s AND condominio_id = %s
-                      AND status NOT IN ('retirada', 'entregue_na_porta', 'cancelada')
-                """, (lote_id, tenant_id))
+                cur.execute("SELECT COUNT(*)::int AS total FROM encomendas WHERE lote_id=%s AND condominio_id=%s", (lote_id, tenant_id))
+                if cur.fetchone()["total"] > 0:
+                    raise ValueError("Recebimentos com encomendas registradas não podem ser cancelados em lote.")
             if alterou and usuario_id:
                 registrar_auditoria_cursor(cur, "encomenda.lote_status", usuario_id=usuario_id, condominio_id=tenant_id, entidade="lote_encomenda", entidade_id=lote_id, detalhes={"status": status})
         conn.commit()
