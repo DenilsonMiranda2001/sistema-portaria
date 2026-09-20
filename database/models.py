@@ -625,8 +625,8 @@ def listar_visitantes_paginado(pagina=1, por_pagina=20):
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao
-                FROM visitantes ORDER BY id DESC LIMIT %s OFFSET %s
-            """, (por_pagina, offset))
+                FROM visitantes WHERE condominio_id = %s ORDER BY id DESC LIMIT %s OFFSET %s
+            """, (tenant_id, por_pagina, offset))
             visitantes = cur.fetchall()
             cur.execute("SELECT COUNT(*) AS total FROM visitantes WHERE condominio_id = %s", (tenant_id,))
             total = cur.fetchone()["total"]
@@ -644,12 +644,12 @@ def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, fot
                 cur.execute("""
                     UPDATE visitantes
                     SET nome=%s, cpf=%s, tipo=%s, placa=%s, modelo=%s, marca=%s, foto=%s, observacao=%s
-                    WHERE id=%s
+                    WHERE id=%s AND condominio_id=%s
                 """, (
                     (nome or "").strip().upper(), limpar_cpf(cpf),
                     (tipo or "").strip().upper(), (placa or "").strip().upper(),
                     (modelo or "").strip().upper(), (marca or "").strip().upper(),
-                    foto, (observacao or "").strip().upper(), visitante_id,
+                    foto, (observacao or "").strip().upper(), visitante_id, tenant_id,
                 ))
             else:
                 cur.execute("""
@@ -834,11 +834,11 @@ def visitantes_ativos():
                     vi.id AS visita_id, vi.endereco, vi.data_entrada,
                     m.nome AS morador_nome, u.codigo AS unidade_codigo
                 FROM visitantes v
-                INNER JOIN visitas vi ON v.id = vi.visitante_id AND vi.data_saida IS NULL
+                INNER JOIN visitas vi ON v.id = vi.visitante_id AND vi.data_saida IS NULL AND vi.condominio_id = %s
                 LEFT JOIN moradores m ON m.id = vi.morador_id
                 LEFT JOIN unidades u ON u.id = vi.unidade_id
                 ORDER BY vi.data_entrada DESC
-            """)
+            """, (tenant_id,))
             return cur.fetchall()
     finally:
         liberar(conn)
@@ -859,9 +859,9 @@ def buscar_ativos(termo):
                 INNER JOIN visitas vi ON v.id = vi.visitante_id AND vi.data_saida IS NULL
                 LEFT JOIN moradores m ON m.id = vi.morador_id
                 LEFT JOIN unidades u ON u.id = vi.unidade_id
-                WHERE v.nome ILIKE %s OR v.cpf ILIKE %s OR v.placa ILIKE %s OR vi.endereco ILIKE %s
+                WHERE vi.condominio_id = %s AND (v.nome ILIKE %s OR v.cpf ILIKE %s OR v.placa ILIKE %s OR vi.endereco ILIKE %s)
                 ORDER BY vi.data_entrada DESC
-            """, (like, like, like, like))
+            """, (tenant_id, like, like, like, like))
             return cur.fetchall()
     finally:
         liberar(conn)
@@ -885,9 +885,9 @@ def historico_visitante(visitante_id):
                 LEFT JOIN usuarios us ON vi.usuario_saida_id = us.id
                 LEFT JOIN moradores m ON vi.morador_id = m.id
                 LEFT JOIN unidades u ON vi.unidade_id = u.id
-                WHERE vi.visitante_id = %s
+                WHERE vi.condominio_id = %s AND vi.visitante_id = %s
                 ORDER BY vi.data_entrada DESC
-            """, (visitante_id,))
+            """, (tenant_id, visitante_id))
             return cur.fetchall()
     finally:
         liberar(conn)
@@ -902,10 +902,10 @@ def atualizar_visita_ativa(visitante_id, endereco):
                 UPDATE visitas SET endereco = %s
                 WHERE id = (
                     SELECT id FROM visitas
-                    WHERE visitante_id = %s AND data_saida IS NULL
+                    WHERE condominio_id = %s AND visitante_id = %s AND data_saida IS NULL
                     ORDER BY data_entrada DESC LIMIT 1
-                )
-            """, ((endereco or "").strip().upper(), visitante_id))
+                ) AND condominio_id = %s
+            """, ((endereco or "").strip().upper(), tenant_id, visitante_id, tenant_id))
         conn.commit()
     except Exception:
         conn.rollback()
@@ -923,7 +923,7 @@ def total_visitantes_cadastrados():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) AS total FROM visitantes")
+            cur.execute("SELECT COUNT(*) AS total FROM visitantes WHERE condominio_id = %s", (tenant_id,))
             r = cur.fetchone()
             return r["total"] if r else 0
     finally:
@@ -974,9 +974,10 @@ def ultima_entrada():
             cur.execute("""
                 SELECT v.nome, vi.data_entrada
                 FROM visitas vi
-                JOIN visitantes v ON v.id = vi.visitante_id
+                JOIN visitantes v ON v.id = vi.visitante_id AND v.condominio_id = vi.condominio_id
+                WHERE vi.condominio_id = %s
                 ORDER BY vi.data_entrada DESC LIMIT 1
-            """)
+            """, (tenant_id,))
             r = cur.fetchone()
             if not r:
                 return ("-", "-")
@@ -997,8 +998,9 @@ def ultimas_entradas_dashboard(limite=5):
                 JOIN visitantes v ON v.id = vi.visitante_id
                 LEFT JOIN moradores m ON vi.morador_id = m.id
                 LEFT JOIN unidades u ON vi.unidade_id = u.id
+                WHERE vi.condominio_id = %s
                 ORDER BY vi.data_entrada DESC LIMIT %s
-            """, (limite,))
+            """, (tenant_id, limite))
             return cur.fetchall()
     finally:
         liberar(conn)
