@@ -495,7 +495,12 @@ def importar_visitantes():
 
         try:
             conteudo = arquivo.read().decode("utf-8-sig")
-            leitor   = csv.DictReader(io.StringIO(conteudo))
+            leitor = csv.DictReader(io.StringIO(conteudo))
+            esperadas = {"nome", "cpf", "endereco", "tipo", "placa", "modelo", "marca", "observacao"}
+            recebidas = set(leitor.fieldnames or [])
+            if recebidas != esperadas:
+                flash("CSV inválido. Use exatamente as colunas do modelo informado.", "erro")
+                return redirect(url_for("visitantes.importar_visitantes"))
 
             importados, duplicados, erros = 0, 0, 0
             detalhes_erros = []
@@ -504,6 +509,10 @@ def importar_visitantes():
             para_importar    = []
 
             for i, linha in enumerate(leitor, start=2):
+                if i > 5001:
+                    erros += 1
+                    detalhes_erros.append("Limite de 5.000 registros por importação excedido.")
+                    break
                 try:
                     nome = (linha.get("nome") or "").strip().upper()
                     cpf  = limpar_cpf(linha.get("cpf") or "")
@@ -523,6 +532,7 @@ def importar_visitantes():
 
                     para_importar.append((
                         nome, cpf,
+                        formatar_endereco_condominio(linha.get("endereco") or ""),
                         (linha.get("tipo") or "").strip().upper(),
                         (linha.get("placa") or "").strip().upper(),
                         (linha.get("modelo") or "").strip().upper(),
