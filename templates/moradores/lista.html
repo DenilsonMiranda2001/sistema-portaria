@@ -2,14 +2,8 @@
 {% block title %}Moradores{% endblock %}
 
 {% block content %}
-<div class="card-padrao">
-    <div class="header-secao header-secao-flex">
-        <div>
-            <h2>Moradores</h2>
-            <p class="texto-ajuda">Gerencie os moradores do condomínio.</p>
-        </div>
-        <a class="btn-principal" href="{{ url_for('moradores.novo') }}">➕ Novo morador</a>
-    </div>
+<div class="card-padrao resident-directory">
+    <div class="compact-list-toolbar"><strong>Moradores</strong><a class="btn-principal" href="{{ url_for('moradores.novo') }}">Novo morador</a></div>
 
     <!-- Busca -->
     <form method="GET" class="busca-box" style="gap:8px; display:flex;">
@@ -63,18 +57,18 @@
                 </td>
                 <td>{{ m.criado_em.strftime('%d/%m/%Y') if m.criado_em else '—' }}</td>
                 <td class="acoes-tabela">
-                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.editar', id=m.id) }}">✏️ Editar</a>
-                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.detalhe', id=m.id) }}">👁 Ver</a>
+                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.editar', id=m.id) }}">Editar</a>
+                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.detalhe', id=m.id) }}">Ver</a>
 
                     {% if m.ativo %}
                     <form method="POST" action="{{ url_for('moradores.inativar', id=m.id) }}"
                           style="display:inline;"
                           onsubmit="return confirm('Inativar {{ m.nome }}?')">
-                        <button class="btn-remover btn-sm" type="submit">⛔ Inativar</button>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn-remover btn-sm" type="submit">Inativar</button>
                     </form>
                     {% else %}
                     <form method="POST" action="{{ url_for('moradores.ativar', id=m.id) }}" style="display:inline;">
-                        <button class="btn-principal btn-sm" type="submit">✅ Ativar</button>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn-principal btn-sm" type="submit">Ativar</button>
                     </form>
                     {% endif %}
                 </td>
@@ -90,7 +84,7 @@
     {% else %}
     <div class="estado-vazio">
         <div>Nenhum morador encontrado.</div>
-        <a class="btn-principal btn-sm" href="{{ url_for('moradores.novo') }}">➕ Cadastrar primeiro morador</a>
+        <a class="btn-principal btn-sm" href="{{ url_for('moradores.novo') }}">Cadastrar primeiro morador</a>
     </div>
     {% endif %}
 </div>
