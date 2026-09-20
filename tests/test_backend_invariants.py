@@ -26,7 +26,8 @@ def test_visitor_profile_address_is_separate_from_visit_destination():
     assert "ADD COLUMN IF NOT EXISTS endereco TEXT" in migration
     assert "endereco=None, entrada=None" in models
     assert 'endereco=endereco' in routes
-    assert '"endereco": ""' in routes
+    cadastro = routes[routes.index("def cadastro"):routes.index("# LISTAGEM")]
+    assert "entrada={" not in cadastro
 
 
 def test_central_package_reception_is_default():
