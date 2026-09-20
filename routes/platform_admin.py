@@ -35,7 +35,7 @@ def criar_condominio():
     if not nome or not slug:
         flash("Informe nome e código do condomínio.","erro")
         return redirect(url_for("platform_admin.condominios"))
-    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
+    if len(slug) > 80 or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
         flash("O código deve usar apenas letras minúsculas, números e hífens.", "erro")
         return redirect(url_for("platform_admin.condominios"))
     conn=conectar()
@@ -61,7 +61,7 @@ def criar_usuario_condominio(condominio_id):
     nivel=request.form.get("nivel","funcionario").strip().lower()
     if nivel not in ("admin","funcionario"):
         nivel="funcionario"
-    if not nome or not usuario or len(senha)<12:
+    if not nome or not usuario or len(usuario) > 100 or len(senha)<12:
         flash("Preencha os dados do usuário; a senha deve ter pelo menos 12 caracteres.","erro")
         return redirect(url_for("platform_admin.condominios"))
     conn=conectar()
