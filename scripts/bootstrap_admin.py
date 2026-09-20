@@ -1,6 +1,10 @@
 import argparse
 import getpass
 import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from werkzeug.security import generate_password_hash
 from database.connection import conectar, liberar
 
