@@ -3,10 +3,6 @@
 
 {% block content %}
 
-<section class="compact-access-head">
-  <div><span class="page-eyebrow">NOVO ACESSO</span><h1>Cadastrar visitante</h1></div>
-  <a href="{{ url_for('main.index') }}">Cancelar</a>
-</section>
 <form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="quick-access-grid">
