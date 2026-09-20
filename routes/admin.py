@@ -43,6 +43,7 @@ def usuarios():
         if resultado == "existe":
             flash("Já existe um usuário com esse login.", "erro")
         else:
+            registrar_auditoria("usuario.criado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=resultado["id"], detalhes={"nivel": tipo})
             flash("Usuário criado com sucesso!", "sucesso")
 
         return redirect(url_for("admin.usuarios"))
@@ -79,6 +80,7 @@ def editar_usuario(id):
             flash("Já existe outro usuário com esse login.", "erro")
             return redirect(url_for("admin.editar_usuario", id=id))
 
+        registrar_auditoria("usuario.atualizado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id, detalhes={"nivel": tipo})
         flash("Usuário atualizado com sucesso!", "sucesso")
         return redirect(url_for("admin.usuarios"))
 
@@ -144,6 +146,7 @@ def alterar_senha_usuario(id):
             return redirect(url_for("admin.alterar_senha_usuario", id=id))
 
         atualizar_senha_usuario(id, nova_senha)
+        registrar_auditoria("usuario.senha_alterada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id)
         flash("Senha atualizada com sucesso!", "sucesso")
         return redirect(url_for("admin.usuarios"))
 
