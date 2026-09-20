@@ -79,7 +79,7 @@ def listar_lotes():
             cur.execute("""
                 SELECT l.*,
                        COUNT(e.id)::int AS total,
-                       COUNT(e.id) FILTER (WHERE e.status = 'retida_portaria')::int AS pendentes,
+                       COUNT(e.id) FILTER (WHERE e.status IN ('recebida','aguardando_resposta','morador_em_casa'))::int AS legadas,
                        COUNT(e.id) FILTER (WHERE e.status = 'retida_portaria')::int AS retidas,
                        COUNT(e.id) FILTER (WHERE e.status = 'retirada')::int AS retiradas
                 FROM lotes_encomendas l
@@ -276,9 +276,10 @@ def resumo_painel():
 
 
 TRANSICOES_ENCOMENDA = {
-    "recebida": {"aguardando_resposta", "cancelada"},
-    "aguardando_resposta": {"morador_em_casa", "retida_portaria", "cancelada"},
-    "morador_em_casa": {"entregue_na_porta", "retida_portaria", "cancelada"},
+    # Legacy states can only move forward into the centralized custody workflow.
+    "recebida": {"retida_portaria", "cancelada"},
+    "aguardando_resposta": {"retida_portaria", "cancelada"},
+    "morador_em_casa": {"retida_portaria", "cancelada"},
     "retida_portaria": {"retirada", "cancelada"},
     "retirada": set(),
     "entregue_na_porta": set(),
