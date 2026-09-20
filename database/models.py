@@ -268,10 +268,11 @@ def cadastrar_morador(nome, cpf, telefone, email, unidade_id, observacao):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO moradores (nome, cpf, telefone, email, unidade_id, observacao, ativo)
-                VALUES (%s, %s, %s, %s, %s, %s, TRUE)
+                INSERT INTO moradores (condominio_id, nome, cpf, telefone, email, unidade_id, observacao, ativo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
                 RETURNING id
             """, (
+                tenant_id,
                 (nome or "").strip().upper(),
                 limpar_cpf(cpf) or None,
                 (telefone or "").strip() or None,
@@ -501,10 +502,11 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao)
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO visitantes (nome, cpf, tipo, placa, modelo, marca, foto, observacao)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO visitantes (condominio_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
+                tenant_id,
                 (nome or "").strip().upper(),
                 limpar_cpf(cpf),
                 (tipo or "").strip().upper(),
