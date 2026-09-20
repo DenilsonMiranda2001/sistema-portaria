@@ -107,7 +107,7 @@ def listar_usuarios():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, nome, usuario, nivel, ativo, criado_em FROM usuarios ORDER BY nome")
+            cur.execute("SELECT id, condominio_id, nome, usuario, nivel, ativo, criado_em FROM usuarios WHERE condominio_id = %s ORDER BY nome", (tenant_id,))
             return cur.fetchall()
     finally:
         liberar(conn)
@@ -146,6 +146,7 @@ def verificar_senha(usuario_banco, senha_digitada):
 
 
 def atualizar_usuario(usuario_id, nome, usuario, nivel):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -166,6 +167,7 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel):
 
 
 def atualizar_senha_usuario(usuario_id, nova_senha):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -182,6 +184,7 @@ def atualizar_senha_usuario(usuario_id, nova_senha):
 
 
 def inativar_usuario(usuario_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -195,6 +198,7 @@ def inativar_usuario(usuario_id):
 
 
 def ativar_usuario(usuario_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -223,15 +227,16 @@ def listar_unidades():
 
 
 def criar_unidade(codigo, descricao=None):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO unidades (codigo, descricao)
-                VALUES (%s, %s)
-                ON CONFLICT (codigo) DO NOTHING
+                INSERT INTO unidades (condominio_id, codigo, descricao)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (condominio_id, codigo) DO NOTHING
                 RETURNING id
-            """, ((codigo or "").strip().upper(), (descricao or "").strip()))
+            """, (tenant_id, (codigo or "").strip().upper(), (descricao or "").strip()))
             resultado = cur.fetchone()
         conn.commit()
         return resultado
@@ -243,6 +248,7 @@ def criar_unidade(codigo, descricao=None):
 
 
 def buscar_unidade_por_id(unidade_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -257,6 +263,7 @@ def buscar_unidade_por_id(unidade_id):
 # ──────────────────────────────────────────────────────────────
 
 def cadastrar_morador(nome, cpf, telefone, email, unidade_id, observacao):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -358,6 +365,7 @@ def buscar_morador_por_id(morador_id):
 
 
 def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observacao):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -384,6 +392,7 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
 
 
 def inativar_morador(morador_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -397,6 +406,7 @@ def inativar_morador(morador_id):
 
 
 def ativar_morador(morador_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -486,6 +496,7 @@ def cpf_ja_cadastrado(cpf, visitante_id=None):
 
 
 def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -588,6 +599,7 @@ def listar_visitantes_paginado(pagina=1, por_pagina=20):
 
 
 def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -622,6 +634,7 @@ def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, fot
 
 
 def remover_visitante(visitante_id):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -635,6 +648,7 @@ def remover_visitante(visitante_id):
 
 
 def atualizar_foto_visitante(visitante_id, nome_arquivo):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -648,6 +662,7 @@ def atualizar_foto_visitante(visitante_id, nome_arquivo):
 
 
 def atualizar_observacao_visitante(visitante_id, observacao):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -675,6 +690,7 @@ def listar_cpfs_visitantes():
 
 
 def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -699,6 +715,7 @@ def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100):
 
 def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=None,
                       observacao=None, usuario_id=None, unidade_id=None, morador_id=None):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -745,6 +762,7 @@ def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=Non
 
 
 def registrar_saida(visitante_id, usuario_saida_id=None):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -837,6 +855,7 @@ def historico_visitante(visitante_id):
 
 
 def atualizar_visita_ativa(visitante_id, endereco):
+    tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
