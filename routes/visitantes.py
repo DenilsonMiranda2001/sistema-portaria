@@ -91,8 +91,6 @@ def _save_photo_production(arquivo_foto, foto_webcam_b64):
 @roles_required("admin", "funcionario")
 def cadastro():
     cpf_pre = request.args.get("cpf", "")
-    unidades = listar_unidades()
-
     if request.method == "POST":
         nome = request.form.get("nome", "").strip().upper()
         cpf  = limpar_cpf(request.form.get("cpf", ""))
@@ -102,8 +100,6 @@ def cadastro():
         modelo  = request.form.get("modelo", "").strip().upper()
         observacao = request.form.get("observacao", "").strip().upper()
         endereco   = formatar_endereco_condominio(request.form.get("endereco", ""))
-        unidade_id = request.form.get("unidade_id") or None
-        morador_id = request.form.get("morador_id") or None
 
         if not nome:
             flash("Informe o nome do visitante.", "erro")
@@ -150,7 +146,7 @@ def cadastro():
         flash("Visitante cadastrado. Registre a entrada quando ele acessar o condomínio.", "sucesso")
         return redirect(url_for("visitantes.visitantes"))
 
-    return render_template("cadastro.html", cpf_pre=cpf_pre, unidades=unidades)
+    return render_template("cadastro.html", cpf_pre=cpf_pre)
 
 
 @visitantes_bp.route("/foto/<int:id>")
