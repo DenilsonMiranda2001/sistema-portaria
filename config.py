@@ -13,7 +13,7 @@ def _bool_env(name, default=False):
 
 class Config:
     APP_ENV = os.getenv("APP_ENV", "development").lower()
-    SECRET_KEY = os.getenv("SECRET_KEY")
+    SECRET_KEY = os.getenv("SECRET_KEY") or ("dev-only-secret-not-for-production" if os.getenv("APP_ENV", "development").lower() != "production" else None)
 
     DATABASE_URL = os.getenv("DATABASE_URL")
     DB_HOST = os.getenv("DB_HOST", "localhost")
