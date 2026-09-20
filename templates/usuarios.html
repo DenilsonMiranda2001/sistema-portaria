@@ -32,6 +32,7 @@
             <h2>Novo usuário</h2>
 
             <form method="POST" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="campo">
                     <label for="nome">Nome</label>
                     <input class="input-padrao" type="text" id="nome" name="nome" required>
