@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 
 from database.models import (
     cadastrar_morador,
+    cadastrar_morador_com_unidade,
     listar_moradores,
     buscar_moradores,
     buscar_morador_por_id,
@@ -42,12 +43,7 @@ def novo():
         unidade_id = request.form.get("unidade_id") or None
         observacao = request.form.get("observacao", "").strip()
 
-        # Permitir criar unidade on-the-fly
         nova_unidade = request.form.get("nova_unidade", "").strip().upper()
-        if nova_unidade and not unidade_id:
-            resultado = criar_unidade(nova_unidade)
-            if resultado:
-                unidade_id = resultado["id"]
 
         if not nome:
             flash("Informe o nome do morador.", "erro")
@@ -63,7 +59,7 @@ def novo():
                 return redirect(url_for("moradores.novo"))
 
         try:
-            cadastrar_morador(nome, cpf or None, telefone, email, unidade_id, observacao)
+            cadastrar_morador_com_unidade(nome, cpf or None, telefone, email, unidade_id, nova_unidade, observacao)
             flash("Morador cadastrado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
         except ValueError as exc:
