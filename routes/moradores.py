@@ -137,8 +137,7 @@ def inativar(id):
         flash("Morador não encontrado.", "erro")
         return redirect(url_for("moradores.listar"))
 
-    inativar_morador(id)
-    registrar_auditoria("morador.inativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="morador", entidade_id=id)
+    inativar_morador(id, session["usuario_id"])
     flash(f"Morador {morador['nome']} inativado.", "sucesso")
     return redirect(url_for("moradores.listar"))
 
@@ -150,7 +149,6 @@ def ativar(id):
         flash("Morador não encontrado.", "erro")
         return redirect(url_for("moradores.listar"))
 
-    ativar_morador(id)
-    registrar_auditoria("morador.ativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="morador", entidade_id=id)
+    ativar_morador(id, session["usuario_id"])
     flash(f"Morador {morador['nome']} reativado.", "sucesso")
     return redirect(url_for("moradores.listar"))
