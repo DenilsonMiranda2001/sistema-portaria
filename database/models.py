@@ -1133,7 +1133,7 @@ def historico_visitante(visitante_id):
         liberar(conn)
 
 
-def atualizar_visita_ativa(visitante_id, endereco):
+def atualizar_visita_ativa(visitante_id, endereco, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -1145,8 +1145,13 @@ def atualizar_visita_ativa(visitante_id, endereco):
                     WHERE condominio_id = %s AND visitante_id = %s AND data_saida IS NULL
                     ORDER BY data_entrada DESC LIMIT 1
                 ) AND condominio_id = %s
+                RETURNING id
             """, ((endereco or "").strip().upper(), tenant_id, visitante_id, tenant_id))
+            visita = cur.fetchone()
+            if visita and usuario_id:
+                registrar_auditoria_cursor(cur, "visita.destino_atualizado", usuario_id=usuario_id, condominio_id=tenant_id, entidade="visita", entidade_id=visita["id"])
         conn.commit()
+        return bool(visita)
     except Exception:
         conn.rollback()
         raise
