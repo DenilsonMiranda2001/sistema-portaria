@@ -107,11 +107,11 @@ async function obterJsonSeguro(res, mensagemPadrao = "Erro na comunicação com 
 }
 
 function mostrarMensagem(texto, tipo = "erro") {
-    mensagem.innerHTML = `<div class="msg-ui ${tipo}">${texto}</div>`;
+    mensagem.replaceChildren(); const box=node("div","msg-ui "+tipo,texto); mensagem.appendChild(box);
 }
 
 function limparMensagem() {
-    mensagem.innerHTML = "";
+    mensagem.replaceChildren();
 }
 
 function mostrarEstadoInicial() {
@@ -311,281 +311,42 @@ function selecionarVisitante(index) {
     renderizarResultados(resultadosAtuais, ultimoTermoBuscado);
 }
 
+function node(tag, cls, text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n}
+function labeled(label,value,cls=""){const box=node("div","info-item "+cls);box.append(node("span","label-ui",label),node("span","valor-ui",value||"—"));return box}
 function renderizarResultados(data, termo) {
-    resultadosAtuais = data;
-    lista.innerHTML = "";
-
-    if (!data || data.length === 0) {
-        lista.innerHTML = `
-            <div class="estado-vazio">
-                <div>Nenhum resultado encontrado.</div>
-                <a class="btn-principal btn-sm" href="/cadastro?cpf=${encodeURIComponent(termo)}">
-                    ➕ Cadastrar novo visitante
-                </a>
-            </div>
-        `;
-        return;
+    resultadosAtuais=Array.isArray(data)?data:[]; lista.replaceChildren();
+    if(!resultadosAtuais.length){
+        const empty=node("div","estado-vazio"),msg=node("div","", "Nenhum resultado encontrado."),a=node("a","btn-principal btn-sm","Cadastrar novo visitante");
+        a.href={{ url_for('visitantes.cadastro')|tojson }}+"?cpf="+encodeURIComponent(termo||"");empty.append(msg,a);lista.appendChild(empty);return;
     }
-
-    if (indiceSelecionado < 0) indiceSelecionado = 0;
-    if (indiceSelecionado > data.length - 1) indiceSelecionado = data.length - 1;
-
-    data.forEach((v, index) => {
-        const selecionado = index === indiceSelecionado;
-        const estado = obterEstadoVisitante(v);
-
-        const fotoHtml = v.foto
-    ? `
-        <div class="foto-card-mini">
-            <img 
-                src="/static/fotos/${v.foto}" 
-                alt="Foto de ${v.nome}" 
-                class="visitor-photo"
-                data-foto-visitante="${v.id}"
-            >
-
-            <div class="foto-acao-box">
-                <button
-                    type="button"
-                    class="btn-foto-premium"
-                    onclick="event.stopPropagation(); abrirModalFoto(${v.id})"
-                    title="Atualizar foto"
-                >
-                    ✏️ Atualizar foto
-                </button>
-            </div>
-        </div>
-    `
-    : `
-        <div class="foto-card-mini">
-            <div class="visitor-photo placeholder">
-                <span>Sem foto</span>
-            </div>
-
-            <div class="foto-acao-box">
-                <button
-                    type="button"
-                    class="btn-foto-premium"
-                    onclick="event.stopPropagation(); abrirModalFoto(${v.id})"
-                    title="Adicionar foto"
-                >
-                    📷 Adicionar foto
-                </button>
-            </div>
-        </div>
-    `;
-
-        lista.innerHTML += `
-        <div
-            class="visitor-card ${selecionado ? "selecionado" : ""}"
-            data-id="${v.id}"
-            data-index="${index}"
-            onclick="selecionarVisitante(${index})"
-        >
-            <div class="visitor-photo-wrap">
-                ${fotoHtml}
-            </div>
-
-            <div class="visitor-main">
-
-            <div class="card-visitante">
-                <div class="info-grid">
-                    <div class="info-item destaque">
-                        <span class="label-ui">Nome</span>
-                        <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
-                    </div>
-
-                    <div class="info-item">
-                        <span class="label-ui">CPF</span>
-                        <span class="valor-ui">${v.cpf || "-"}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="extras-grid">
-                <div class="extra-card">
-                    <span class="label-ui">Tipo</span>
-                    <div class="badge-ui badge-tipo">
-                        🏷 ${((v.tipo || "SEM TIPO")).toUpperCase()}
-                    </div>
-                </div>
-
-                <div class="extra-card">
-                    <span class="label-ui">Placa</span>
-                    <div class="badge-ui badge-veiculo">
-                        🚘 ${v.placa ? String(v.placa).toUpperCase() : "SEM PLACA"}
-                    </div>
-                </div>
-
-                <div class="extra-card">
-                    <span class="label-ui">Veículo</span>
-                    <div class="badge-ui badge-veiculo">
-                        🚗 ${
-                            (v.marca || v.modelo)
-                                ? `${(v.marca || "").toUpperCase()} ${(v.modelo || "").toUpperCase()}`.trim()
-                                : "SEM VEÍCULO"
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <div class="linha-dupla">
-
-                <div class="extra-card" onclick="event.stopPropagation()">
-                    <span class="label-ui">Observação</span>
-
-                    <div class="observacao-resumo-box">
-                        ${
-                            v.observacao
-                                ? String(v.observacao).length > 50
-                                    ? String(v.observacao).substring(0, 50) + "..."
-                                    : String(v.observacao)
-                                : "Sem observações"
-                        }
-                    </div>
-
-                    <button
-                        class="btn-secundario btn-sm"
-                        type="button"
-                        onclick="event.stopPropagation(); toggleObservacao(${v.id})"
-                        style="margin-top: 6px;"
-                    >
-                        ✏️ Editar
-                    </button>
-
-                    <div id="box_observacao_${v.id}" style="display:none; margin-top:8px;">
-                        <textarea
-                            id="observacao_${v.id}"
-                            class="input-padrao textarea-premium"
-                            onclick="event.stopPropagation()"
-                            oninput="this.value = this.value.toUpperCase()"
-                        >${v.observacao || ""}</textarea>
-
-                        <div style="display:flex; gap:6px; margin-top:6px;">
-                            <button class="btn-secundario btn-sm"
-                                onclick="event.stopPropagation(); toggleObservacao(${v.id})">
-                                Cancelar
-                            </button>
-
-                            <button class="btn-principal btn-sm"
-                                onclick="event.stopPropagation(); salvarObservacao(${v.id})">
-                                💾 Salvar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="extra-card" onclick="event.stopPropagation()">
-                    <span class="label-ui">Entrada</span>
-
-                    <select
-                        id="tipo_chegada_${v.id}"
-                        class="input-padrao"
-                        onclick="event.stopPropagation()"
-                        onchange="alternarTipoChegada(${v.id})"
-                    >
-                        <option value="VEICULO" ${estado.tipoChegada === "VEICULO" ? "selected" : ""}>🚗 Veículo</option>
-                        <option value="PEDESTRE" ${estado.tipoChegada === "PEDESTRE" ? "selected" : ""}>🚶 Pedestre</option>
-                    </select>
-
-                    <div
-                        id="bloco_veiculo_${v.id}"
-                        class="${estado.tipoChegada === "PEDESTRE" ? "oculto" : ""}"
-                        style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;"
-                    >
-                        <input
-                            type="text"
-                            id="placa_${v.id}"
-                            class="input-padrao"
-                            placeholder="Placa"
-                            value="${estado.placa || ""}"
-                            onclick="event.stopPropagation()"
-                            oninput="this.value=this.value.toUpperCase(); atualizarCampoEstado(${v.id}, 'placa', this.value)"
-                        >
-
-                        <div class="campo-autocomplete" onclick="event.stopPropagation()" style="position:relative;">
-                            <input
-                                type="text"
-                                id="marca_${v.id}"
-                                class="input-padrao"
-                                value="${estado.marca || ""}"
-                                placeholder="Marca"
-                                autocomplete="off"
-                                onclick="event.stopPropagation()"
-                            >
-                            <div id="sugestoes_marca_${v.id}" class="caixa-sugestoes"></div>
-                        </div>
-
-                        <div class="campo-autocomplete" onclick="event.stopPropagation()" style="grid-column: span 2; position:relative;">
-                            <input
-                                type="text"
-                                id="modelo_${v.id}"
-                                class="input-padrao"
-                                value="${estado.modelo || ""}"
-                                placeholder="Modelo"
-                                autocomplete="off"
-                                onclick="event.stopPropagation()"
-                            >
-                            <div id="sugestoes_modelo_${v.id}" class="caixa-sugestoes"></div>
-                        </div>
-                    </div>
-                </div>
-
-            <div class="extra-card" onclick="event.stopPropagation()">
-                <span class="label-ui">Destino</span>
-
-                <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:end; margin-top:6px;">
-                    <div>
-                        <input
-                        type="text"
-                        id="endereco_${v.id}"
-                        class="input-padrao input-destino-compacto"
-                        value="${estado.endereco || ""}"
-                        placeholder="070220"
-                        autocomplete="off"
-                        onclick="event.stopPropagation()"
-                        oninput="sugerirEndereco(this, ${v.id})"
-                        onblur="formatarEnderecoInput(this, ${v.id})"
-                        onkeydown="aplicarEnderecoAoPressionarEnter(event, this, ${v.id})"
-                    >
-                        <small id="sugestao_endereco_${v.id}" style="display:block; margin-top:4px; color:#666; font-size:12px;"></small>
-                    </div>
-
-                    <button
-                        class="btn-principal"
-                        type="button"
-                        onclick="event.stopPropagation(); registrarEntrada(${v.id})"
-                        style="height: 42px; white-space: nowrap;"
-                    >
-                        🚪 Registrar Entrada
-                    </button>
-                </div>
-
-                ${
-                    estado.ultimoEndereco
-                        ? `
-                        <div
-                            class="destino-sugestao-box"
-                            style="margin-top: 8px; cursor: pointer;"
-                            onclick="event.stopPropagation(); usarUltimoEndereco(${v.id}, '${(montarEnderecoPadrao(estado.ultimoEndereco) || estado.ultimoEndereco || "").replace(/'/g, "\\'")}')"
-                        >
-                            <span class="destino-sugestao-label">Último endereço usado</span>
-                            <div class="chip-destino">
-                                🏠 ${montarEnderecoPadrao(estado.ultimoEndereco) || estado.ultimoEndereco}
-                            </div>
-                        </div>
-                        `
-                        : ""
-                }
-            </div>
-
-        </div>
-        `;
-    });
-
-    data.forEach((v) => {
-        criarAutocompleteDinamico(`marca_${v.id}`, `sugestoes_marca_${v.id}`, MARCAS, v.id, "marca");
-        criarAutocompleteDinamico(`modelo_${v.id}`, `sugestoes_modelo_${v.id}`, MODELOS, v.id, "modelo");
+    indiceSelecionado=Math.max(0,Math.min(indiceSelecionado,resultadosAtuais.length-1));
+    resultadosAtuais.forEach((v,index)=>{
+        const estado=obterEstadoVisitante(v),card=node("div","visitor-card"+(index===indiceSelecionado?" selecionado":""));card.dataset.id=v.id;card.dataset.index=index;
+        const photoWrap=node("div","visitor-photo-wrap");
+        if(v.foto_url){const img=document.createElement("img");img.src=v.foto_url;img.alt="Foto do visitante";img.className="visitor-photo";photoWrap.appendChild(img)}
+        else photoWrap.appendChild(node("div","visitor-photo placeholder","Sem foto"));
+        const main=node("div","visitor-main"),details=node("div","card-visitante"),grid=node("div","info-grid");
+        grid.append(labeled("Nome",(v.nome||"").toUpperCase(),"destaque"),labeled("CPF",v.cpf||"—"));details.appendChild(grid);
+        const extras=node("div","extras-grid");
+        [["Tipo",(v.tipo||"SEM TIPO").toUpperCase()],["Placa",(v.placa||"SEM PLACA").toUpperCase()],["Veículo",([v.marca,v.modelo].filter(Boolean).join(" ")||"SEM VEÍCULO").toUpperCase()]].forEach(([l,val])=>{const x=node("div","extra-card");x.append(node("span","label-ui",l),node("div","badge-ui",val));extras.appendChild(x)});
+        const operation=node("div","linha-dupla"),vehicle=node("div","extra-card"),dest=node("div","extra-card");
+        vehicle.appendChild(node("span","label-ui","Entrada"));
+        const arrival=document.createElement("select");arrival.id="tipo_chegada_"+v.id;arrival.className="input-padrao";
+        [["VEICULO","Veículo"],["PEDESTRE","Pedestre"]].forEach(([val,label])=>{const o=document.createElement("option");o.value=val;o.textContent=label;o.selected=estado.tipoChegada===val;arrival.appendChild(o)});
+        const vehicleFields=node("div","home-entry-vehicle");
+        const plate=document.createElement("input");plate.className="input-padrao";plate.placeholder="Placa";plate.value=estado.placa||"";
+        const brand=document.createElement("input");brand.className="input-padrao";brand.placeholder="Marca";brand.value=estado.marca||"";
+        const model=document.createElement("input");model.className="input-padrao";model.placeholder="Modelo";model.value=estado.modelo||"";
+        [[plate,"placa"],[brand,"marca"],[model,"modelo"]].forEach(([input,campo])=>input.addEventListener("input",()=>{input.value=input.value.toUpperCase();atualizarCampoEstado(v.id,campo,input.value)}));
+        vehicleFields.append(plate,brand,model);if(estado.tipoChegada==="PEDESTRE")vehicleFields.hidden=true;
+        arrival.addEventListener("change",()=>{estado.tipoChegada=arrival.value;if(arrival.value==="PEDESTRE"){estado.placa=estado.marca=estado.modelo="";vehicleFields.hidden=true}else vehicleFields.hidden=false});
+        vehicle.append(arrival,vehicleFields);
+        dest.appendChild(node("span","label-ui","Destino"));
+        const row=node("div","home-entry-destination"),address=document.createElement("input");address.className="input-padrao input-destino-compacto";address.placeholder="Unidade ou destino";address.value=estado.endereco||"";
+        address.addEventListener("input",()=>atualizarCampoEstado(v.id,"endereco",address.value));
+        const enter=node("button","btn-principal","Registrar entrada");enter.type="button";enter.addEventListener("click",()=>registrarEntrada(v.id));row.append(address,enter);dest.appendChild(row);
+        if(estado.ultimoEndereco){const last=node("button","home-last-destination","Último destino: "+estado.ultimoEndereco);last.type="button";last.addEventListener("click",()=>{address.value=estado.ultimoEndereco;atualizarCampoEstado(v.id,"endereco",estado.ultimoEndereco);address.focus()});dest.appendChild(last)}
+        operation.append(vehicle,dest);main.append(details,extras,operation);card.append(photoWrap,main);card.addEventListener("click",()=>{indiceSelecionado=index});lista.appendChild(card);
     });
 }
 
@@ -721,6 +482,7 @@ function registrarEntrada(id) {
     body.append("marca", marca);
     body.append("modelo", modelo);
     body.append("observacao", observacao);
+    body.append("csrf_token", document.querySelector('meta[name="csrf-token"]').content);
 
     fetch("/entrada_ajax", {
         method: "POST",
@@ -839,6 +601,7 @@ function salvarObservacao(id) {
     const body = new URLSearchParams();
     body.append("id", id);
     body.append("observacao", observacao);
+    body.append("csrf_token", document.querySelector('meta[name="csrf-token"]').content);
 
     fetch("/atualizar_observacao_ajax", {
         method: "POST",
