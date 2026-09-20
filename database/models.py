@@ -713,6 +713,7 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
                     (modelo or "").strip().upper(), (observacao or "").strip().upper(),
                     entrada.get("usuario_id"), unidade_id, morador_id,
                 ))
+                registrar_auditoria_cursor(cur, "visitante.criado_com_entrada", usuario_id=entrada.get("usuario_id"), condominio_id=tenant_id, entidade="visitante", entidade_id=novo["id"])
         conn.commit()
         return novo["id"]
     except Exception:
