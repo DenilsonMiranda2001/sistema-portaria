@@ -11,6 +11,7 @@ from database.models import (
     ativar_morador,
     cpf_morador_ja_cadastrado,
     listar_unidades,
+    criar_unidade,
 )
 from utils.validators import limpar_cpf, validar_cpf
 
@@ -89,10 +90,6 @@ def editar(id):
         observacao = request.form.get("observacao", "").strip()
 
         nova_unidade = request.form.get("nova_unidade", "").strip().upper()
-        if nova_unidade and not unidade_id:
-            resultado = criar_unidade(nova_unidade)
-            if resultado:
-                unidade_id = resultado["id"]
 
         if not nome:
             flash("Informe o nome do morador.", "erro")
@@ -108,6 +105,8 @@ def editar(id):
                 return redirect(url_for("moradores.editar", id=id))
 
         try:
+            if nova_unidade and not unidade_id:
+                unidade_id = criar_unidade(nova_unidade)["id"]
             atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao)
             flash("Morador atualizado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
