@@ -9,7 +9,8 @@ from database.models import (
     atualizar_usuario,
     inativar_usuario,
     ativar_usuario,
-    atualizar_senha_usuario
+    atualizar_senha_usuario,
+    resumo_unidades
 )
 
 admin_bp = Blueprint("admin", __name__)
@@ -48,7 +49,8 @@ def usuarios():
         return redirect(url_for("admin.usuarios"))
 
     dados = listar_usuarios()
-    return render_template("usuarios.html", usuarios=dados)
+    residencial = resumo_unidades()
+    return render_template("usuarios.html", usuarios=dados, residencial=residencial)
 
 
 @admin_bp.route("/usuarios/editar/<int:id>", methods=["GET", "POST"])
