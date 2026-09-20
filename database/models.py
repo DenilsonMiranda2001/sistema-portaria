@@ -963,8 +963,8 @@ def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100, usuario_id=
     try:
         with conn.cursor() as cur:
             query = """
-                INSERT INTO visitantes (condominio_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO visitantes (condominio_id, nome, cpf, endereco, tipo, placa, modelo, marca, foto, observacao)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (condominio_id, cpf) WHERE condominio_id IS NOT NULL DO NOTHING
             """
             importados = 0
