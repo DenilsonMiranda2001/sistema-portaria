@@ -66,6 +66,9 @@ def novo():
             cadastrar_morador(nome, cpf or None, telefone, email, unidade_id, observacao)
             flash("Morador cadastrado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("moradores.novo"))
         except Exception:
             logger.exception("Erro ao cadastrar morador")
             flash("Erro ao cadastrar morador.", "erro")
@@ -114,6 +117,9 @@ def editar(id):
             atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao)
             flash("Morador atualizado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("moradores.editar", id=id))
         except Exception:
             logger.exception("Erro ao atualizar morador")
             flash("Erro ao atualizar morador.", "erro")
