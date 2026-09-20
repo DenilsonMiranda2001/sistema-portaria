@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<section class="page-heading access-form-heading"><div><span class="page-eyebrow">NOVO ACESSO</span><h1>Cadastrar visitante</h1><p>Um fluxo direto para identificação, destino e informações de chegada.</p></div><a class="btn-secundario" href="{{ url_for('main.index') }}">Cancelar</a></section><div class="card-padrao access-form-shell">
+<section class="page-heading access-form-heading"><div><span class="page-eyebrow">NOVO ACESSO</span><h1>Cadastrar visitante</h1><p>Identifique o visitante e informe o destino.</p></div><a class="btn-secundario" href="{{ url_for('main.index') }}">Cancelar</a></section><div class="card-padrao access-form-shell">
 
     <form method="POST" enctype="multipart/form-data" autocomplete="off" class="form-cadastro-visitante">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -28,7 +28,7 @@
 
         <div class="card-bloco">
             <h3>02 · Destino</h3>
-            <p class="texto-ajuda">Selecione a unidade ou busque o morador que receberá este visitante.</p>
+            <p class="texto-ajuda">Busque o morador ou selecione a unidade.</p>
 
             <div class="grid-formulario">
                 <div class="campo-full">
@@ -109,10 +109,10 @@
         <h3>05 · Identificação visual</h3>
 
         <div class="divisor">
-            ───── ou usar método manual ─────
+            Câmera
         </div>
 
-        <p class="preview-label preview-label-topo">Tirar nova foto</p>
+        <p class="preview-label preview-label-topo">Foto do visitante</p>
 
         <div class="camera-actions">
             <button type="button" class="btn-principal btn-sm" id="btnAbrirCamera">Abrir câmera</button>
@@ -136,7 +136,7 @@
         <input type="hidden" name="foto_webcam" id="foto_webcam">
 
         <div class="divisor">
-            ───── ou enviar imagem ─────
+            Arquivo
         </div>
 
         <input class="input-padrao" type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*">
