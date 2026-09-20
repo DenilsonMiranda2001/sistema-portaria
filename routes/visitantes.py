@@ -7,7 +7,7 @@ from datetime import datetime
 
 from flask import (
     Blueprint, render_template, request, redirect,
-    flash, jsonify, url_for, current_app, session, g
+    flash, jsonify, url_for, current_app, session, g, abort, send_from_directory
 )
 from werkzeug.utils import secure_filename
 
@@ -38,7 +38,7 @@ from utils.validators import (
     EXTENSOES_FOTO_PERMITIDAS,
 )
 from utils.imagem import salvar_foto_webcam
-from utils.storage import save_image, save_webcam_image
+from utils.storage import save_image, save_webcam_image, presigned_image_url
 from utils.endereco import formatar_endereco_condominio
 from utils.audit import registrar_auditoria
 from utils.authz import roles_required
@@ -151,6 +151,24 @@ def cadastro():
         return redirect(url_for("visitantes.visitantes"))
 
     return render_template("cadastro.html", cpf_pre=cpf_pre, unidades=unidades)
+
+
+@visitantes_bp.route("/foto/<int:id>")
+@roles_required("admin", "funcionario")
+def foto(id):
+    visitante = buscar_visitante_por_id(id)
+    if not visitante or not visitante.get("foto"):
+        abort(404)
+    referencia = visitante["foto"]
+    if current_app.config.get("APP_ENV") == "production":
+        if not _storage_ready() or "/" not in referencia:
+            abort(404)
+        try:
+            return redirect(presigned_image_url(referencia))
+        except Exception:
+            logger.exception("Falha ao gerar URL privada da foto")
+            abort(404)
+    return send_from_directory(os.path.join(current_app.root_path, "static", "fotos"), os.path.basename(referencia))
 
 
 # ──────────────────────────────────────────────────────────────
