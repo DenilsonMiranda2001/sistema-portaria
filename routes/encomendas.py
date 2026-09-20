@@ -17,6 +17,7 @@ from database.encomendas import (
     resumo_painel,
 )
 from database.models import listar_moradores
+from utils.audit import registrar_auditoria
 
 
 encomendas_bp = Blueprint("encomendas", __name__, url_prefix="/encomendas")
@@ -93,6 +94,7 @@ def novo_lote():
                 request.form.get("observacao"),
                 session["usuario_id"],
             )
+            registrar_auditoria("encomenda.lote_criado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="lote_encomenda", entidade_id=lote_id)
             flash("Lote criado. Cadastre as encomendas em sequência.", "sucesso")
             return redirect(url_for("encomendas.lote_detalhe", lote_id=lote_id))
         except Exception:
@@ -124,6 +126,7 @@ def lote_detalhe(lote_id):
                 request.form.get("observacao"),
                 session["usuario_id"],
             )
+            registrar_auditoria("encomenda.criada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="encomenda", entidade_id=nova["id"], detalhes={"lote_id": lote_id})
             flash(f"Encomenda {nova['codigo_retirada']} adicionada.", "sucesso")
         except ValueError as exc:
             flash(str(exc), "erro")
@@ -143,6 +146,7 @@ def lote_detalhe(lote_id):
 def status_lote(lote_id):
     status = request.form.get("status", "")
     if atualizar_status_lote(lote_id, status):
+        registrar_auditoria("encomenda.lote_status", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="lote_encomenda", entidade_id=lote_id, detalhes={"status": status})
         flash("Status do lote atualizado.", "sucesso")
     else:
         flash("Lote ou status inválido.", "erro")
@@ -160,6 +164,7 @@ def status_encomenda(encomenda_id):
             encomenda_id, request.form.get("status", ""), request.form.get("retirado_por")
         )
         if alterou:
+            registrar_auditoria("encomenda.status", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="encomenda", entidade_id=encomenda_id, detalhes={"status": request.form.get("status", "")})
             flash("Status da encomenda atualizado.", "sucesso")
         else:
             flash("A encomenda já está encerrada e não pode ser alterada.", "aviso")
