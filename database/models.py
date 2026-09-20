@@ -362,7 +362,7 @@ def listar_moradores(apenas_ativos=True):
                     m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
                     m.ativo, m.observacao, m.criado_em
                 FROM moradores m
-                LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id AND u.condominio_id = m.condominio_id
+                LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
                 WHERE m.condominio_id = %s {filtro}
                 ORDER BY m.nome
             """, (tenant_id,))
