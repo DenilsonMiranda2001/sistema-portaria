@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, session
 from utils.authz import roles_required
+from utils.audit import registrar_auditoria
 
 from database.models import (
     criar_usuario,
@@ -98,6 +99,7 @@ def inativar_usuario_rota(id):
         return redirect(url_for("admin.usuarios"))
 
     inativar_usuario(id)
+    registrar_auditoria("usuario.inativado", "usuario", id)
     flash("Usuário inativado com sucesso!", "sucesso")
     return redirect(url_for("admin.usuarios"))
 
@@ -112,6 +114,7 @@ def ativar_usuario_rota(id):
         return redirect(url_for("admin.usuarios"))
 
     ativar_usuario(id)
+    registrar_auditoria("usuario.ativado", "usuario", id)
     flash("Usuário ativado com sucesso!", "sucesso")
     return redirect(url_for("admin.usuarios"))
 
