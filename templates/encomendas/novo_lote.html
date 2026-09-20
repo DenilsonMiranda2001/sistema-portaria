@@ -5,6 +5,7 @@
 {{ subnav('novo') }}
 <div class="enc-header"><div><h2>Novo lote</h2><p>Registre a chegada do entregador e siga para o modo rajada.</p></div></div>
 <form class="card enc-form" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
     <div class="enc-form-grid">
         <label><span>Transportadora *</span>
