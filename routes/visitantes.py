@@ -136,8 +136,9 @@ def cadastro():
         try:
             visitante_id = cadastrar_visitante(
                 nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao,
+                endereco=endereco,
                 entrada={
-                    "endereco": endereco,
+                    "endereco": "",
                     "usuario_id": session["usuario_id"],
                     "unidade_id": unidade_id,
                     "morador_id": morador_id,
@@ -266,6 +267,7 @@ def editar(id):
         modelo = request.form.get("modelo", "").strip().upper()
         marca  = request.form.get("marca", "").strip().upper()
         observacao = request.form.get("observacao", "").strip().upper()
+        endereco = formatar_endereco_condominio(request.form.get("endereco", ""))
 
         if cpf and not validar_cpf(cpf):
             flash("CPF inválido. Verifique os dígitos.", "erro")
@@ -290,7 +292,7 @@ def editar(id):
         if not nome_foto:
             nome_foto = visitante["foto"]
 
-        atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao, session["usuario_id"])
+        atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao, endereco=endereco, usuario_id=session["usuario_id"])
         flash("Cadastro atualizado com sucesso!", "sucesso")
         return redirect(url_for("visitantes.visitantes"))
 
