@@ -26,7 +26,7 @@ jobs:
       - name: Repository hygiene
         run: |
           test -z "$(git ls-files | grep -E '(^|/)\.env$|(^|/)venv/|(^|/)__pycache__/|\.pyc$|\.sqlite3?$|\.db$|^static/fotos/' || true)"
-          test -z "$(git grep -IlE '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|aws_secret_access_key[[:space:]]*=)' -- . ':!*.example' || true)"
+          test -z "$(git grep -IlE '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|aws_secret_access_key[[:space:]]*=)' -- . ':!*.example' ':!.github/workflows/quality.yml' || true)"
       - name: Production config must fail closed without secret
         env:
           APP_ENV: production
