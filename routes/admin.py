@@ -38,12 +38,11 @@ def usuarios():
         if tipo not in ["admin", "funcionario"]:
             tipo = "funcionario"
 
-        resultado = criar_usuario(nome, usuario, senha, tipo)
+        resultado = criar_usuario(nome, usuario, senha, tipo, session["usuario_id"])
 
         if resultado == "existe":
             flash("Já existe um usuário com esse login.", "erro")
         else:
-            registrar_auditoria("usuario.criado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=resultado["id"], detalhes={"nivel": tipo})
             flash("Usuário criado com sucesso!", "sucesso")
 
         return redirect(url_for("admin.usuarios"))
@@ -74,13 +73,12 @@ def editar_usuario(id):
         if tipo not in ["admin", "funcionario"]:
             tipo = "funcionario"
 
-        resultado = atualizar_usuario(id, nome, usuario, tipo)
+        resultado = atualizar_usuario(id, nome, usuario, tipo, session["usuario_id"])
 
         if resultado == "existe":
             flash("Já existe outro usuário com esse login.", "erro")
             return redirect(url_for("admin.editar_usuario", id=id))
 
-        registrar_auditoria("usuario.atualizado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id, detalhes={"nivel": tipo})
         flash("Usuário atualizado com sucesso!", "sucesso")
         return redirect(url_for("admin.usuarios"))
 
@@ -101,9 +99,8 @@ def inativar_usuario_rota(id):
         return redirect(url_for("admin.usuarios"))
 
     try:
-        alterou = inativar_usuario(id)
+        alterou = inativar_usuario(id, session["usuario_id"])
         if alterou:
-            registrar_auditoria("usuario.inativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id)
             flash("Usuário inativado com sucesso!", "sucesso")
     except ValueError as exc:
         flash(str(exc), "erro")
@@ -119,8 +116,7 @@ def ativar_usuario_rota(id):
         flash("Usuário não encontrado.", "erro")
         return redirect(url_for("admin.usuarios"))
 
-    ativar_usuario(id)
-    registrar_auditoria("usuario.ativado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id)
+    ativar_usuario(id, session["usuario_id"])
     flash("Usuário ativado com sucesso!", "sucesso")
     return redirect(url_for("admin.usuarios"))
 
@@ -149,8 +145,7 @@ def alterar_senha_usuario(id):
             flash("A senha deve ter pelo menos 12 caracteres.", "erro")
             return redirect(url_for("admin.alterar_senha_usuario", id=id))
 
-        atualizar_senha_usuario(id, nova_senha)
-        registrar_auditoria("usuario.senha_alterada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="usuario", entidade_id=id)
+        atualizar_senha_usuario(id, nova_senha, session["usuario_id"])
         flash("Senha atualizada com sucesso!", "sucesso")
         return redirect(url_for("admin.usuarios"))
 
