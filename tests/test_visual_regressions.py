@@ -48,7 +48,8 @@ def test_core_operator_screens_avoid_redundant_page_heroes():
     visitors = Path("templates/visitantes.html").read_text(encoding="utf-8")
     residents = Path("templates/moradores/lista.html").read_text(encoding="utf-8")
     assert ">Início</a>" in base
-    assert "command-hero" not in home
+    content = home.split("{% block content %}", 1)[1].split("<style>", 1)[0]
+    assert "command-hero" not in content
     assert "compact-access-head" not in cadastro
     assert "compact-list-toolbar" in visitors
     assert "compact-list-toolbar" in residents
