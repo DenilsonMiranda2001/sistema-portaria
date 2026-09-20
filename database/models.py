@@ -355,17 +355,17 @@ def listar_moradores(apenas_ativos=True):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            filtro = "WHERE m.ativo = TRUE" if apenas_ativos else ""
+            filtro = "AND m.ativo = TRUE" if apenas_ativos else ""
             cur.execute(f"""
                 SELECT
                     m.id, m.nome, m.cpf, m.telefone, m.email,
                     m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
                     m.ativo, m.observacao, m.criado_em
                 FROM moradores m
-                LEFT JOIN unidades u ON u.id = m.unidade_id
-                {filtro}
+                LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id AND u.condominio_id = m.condominio_id
+                WHERE m.condominio_id = %s {filtro}
                 ORDER BY m.nome
-            """)
+            """, (tenant_id,))
             return cur.fetchall()
     finally:
         liberar(conn)
@@ -383,7 +383,7 @@ def buscar_moradores(termo):
                            m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
                            m.ativo, m.observacao, m.criado_em
                     FROM moradores m
-                    LEFT JOIN unidades u ON u.id = m.unidade_id
+                    LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
                     WHERE m.condominio_id = %s AND m.ativo = TRUE
                     ORDER BY m.nome
                     LIMIT 30
@@ -395,7 +395,7 @@ def buscar_moradores(termo):
                            m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
                            m.ativo, m.observacao, m.criado_em
                     FROM moradores m
-                    LEFT JOIN unidades u ON u.id = m.unidade_id
+                    LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
                     WHERE m.condominio_id = %s AND m.ativo = TRUE
                       AND (m.nome ILIKE %s OR m.cpf ILIKE %s OR u.codigo ILIKE %s)
                     ORDER BY m.nome
@@ -416,9 +416,9 @@ def buscar_morador_por_id(morador_id):
                        m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
                        m.ativo, m.observacao, m.criado_em
                 FROM moradores m
-                LEFT JOIN unidades u ON u.id = m.unidade_id
-                WHERE m.id = %s
-            """, (morador_id,))
+                LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
+                WHERE m.id = %s AND m.condominio_id = %s
+            """, (morador_id, tenant_id))
             return cur.fetchone()
     finally:
         liberar(conn)
@@ -490,11 +490,11 @@ def cpf_morador_ja_cadastrado(cpf, morador_id=None):
         with conn.cursor() as cur:
             if morador_id:
                 cur.execute(
-                    "SELECT id, nome FROM moradores WHERE cpf = %s AND id <> %s LIMIT 1",
-                    (cpf, morador_id)
+                    "SELECT id, nome FROM moradores WHERE condominio_id = %s AND cpf = %s AND id <> %s LIMIT 1",
+                    (tenant_id, cpf, morador_id)
                 )
             else:
-                cur.execute("SELECT id, nome FROM moradores WHERE cpf = %s LIMIT 1", (cpf,))
+                cur.execute("SELECT id, nome FROM moradores WHERE condominio_id = %s AND cpf = %s LIMIT 1", (tenant_id, cpf))
             return cur.fetchone()
     finally:
         liberar(conn)
@@ -509,12 +509,12 @@ def buscar_moradores_ajax(termo):
             cur.execute("""
                 SELECT m.id, m.nome, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao
                 FROM moradores m
-                LEFT JOIN unidades u ON u.id = m.unidade_id
-                WHERE m.ativo = TRUE
+                LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
+                WHERE m.condominio_id = %s AND m.ativo = TRUE
                   AND (m.nome ILIKE %s OR u.codigo ILIKE %s)
                 ORDER BY m.nome
                 LIMIT 15
-            """, (like, like))
+            """, (tenant_id, like, like))
             return cur.fetchall()
     finally:
         liberar(conn)
@@ -546,11 +546,11 @@ def cpf_ja_cadastrado(cpf, visitante_id=None):
         with conn.cursor() as cur:
             if visitante_id:
                 cur.execute(
-                    "SELECT id, nome FROM visitantes WHERE cpf = %s AND id <> %s LIMIT 1",
-                    (cpf, visitante_id)
+                    "SELECT id, nome FROM visitantes WHERE condominio_id = %s AND cpf = %s AND id <> %s LIMIT 1",
+                    (tenant_id, cpf, visitante_id)
                 )
             else:
-                cur.execute("SELECT id, nome FROM visitantes WHERE cpf = %s LIMIT 1", (cpf,))
+                cur.execute("SELECT id, nome FROM visitantes WHERE condominio_id = %s AND cpf = %s LIMIT 1", (tenant_id, cpf))
             return cur.fetchone()
     finally:
         liberar(conn)
@@ -866,8 +866,8 @@ def visitantes_ativos():
                     m.nome AS morador_nome, u.codigo AS unidade_codigo
                 FROM visitantes v
                 INNER JOIN visitas vi ON v.id = vi.visitante_id AND v.condominio_id = vi.condominio_id AND vi.data_saida IS NULL AND vi.condominio_id = %s
-                LEFT JOIN moradores m ON m.id = vi.morador_id
-                LEFT JOIN unidades u ON u.id = vi.unidade_id
+                LEFT JOIN moradores m ON m.id = vi.morador_id AND m.condominio_id = vi.condominio_id
+                LEFT JOIN unidades u ON u.id = vi.unidade_id AND u.condominio_id = vi.condominio_id
                 ORDER BY vi.data_entrada DESC
             """, (tenant_id,))
             return cur.fetchall()
@@ -888,8 +888,8 @@ def buscar_ativos(termo):
                     m.nome AS morador_nome, u.codigo AS unidade_codigo
                 FROM visitantes v
                 INNER JOIN visitas vi ON v.id = vi.visitante_id AND v.condominio_id = vi.condominio_id AND vi.data_saida IS NULL
-                LEFT JOIN moradores m ON m.id = vi.morador_id
-                LEFT JOIN unidades u ON u.id = vi.unidade_id
+                LEFT JOIN moradores m ON m.id = vi.morador_id AND m.condominio_id = vi.condominio_id
+                LEFT JOIN unidades u ON u.id = vi.unidade_id AND u.condominio_id = vi.condominio_id
                 WHERE vi.condominio_id = %s AND (v.nome ILIKE %s OR v.cpf ILIKE %s OR v.placa ILIKE %s OR vi.endereco ILIKE %s)
                 ORDER BY vi.data_entrada DESC
             """, (tenant_id, like, like, like, like))
