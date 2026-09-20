@@ -66,29 +66,6 @@ def criar_usuario_condominio(condominio_id):
     except Exception:
         flash("Não foi possível criar o usuário. Verifique se o login já está em uso.","erro")
     return redirect(url_for("platform_admin.condominios"))
-            cur.execute("SELECT 1 FROM platform_admins WHERE usuario=%s", (usuario,))
-            if cur.fetchone():
-                flash("Este login é reservado pela plataforma.", "erro")
-                return redirect(url_for("platform_admin.condominios"))
-            cur.execute("SELECT 1 FROM usuarios WHERE usuario=%s", (usuario,))
-            if cur.fetchone():
-                flash("Este login já está em uso.", "erro")
-                return redirect(url_for("platform_admin.condominios"))
-            cur.execute("""INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel,ativo)
-                           VALUES(%s,%s,%s,%s,%s,TRUE) RETURNING id""",
-                        (condominio_id,nome.upper(),usuario,generate_password_hash(senha),nivel))
-            novo_usuario = cur.fetchone()
-        conn.commit()
-        registrar_auditoria("plataforma.usuario_tenant_criado", actor_tipo="platform_admin", actor_id=session["usuario_id"], condominio_id=condominio_id, entidade="usuario", entidade_id=novo_usuario["id"], detalhes={"nivel": nivel})
-        flash("Usuário do condomínio criado com sucesso.","sucesso")
-    except Exception:
-        conn.rollback()
-        flash("Não foi possível criar o usuário.","erro")
-    finally:
-        liberar(conn)
-    return redirect(url_for("platform_admin.condominios"))
-
-
 @platform_admin_bp.get("/condominios/<int:condominio_id>")
 @platform_admin_required
 def detalhe_condominio(condominio_id):
