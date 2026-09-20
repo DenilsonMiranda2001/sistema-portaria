@@ -20,6 +20,7 @@
             <h2>Alterar senha de {{ user['nome'] }}</h2>
 
             <form method="POST" class="form-coluna">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="campo">
                     <label>Nova senha</label>
                     <input class="input-padrao" type="password" name="nova_senha" required>
