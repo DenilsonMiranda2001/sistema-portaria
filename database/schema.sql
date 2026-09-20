@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     id         SERIAL PRIMARY KEY,
     condominio_id INTEGER REFERENCES condominios(id) ON DELETE RESTRICT,
     nome       VARCHAR(150)  NOT NULL,
-    usuario    VARCHAR(100)  UNIQUE NOT NULL,
+    usuario    VARCHAR(100)  NOT NULL,
     senha      VARCHAR(255)  NOT NULL,
     nivel      VARCHAR(20)   NOT NULL CHECK (nivel IN ('admin', 'funcionario')),
     ativo      BOOLEAN       NOT NULL DEFAULT TRUE,
@@ -133,7 +133,8 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     criado_em     TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tenant-aware uniqueness. These indexes allow the same CPF/unit in distinct condominiums.
+-- Tenant-aware uniqueness. These indexes allow the same CPF/unit/username in distinct condominiums.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_usuarios_tenant_usuario ON usuarios(condominio_id, usuario) WHERE condominio_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_unidades_tenant_codigo ON unidades(condominio_id, codigo) WHERE condominio_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_moradores_tenant_cpf ON moradores(condominio_id, cpf) WHERE condominio_id IS NOT NULL AND cpf IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_visitantes_tenant_cpf ON visitantes(condominio_id, cpf) WHERE condominio_id IS NOT NULL;
