@@ -11,7 +11,6 @@ from database.models import (
     ativar_morador,
     cpf_morador_ja_cadastrado,
     listar_unidades,
-    criar_unidade,
 )
 from utils.validators import limpar_cpf, validar_cpf
 
@@ -105,9 +104,7 @@ def editar(id):
                 return redirect(url_for("moradores.editar", id=id))
 
         try:
-            if nova_unidade and not unidade_id:
-                unidade_id = criar_unidade(nova_unidade)["id"]
-            atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao)
+            atualizar_morador(id, nome, cpf or None, telefone, email, unidade_id, observacao, nova_unidade)
             flash("Morador atualizado com sucesso!", "sucesso")
             return redirect(url_for("moradores.listar"))
         except ValueError as exc:
