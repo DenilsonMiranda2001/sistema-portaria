@@ -299,9 +299,11 @@ def remover(id):
         flash("Visitante não encontrado.", "erro")
         return redirect(url_for("visitantes.visitantes"))
 
-    remover_visitante(id)
-    registrar_auditoria("visitante.removido", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=id)
-    flash("Visitante removido com sucesso!", "sucesso")
+    try:
+        remover_visitante(id, session["usuario_id"])
+        flash("Visitante removido com sucesso!", "sucesso")
+    except ValueError as exc:
+        flash(str(exc), "erro")
     return redirect(url_for("visitantes.visitantes"))
 
 
