@@ -1175,6 +1175,28 @@ def total_visitantes_cadastrados():
         liberar(conn)
 
 
+def listar_visitantes_ativos_resumo(limite=6):
+    tenant_id = _tenant_id()
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT vi.id AS visita_id, v.id AS visitante_id, v.nome, v.foto,
+                       vi.data_entrada, vi.endereco,
+                       m.nome AS morador_nome, u.codigo AS unidade_codigo
+                FROM visitas vi
+                JOIN visitantes v ON v.id=vi.visitante_id AND v.condominio_id=vi.condominio_id
+                LEFT JOIN moradores m ON m.id=vi.morador_id AND m.condominio_id=vi.condominio_id
+                LEFT JOIN unidades u ON u.id=vi.unidade_id AND u.condominio_id=vi.condominio_id
+                WHERE vi.condominio_id=%s AND vi.data_saida IS NULL
+                ORDER BY vi.data_entrada ASC
+                LIMIT %s
+            """, (tenant_id, limite))
+            return cur.fetchall()
+    finally:
+        liberar(conn)
+
+
 def total_visitantes_ativos():
     tenant_id = _tenant_id()
     conn = conectar()
