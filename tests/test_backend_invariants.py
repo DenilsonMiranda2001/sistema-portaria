@@ -33,3 +33,24 @@ def test_central_package_reception_is_default():
     source = Path("database/encomendas.py").read_text(encoding="utf-8")
     assert "'retida_portaria'" in source
     assert "retirada" in source
+
+
+def test_noop_locked_mutations_close_transactions():
+    models = Path("database/models.py").read_text(encoding="utf-8")
+    platform = Path("database/platform.py").read_text(encoding="utf-8")
+    packages = Path("database/encomendas.py").read_text(encoding="utf-8")
+    assert 'conn.rollback()\n                return False' in models
+    assert platform.count('conn.rollback()\n                    return False') >= 1
+    assert 'conn.rollback()\n                return False' in packages
+
+
+def test_audit_ip_hash_is_safe_without_request_context():
+    audit = Path("utils/audit.py").read_text(encoding="utf-8")
+    assert "has_request_context" in audit
+    assert "if not has_request_context()" in audit
+
+
+def test_login_identity_invariant_migration_exists():
+    migration = Path("migrations/0012_login_identity_invariant.sql").read_text(encoding="utf-8")
+    assert "JOIN platform_admins" in migration
+    assert "duplicate tenant login" in migration
