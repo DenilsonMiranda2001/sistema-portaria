@@ -247,8 +247,17 @@ def inativar_usuario(usuario_id):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            cur.execute("SELECT nivel,ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE", (usuario_id, tenant_id))
+            alvo = cur.fetchone()
+            if not alvo or not alvo["ativo"]:
+                return False
+            if alvo["nivel"] == "admin":
+                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin' AND ativo=TRUE", (tenant_id,))
+                if cur.fetchone()["total"] <= 1:
+                    raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
             cur.execute("UPDATE usuarios SET ativo = FALSE WHERE id = %s AND condominio_id = %s", (usuario_id, tenant_id))
         conn.commit()
+        return True
     except Exception:
         conn.rollback()
         raise
