@@ -2,10 +2,10 @@ from functools import wraps
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 import re
 from werkzeug.security import generate_password_hash
-from database.connection import conectar, liberar
 from database.platform import (
     listar_condominios_com_metricas, buscar_condominio_detalhe,
     atualizar_condominio, definir_status_condominio, definir_status_usuario_tenant,
+    criar_condominio_com_usuario, criar_usuario_tenant,
 )
 from utils.audit import registrar_auditoria
 
@@ -37,19 +37,12 @@ def criar_condominio():
     if len(slug) > 80 or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
         flash("O código deve usar apenas letras minúsculas, números e hífens.", "erro")
         return redirect(url_for("platform_admin.condominios"))
-    conn=conectar()
     try:
-        with conn.cursor() as cur:
-            cur.execute("INSERT INTO condominios(nome,slug,ativo) VALUES(%s,%s,TRUE) RETURNING id",(nome,slug))
-            novo = cur.fetchone()
-        conn.commit()
-        registrar_auditoria("plataforma.condominio_criado", actor_tipo="platform_admin", actor_id=session["usuario_id"], entidade="condominio", entidade_id=novo["id"], detalhes={"slug": slug})
+        condominio_id, _ = criar_condominio_com_usuario(nome, slug)
+        registrar_auditoria("plataforma.condominio_criado", actor_tipo="platform_admin", actor_id=session["usuario_id"], entidade="condominio", entidade_id=condominio_id, detalhes={"slug": slug})
         flash("Condomínio criado com sucesso.","sucesso")
     except Exception:
-        conn.rollback()
         flash("Não foi possível criar o condomínio. Verifique se o código já existe.","erro")
-    finally:
-        liberar(conn)
     return redirect(url_for("platform_admin.condominios"))
 
 @platform_admin_bp.post("/condominios/<int:condominio_id>/usuarios")
@@ -64,13 +57,15 @@ def criar_usuario_condominio(condominio_id):
     if not nome or not usuario or len(usuario) > 100 or len(senha)<12:
         flash("Preencha os dados do usuário; a senha deve ter pelo menos 12 caracteres.","erro")
         return redirect(url_for("platform_admin.condominios"))
-    conn=conectar()
     try:
-        with conn.cursor() as cur:
-            cur.execute("SELECT id FROM condominios WHERE id=%s AND ativo=TRUE",(condominio_id,))
-            if not cur.fetchone():
-                flash("Condomínio não encontrado ou inativo.","erro")
-                return redirect(url_for("platform_admin.condominios"))
+        novo_usuario_id = criar_usuario_tenant(condominio_id, nome, usuario, generate_password_hash(senha), nivel)
+        registrar_auditoria("plataforma.usuario_tenant_criado", actor_tipo="platform_admin", actor_id=session["usuario_id"], condominio_id=condominio_id, entidade="usuario", entidade_id=novo_usuario_id, detalhes={"nivel": nivel})
+        flash("Usuário do condomínio criado com sucesso.","sucesso")
+    except ValueError as exc:
+        flash(str(exc),"erro")
+    except Exception:
+        flash("Não foi possível criar o usuário. Verifique se o login já está em uso.","erro")
+    return redirect(url_for("platform_admin.condominios"))
             cur.execute("SELECT 1 FROM platform_admins WHERE usuario=%s", (usuario,))
             if cur.fetchone():
                 flash("Este login é reservado pela plataforma.", "erro")
