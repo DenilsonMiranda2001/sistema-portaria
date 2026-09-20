@@ -1,7 +1,5 @@
 import logging
-import hmac
 import re
-import secrets
 from urllib.parse import quote
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
@@ -24,26 +22,6 @@ from database.models import listar_moradores
 encomendas_bp = Blueprint("encomendas", __name__, url_prefix="/encomendas")
 logger = logging.getLogger(__name__)
 TRANSPORTADORAS = ("Shopee", "Mercado Livre", "Correios", "Amazon", "Outra")
-
-
-def _csrf_token():
-    if "_csrf_encomendas" not in session:
-        session["_csrf_encomendas"] = secrets.token_urlsafe(32)
-    return session["_csrf_encomendas"]
-
-
-@encomendas_bp.context_processor
-def _injetar_csrf():
-    return {"csrf_encomendas": _csrf_token}
-
-
-@encomendas_bp.before_request
-def _validar_csrf():
-    if request.method == "POST":
-        esperado = session.get("_csrf_encomendas", "")
-        recebido = request.form.get("_csrf_token", "")
-        if not esperado or not hmac.compare_digest(esperado, recebido):
-            abort(400, description="Token de segurança inválido. Recarregue a página.")
 
 
 def _voltar_padrao():
