@@ -22,9 +22,24 @@ def condominios():
     conn=conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT id,nome,slug,ativo,criado_em FROM condominios ORDER BY nome")
+            cur.execute("""
+                SELECT c.id,c.nome,c.slug,c.ativo,c.criado_em,
+                       COUNT(u.id) AS total_usuarios,
+                       COUNT(u.id) FILTER (WHERE u.ativo = TRUE) AS usuarios_ativos,
+                       COUNT(u.id) FILTER (WHERE u.nivel = 'admin' AND u.ativo = TRUE) AS admins_ativos
+                FROM condominios c
+                LEFT JOIN usuarios u ON u.condominio_id = c.id
+                GROUP BY c.id,c.nome,c.slug,c.ativo,c.criado_em
+                ORDER BY c.nome
+            """)
             dados=cur.fetchall()
-        return render_template("platform_condominios.html", condominios=dados)
+            cur.execute("""
+                SELECT COUNT(*) AS total,
+                       COUNT(*) FILTER (WHERE ativo = TRUE) AS ativos
+                FROM condominios
+            """)
+            resumo = cur.fetchone()
+        return render_template("platform_condominios.html", condominios=dados, resumo=resumo)
     finally:
         liberar(conn)
 
