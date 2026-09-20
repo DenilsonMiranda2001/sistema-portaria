@@ -20,7 +20,7 @@
   </div>
   <nav class="enterprise-nav" aria-label="Navegação principal">
     <a class="{{ 'is-active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}">Início</a>
-    <a class="{{ 'is-active' if request.endpoint == 'visitantes.cadastro' else '' }}" href="{{ url_for('visitantes.cadastro') }}">Novo acesso</a>
+    <a class="{{ 'is-active' if request.endpoint == 'visitantes.cadastro' else '' }}" href="{{ url_for('visitantes.cadastro') }}">Cadastro</a>
     <a class="{{ 'is-active' if request.endpoint in ['visitantes.visitantes','visitantes.ativos'] else '' }}" href="{{ url_for('visitantes.visitantes') }}">Visitantes</a>
     <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('moradores') else '' }}" href="{{ url_for('moradores.listar') }}">Moradores</a>
     <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('encomendas') else '' }}" href="{{ url_for('encomendas.painel') }}">Encomendas</a>
