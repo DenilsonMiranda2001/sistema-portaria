@@ -4,6 +4,10 @@ from database.models import buscar_usuario_por_id
 
 
 def load_identity():
+    if session.get("is_platform_admin"):
+        g.current_user = {"id": session.get("usuario_id"), "nome": session.get("usuario_nome"), "nivel": "platform_admin", "ativo": True}
+        g.tenant_id = None
+        return
     user_id = session.get("usuario_id")
     if not user_id:
         g.current_user = None
