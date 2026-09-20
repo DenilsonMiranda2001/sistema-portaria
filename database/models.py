@@ -148,6 +148,18 @@ def buscar_usuario(usuario, condominio_slug=None):
         liberar(conn)
 
 
+def buscar_platform_admin(usuario):
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""SELECT id, nome, usuario, senha, ativo
+                           FROM platform_admins
+                           WHERE usuario=%s AND ativo=TRUE""", ((usuario or "").strip(),))
+            return cur.fetchone()
+    finally:
+        liberar(conn)
+
+
 def verificar_senha(usuario_banco, senha_digitada):
     if not usuario_banco or not usuario_banco.get("ativo"):
         return False
