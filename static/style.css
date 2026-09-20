@@ -3032,3 +3032,7 @@ body{background:var(--pc-ice)}
 .enterprise-account>div{min-width:112px!important}.enterprise-account>div strong{font-size:11px!important}.enterprise-account>div small{font-size:9px!important;margin-top:2px!important}.enterprise-avatar{width:32px!important;height:32px!important;border-radius:9px!important;background:#e9eff6!important;color:#24405f!important}.enterprise-account form button{height:32px!important;padding:0 11px!important;border-radius:8px!important;background:#fff!important}
 @media(max-width:1000px){.enterprise-header-main,.enterprise-nav{width:calc(100% - 32px)!important}.enterprise-nav{display:flex!important;overflow-x:auto!important;justify-content:flex-start!important}.enterprise-nav>a{min-width:max-content!important}.enterprise-account>div{min-width:0!important}}
 @media(max-width:650px){.enterprise-header-main,.enterprise-nav{width:calc(100% - 24px)!important}.enterprise-account{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}.enterprise-account>div{display:none!important}}
+
+/* ===== Visitor edit workspace ===== */
+.quick-edit-form{max-width:none!important}.edit-photo-stage{background:#f8fafc}.edit-current-photo{width:100%;height:100%;object-fit:cover;display:block}.quick-edit-form .quick-submit{margin-bottom:0}.quick-edit-form .quick-fields.identity-fields .span-2{max-width:760px!important}
+@media(max-width:850px){.quick-edit-form .quick-fields.identity-fields .span-2{max-width:none!important}}
