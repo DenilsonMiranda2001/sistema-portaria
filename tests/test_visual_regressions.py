@@ -23,3 +23,11 @@ def test_front_desk_density_stays_compact():
     assert "font-size:clamp(24px,2vw,30px)!important" in css
     assert "min-height:40px!important" in css
     assert "padding:18px 20px!important" in css
+
+
+def test_desktop_registration_uses_full_viewport_pattern():
+    css = Path("static/style.css").read_text(encoding="utf-8")
+    resident = Path("templates/moradores/form.html").read_text(encoding="utf-8")
+    assert ".quick-access-form{height:calc(100vh - 194px)" in css
+    assert "max-width:none!important" in css
+    assert "compact-crud-form" in resident
