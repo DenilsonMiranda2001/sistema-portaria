@@ -816,13 +816,20 @@ def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, fot
         liberar(conn)
 
 
-def remover_visitante(visitante_id):
+def remover_visitante(visitante_id, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM visitas WHERE visitante_id=%s AND condominio_id=%s LIMIT 1", (visitante_id, tenant_id))
+            if cur.fetchone():
+                raise ValueError("Visitante com histórico de visitas não pode ser excluído. Mantenha o cadastro para preservar o histórico.")
             cur.execute("DELETE FROM visitantes WHERE id = %s AND condominio_id = %s", (visitante_id, tenant_id))
+            alterou = cur.rowcount > 0
+            if alterou and usuario_id:
+                registrar_auditoria_cursor(cur, "visitante.removido", usuario_id=usuario_id, condominio_id=tenant_id, entidade="visitante", entidade_id=visitante_id)
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
