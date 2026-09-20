@@ -220,7 +220,6 @@ def entrada():
             logger.exception("Erro ao registrar entrada")
             flash("Não foi possível registrar a entrada.", "erro")
             return redirect(url_for("visitantes.entrada"))
-        registrar_auditoria("visita.entrada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=visitante["id"])
         flash("Entrada registrada com sucesso!", "sucesso")
         return redirect(url_for("visitantes.ativos"))
 
@@ -238,7 +237,6 @@ def saida(id):
     if not alterou:
         flash("Não há visita ativa para este visitante.", "aviso")
         return redirect(url_for("visitantes.ativos"))
-    registrar_auditoria("visita.saida", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=id)
     flash("Saída registrada com sucesso!", "sucesso")
     return redirect(url_for("visitantes.ativos"))
 
@@ -414,7 +412,6 @@ def entrada_ajax():
             visitante_id, endereco, placa, marca, modelo, observacao,
             session["usuario_id"], unidade_id, morador_id
         )
-        registrar_auditoria("visita.entrada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="visitante", entidade_id=visitante_id)
         return jsonify({"status": "ok"})
 
     except ValueError as exc:
