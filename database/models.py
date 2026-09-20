@@ -530,13 +530,17 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
         liberar(conn)
 
 
-def inativar_morador(morador_id):
+def inativar_morador(morador_id, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE moradores SET ativo = FALSE WHERE id = %s AND condominio_id = %s", (morador_id, tenant_id))
+            cur.execute("UPDATE moradores SET ativo = FALSE WHERE id = %s AND condominio_id = %s AND ativo=TRUE", (morador_id, tenant_id))
+            alterou = cur.rowcount > 0
+            if alterou and usuario_id:
+                registrar_auditoria_cursor(cur, "morador.inativado", usuario_id=usuario_id, condominio_id=tenant_id, entidade="morador", entidade_id=morador_id)
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
@@ -544,13 +548,17 @@ def inativar_morador(morador_id):
         liberar(conn)
 
 
-def ativar_morador(morador_id):
+def ativar_morador(morador_id, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE moradores SET ativo = TRUE WHERE id = %s AND condominio_id = %s", (morador_id, tenant_id))
+            cur.execute("UPDATE moradores SET ativo = TRUE WHERE id = %s AND condominio_id = %s AND ativo=FALSE", (morador_id, tenant_id))
+            alterou = cur.rowcount > 0
+            if alterou and usuario_id:
+                registrar_auditoria_cursor(cur, "morador.ativado", usuario_id=usuario_id, condominio_id=tenant_id, entidade="morador", entidade_id=morador_id)
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
@@ -836,7 +844,7 @@ def atualizar_foto_visitante(visitante_id, nome_arquivo):
         liberar(conn)
 
 
-def atualizar_observacao_visitante(visitante_id, observacao):
+def atualizar_observacao_visitante(visitante_id, observacao, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -845,7 +853,11 @@ def atualizar_observacao_visitante(visitante_id, observacao):
                 "UPDATE visitantes SET observacao = %s WHERE id = %s AND condominio_id = %s",
                 ((observacao or "").strip().upper(), visitante_id, tenant_id)
             )
+            alterou = cur.rowcount > 0
+            if alterou and usuario_id:
+                registrar_auditoria_cursor(cur, "visitante.observacao_atualizada", usuario_id=usuario_id, condominio_id=tenant_id, entidade="visitante", entidade_id=visitante_id)
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
