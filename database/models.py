@@ -666,14 +666,14 @@ def cpf_ja_cadastrado(cpf, visitante_id=None):
 
 
 def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
-                       entrada=None):
+                       endereco=None, entrada=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO visitantes (condominio_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO visitantes (condominio_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao, endereco)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 tenant_id,
@@ -685,6 +685,7 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
                 (marca or "").strip().upper(),
                 foto,
                 (observacao or "").strip().upper(),
+                (endereco or "").strip().upper() or None,
             ))
             novo = cur.fetchone()
             if entrada:
@@ -765,8 +766,7 @@ def buscar_um_por_cpf(cpf):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao
-                FROM visitantes WHERE condominio_id = %s AND cpf = %s LIMIT 1
+                SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao, endereco\n                FROM visitantes WHERE condominio_id = %s AND cpf = %s LIMIT 1
             """, (tenant_id, limpar_cpf(cpf)))
             return cur.fetchone()
     finally:
@@ -779,8 +779,7 @@ def buscar_visitante_por_id(visitante_id):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao
-                FROM visitantes WHERE condominio_id = %s AND id = %s
+                SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao, endereco\n                FROM visitantes WHERE condominio_id = %s AND id = %s
             """, (tenant_id, visitante_id))
             return cur.fetchone()
     finally:
@@ -794,8 +793,7 @@ def listar_visitantes_paginado(pagina=1, por_pagina=20):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao
-                FROM visitantes WHERE condominio_id = %s ORDER BY id DESC LIMIT %s OFFSET %s
+                SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao, endereco\n                FROM visitantes WHERE condominio_id = %s ORDER BY id DESC LIMIT %s OFFSET %s
             """, (tenant_id, por_pagina, offset))
             visitantes = cur.fetchall()
             cur.execute("SELECT COUNT(*) AS total FROM visitantes WHERE condominio_id = %s", (tenant_id,))
@@ -805,7 +803,7 @@ def listar_visitantes_paginado(pagina=1, por_pagina=20):
         liberar(conn)
 
 
-def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao, usuario_id=None):
+def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao, endereco=None, usuario_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -813,24 +811,21 @@ def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, fot
             if foto:
                 cur.execute("""
                     UPDATE visitantes
-                    SET nome=%s, cpf=%s, tipo=%s, placa=%s, modelo=%s, marca=%s, foto=%s, observacao=%s
-                    WHERE id=%s AND condominio_id=%s
+                    SET nome=%s, cpf=%s, tipo=%s, placa=%s, modelo=%s, marca=%s, foto=%s, observacao=%s, endereco=%s\n                    WHERE id=%s AND condominio_id=%s
                 """, (
                     (nome or "").strip().upper(), limpar_cpf(cpf),
                     (tipo or "").strip().upper(), (placa or "").strip().upper(),
                     (modelo or "").strip().upper(), (marca or "").strip().upper(),
-                    foto, (observacao or "").strip().upper(), visitante_id, tenant_id,
+                    foto, (observacao or "").strip().upper(), (endereco or "").strip().upper() or None, visitante_id, tenant_id,
                 ))
             else:
                 cur.execute("""
                     UPDATE visitantes
-                    SET nome=%s, cpf=%s, tipo=%s, placa=%s, modelo=%s, marca=%s, observacao=%s
-                    WHERE id=%s AND condominio_id=%s
+                    SET nome=%s, cpf=%s, tipo=%s, placa=%s, modelo=%s, marca=%s, observacao=%s, endereco=%s\n                    WHERE id=%s AND condominio_id=%s
                 """, (
                     (nome or "").strip().upper(), limpar_cpf(cpf),
                     (tipo or "").strip().upper(), (placa or "").strip().upper(),
-                    (modelo or "").strip().upper(), (marca or "").strip().upper(),
-                    (observacao or "").strip().upper(), visitante_id, tenant_id,
+                    (modelo or "").strip().upper(), (marca or "").strip().upper(),\n                    (observacao or "").strip().upper(), (endereco or "").strip().upper() or None, visitante_id, tenant_id,
                 ))
             alterou = cur.rowcount > 0
             if alterou and usuario_id:
