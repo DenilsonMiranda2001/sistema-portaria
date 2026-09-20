@@ -207,9 +207,17 @@ def entrada():
             flash("Informe o endereço/destino da visita.", "erro")
             return redirect(url_for("visitantes.entrada"))
 
-        registrar_entrada(visitante["id"], endereco,
-                          usuario_id=session["usuario_id"],
-                          unidade_id=unidade_id, morador_id=morador_id)
+        try:
+            registrar_entrada(visitante["id"], endereco,
+                              usuario_id=session["usuario_id"],
+                              unidade_id=unidade_id, morador_id=morador_id)
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("visitantes.entrada"))
+        except Exception:
+            logger.exception("Erro ao registrar entrada")
+            flash("Não foi possível registrar a entrada.", "erro")
+            return redirect(url_for("visitantes.entrada"))
         flash("Entrada registrada com sucesso!", "sucesso")
         return redirect(url_for("visitantes.ativos"))
 
@@ -218,7 +226,15 @@ def entrada():
 
 @visitantes_bp.route("/saida/<int:id>", methods=["POST"])
 def saida(id):
-    registrar_saida(id, session["usuario_id"])
+    try:
+        alterou = registrar_saida(id, session["usuario_id"])
+    except Exception:
+        logger.exception("Erro ao registrar saída")
+        flash("Não foi possível registrar a saída.", "erro")
+        return redirect(url_for("visitantes.ativos"))
+    if not alterou:
+        flash("Não há visita ativa para este visitante.", "aviso")
+        return redirect(url_for("visitantes.ativos"))
     flash("Saída registrada com sucesso!", "sucesso")
     return redirect(url_for("visitantes.ativos"))
 
