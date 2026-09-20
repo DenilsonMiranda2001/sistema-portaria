@@ -265,8 +265,8 @@ def resumo_painel():
                     COUNT(*) FILTER (WHERE status = 'retida_portaria')::int AS retidas,
                     COUNT(*) FILTER (WHERE status = 'retirada'
                                       AND data_retirada::date = CURRENT_DATE)::int AS retiradas_hoje,
-                    COUNT(*) FILTER (WHERE status = 'entregue_na_porta'
-                                      AND atualizado_em::date = CURRENT_DATE)::int AS entregues_porta
+                    COUNT(*) FILTER (WHERE status IN ('retirada','cancelada')
+                                      AND atualizado_em::date = CURRENT_DATE)::int AS finalizadas_hoje
                 FROM encomendas
                 WHERE condominio_id = %s
             """, (tenant_id,))
