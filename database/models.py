@@ -570,20 +570,25 @@ def buscar_visitantes(termo):
             if not termo:
                 cur.execute("""
                     SELECT v.id, v.nome, v.cpf, v.tipo, v.placa, v.modelo, v.marca, v.foto, v.observacao,
-                           (SELECT vi.endereco FROM visitas vi WHERE vi.visitante_id = v.id
+                           (SELECT vi.endereco FROM visitas vi
+                            WHERE vi.condominio_id = %s AND vi.visitante_id = v.id
                             ORDER BY vi.data_entrada DESC LIMIT 1) AS ultimo_endereco
-                    FROM visitantes v ORDER BY v.id DESC LIMIT 20
-                """)
+                    FROM visitantes v
+                    WHERE v.condominio_id = %s
+                    ORDER BY v.id DESC LIMIT 20
+                """, (tenant_id, tenant_id))
             else:
                 like = f"%{termo}%"
                 cur.execute("""
                     SELECT v.id, v.nome, v.cpf, v.tipo, v.placa, v.modelo, v.marca, v.foto, v.observacao,
-                           (SELECT vi.endereco FROM visitas vi WHERE vi.visitante_id = v.id
+                           (SELECT vi.endereco FROM visitas vi
+                            WHERE vi.condominio_id = %s AND vi.visitante_id = v.id
                             ORDER BY vi.data_entrada DESC LIMIT 1) AS ultimo_endereco
                     FROM visitantes v
-                    WHERE v.nome ILIKE %s OR v.cpf ILIKE %s OR v.placa ILIKE %s
+                    WHERE v.condominio_id = %s
+                      AND (v.nome ILIKE %s OR v.cpf ILIKE %s OR v.placa ILIKE %s)
                     ORDER BY v.id DESC LIMIT 20
-                """, (like, like, like))
+                """, (tenant_id, tenant_id, like, like, like))
             return cur.fetchall()
     finally:
         liberar(conn)
