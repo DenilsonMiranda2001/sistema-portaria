@@ -57,6 +57,8 @@ def verificar_login():
         return
     if not getattr(g, "current_user", None):
         return redirect(url_for("auth.login"))
+    if g.current_user.get("nivel") == "platform_admin" and not endpoint.startswith("platform_admin."):
+        return redirect(url_for("platform_admin.condominios"))
 
 
 @app.after_request
