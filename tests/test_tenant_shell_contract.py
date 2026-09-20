@@ -14,6 +14,7 @@ def test_tenant_shell_keeps_security_and_navigation_contracts():
 def test_shells_are_structurally_separate():
     tenant = Path("templates/base.html").read_text(encoding="utf-8")
     platform = Path("templates/platform_base.html").read_text(encoding="utf-8")
-    assert "modalFoto" in tenant
+    assert "modalFoto" not in tenant
     assert "modalFoto" not in platform
+    assert "{% block global_overlays %}" in tenant
     assert "Administração da plataforma" in platform
