@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -30,7 +31,8 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = _bool_env("SESSION_COOKIE_SECURE", APP_ENV == "production")
-    PERMANENT_SESSION_LIFETIME = 60 * 60 * 8
+    SESSION_REFRESH_EACH_REQUEST = False
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
 
     @classmethod
     def validate(cls):
