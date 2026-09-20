@@ -64,9 +64,16 @@ def definir_status_condominio(condominio_id,ativo):
     try:
         with conn.cursor() as cur:
             if not ativo:
+                cur.execute("SELECT id FROM condominios WHERE id=%s FOR UPDATE", (condominio_id,))
+                if not cur.fetchone():
+                    return False
                 cur.execute("SELECT COUNT(*) AS abertas FROM visitas WHERE condominio_id=%s AND data_saida IS NULL",(condominio_id,))
                 if cur.fetchone()["abertas"] > 0:
                     raise ValueError("Existem visitas com entrada aberta. Registre as saídas antes de inativar o condomínio.")
+                cur.execute("""SELECT COUNT(*) AS pendentes FROM encomendas
+                               WHERE condominio_id=%s AND status NOT IN ('retirada','entregue_na_porta','cancelada')""",(condominio_id,))
+                if cur.fetchone()["pendentes"] > 0:
+                    raise ValueError("Existem encomendas pendentes. Finalize ou cancele as encomendas antes de inativar o condomínio.")
             cur.execute("UPDATE condominios SET ativo=%s WHERE id=%s AND ativo IS DISTINCT FROM %s RETURNING id",(ativo,condominio_id,ativo))
             row=cur.fetchone()
         conn.commit(); return bool(row)
