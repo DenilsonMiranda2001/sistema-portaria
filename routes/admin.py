@@ -30,6 +30,9 @@ def usuarios():
         if not nome or not usuario or not senha:
             flash("Preencha nome, usuário e senha.", "erro")
             return redirect(url_for("admin.usuarios"))
+        if len(senha) < 12:
+            flash("A senha deve ter pelo menos 12 caracteres.", "erro")
+            return redirect(url_for("admin.usuarios"))
 
         if tipo not in ["admin", "funcionario"]:
             tipo = "funcionario"
@@ -51,7 +54,7 @@ def usuarios():
 @roles_required("admin")
 def editar_usuario(id):
 
-    user = buscar_usuario_por_id(id)
+    user = buscar_usuario_por_id(id, exigir_tenant=True)
 
     if not user:
         flash("Usuário não encontrado.", "erro")
@@ -89,7 +92,7 @@ def inativar_usuario_rota(id):
         flash("Você não pode inativar seu próprio usuário.", "erro")
         return redirect(url_for("admin.usuarios"))
 
-    user = buscar_usuario_por_id(id)
+    user = buscar_usuario_por_id(id, exigir_tenant=True)
     if not user:
         flash("Usuário não encontrado.", "erro")
         return redirect(url_for("admin.usuarios"))
@@ -103,7 +106,7 @@ def inativar_usuario_rota(id):
 @roles_required("admin")
 def ativar_usuario_rota(id):
 
-    user = buscar_usuario_por_id(id)
+    user = buscar_usuario_por_id(id, exigir_tenant=True)
     if not user:
         flash("Usuário não encontrado.", "erro")
         return redirect(url_for("admin.usuarios"))
@@ -116,7 +119,7 @@ def ativar_usuario_rota(id):
 @roles_required("admin")
 def alterar_senha_usuario(id):
 
-    user = buscar_usuario_por_id(id)
+    user = buscar_usuario_por_id(id, exigir_tenant=True)
 
     if not user:
         flash("Usuário não encontrado.", "erro")
@@ -132,6 +135,9 @@ def alterar_senha_usuario(id):
 
         if nova_senha != confirmar_senha:
             flash("As senhas não coincidem.", "erro")
+            return redirect(url_for("admin.alterar_senha_usuario", id=id))
+        if len(nova_senha) < 12:
+            flash("A senha deve ter pelo menos 12 caracteres.", "erro")
             return redirect(url_for("admin.alterar_senha_usuario", id=id))
 
         atualizar_senha_usuario(id, nova_senha)
