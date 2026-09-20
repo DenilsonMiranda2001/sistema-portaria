@@ -82,3 +82,20 @@ def test_applied_migrations_are_forward_only():
     verification = Path("migrations/0014_verify_live_access_invariant.sql").read_text(encoding="utf-8")
     assert "pg_indexes" in verification
     assert "uq_visita_aberta_visitante_tenant" in verification
+
+
+def test_live_access_dynamic_rendering_avoids_innerhtml_and_keyboard_exit_has_csrf():
+    source = Path("templates/ativos.html").read_text(encoding="utf-8")
+    script = source[source.index("<script>"):]
+    assert ".innerHTML" not in script
+    assert "replaceChildren" in script
+    assert 'token.name="csrf_token"' in script
+    assert "data_entrada" in Path("routes/visitantes.py").read_text(encoding="utf-8")
+
+
+def test_package_state_machine_cannot_reenter_obsolete_door_delivery_flow():
+    source = Path("database/encomendas.py").read_text(encoding="utf-8")
+    block = source[source.index("TRANSICOES_ENCOMENDA"):source.index("def atualizar_status_encomenda")]
+    assert '"recebida": {"retida_portaria", "cancelada"}' in block
+    assert '"aguardando_resposta": {"retida_portaria", "cancelada"}' in block
+    assert '"morador_em_casa": {"retida_portaria", "cancelada"}' in block
