@@ -2,7 +2,6 @@ import logging
 from flask import Blueprint, render_template, request, redirect, flash, url_for, session
 
 from database.models import (
-    cadastrar_morador,
     cadastrar_morador_com_unidade,
     listar_moradores,
     buscar_moradores,
@@ -12,7 +11,6 @@ from database.models import (
     ativar_morador,
     cpf_morador_ja_cadastrado,
     listar_unidades,
-    criar_unidade,
 )
 from utils.validators import limpar_cpf, validar_cpf
 
