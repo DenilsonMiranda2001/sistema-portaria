@@ -12,6 +12,7 @@
     </div>
 
     <form method="POST" autocomplete="off" class="form-cadastro-visitante">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="card-bloco">
             <h3>👤 Dados pessoais</h3>
