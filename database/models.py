@@ -216,7 +216,7 @@ def listar_unidades():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, codigo, descricao, ativo FROM unidades WHERE ativo = TRUE ORDER BY codigo")
+            cur.execute("SELECT id, codigo, descricao, ativo FROM unidades WHERE condominio_id = %s AND ativo = TRUE ORDER BY codigo", (tenant_id,))
             return cur.fetchall()
     finally:
         liberar(conn)
@@ -317,10 +317,10 @@ def buscar_moradores(termo):
                            m.ativo, m.observacao, m.criado_em
                     FROM moradores m
                     LEFT JOIN unidades u ON u.id = m.unidade_id
-                    WHERE m.ativo = TRUE
+                    WHERE m.condominio_id = %s AND m.ativo = TRUE
                     ORDER BY m.nome
                     LIMIT 30
-                """)
+                """, (tenant_id,))
             else:
                 like = f"%{termo}%"
                 cur.execute("""
@@ -329,11 +329,11 @@ def buscar_moradores(termo):
                            m.ativo, m.observacao, m.criado_em
                     FROM moradores m
                     LEFT JOIN unidades u ON u.id = m.unidade_id
-                    WHERE m.ativo = TRUE
+                    WHERE m.condominio_id = %s AND m.ativo = TRUE
                       AND (m.nome ILIKE %s OR m.cpf ILIKE %s OR u.codigo ILIKE %s)
                     ORDER BY m.nome
                     LIMIT 30
-                """, (like, like, like))
+                """, (tenant_id, like, like, like))
             return cur.fetchall()
     finally:
         liberar(conn)
@@ -548,8 +548,8 @@ def buscar_um_por_cpf(cpf):
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao
-                FROM visitantes WHERE cpf = %s LIMIT 1
-            """, (limpar_cpf(cpf),))
+                FROM visitantes WHERE condominio_id = %s AND cpf = %s LIMIT 1
+            """, (tenant_id, limpar_cpf(cpf)))
             return cur.fetchone()
     finally:
         liberar(conn)
@@ -562,8 +562,8 @@ def buscar_visitante_por_id(visitante_id):
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT id, nome, cpf, tipo, placa, modelo, marca, foto, observacao
-                FROM visitantes WHERE id = %s
-            """, (visitante_id,))
+                FROM visitantes WHERE condominio_id = %s AND id = %s
+            """, (tenant_id, visitante_id))
             return cur.fetchone()
     finally:
         liberar(conn)
