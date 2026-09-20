@@ -376,13 +376,19 @@ def cadastrar_morador_com_unidade(nome, cpf, telefone, email, unidade_id, nova_u
                     raise ValueError("Unidade inválida para este condomínio.")
             elif nova_unidade:
                 codigo = nova_unidade.strip().upper()
-                cur.execute("""
-                    INSERT INTO unidades (condominio_id, codigo, descricao)
-                    VALUES (%s, %s, NULL)
-                    ON CONFLICT (condominio_id, codigo) DO UPDATE SET codigo = EXCLUDED.codigo
-                    RETURNING id
-                """, (tenant_id, codigo))
-                resolved_unidade_id = cur.fetchone()["id"]
+                cur.execute("SELECT id, ativo FROM unidades WHERE condominio_id=%s AND codigo=%s FOR UPDATE", (tenant_id, codigo))
+                existente = cur.fetchone()
+                if existente:
+                    if not existente["ativo"]:
+                        raise ValueError("Esta unidade existe, mas está inativa. Reative a unidade antes de vinculá-la.")
+                    resolved_unidade_id = existente["id"]
+                else:
+                    cur.execute("""
+                        INSERT INTO unidades (condominio_id, codigo, descricao, ativo)
+                        VALUES (%s, %s, NULL, TRUE)
+                        RETURNING id
+                    """, (tenant_id, codigo))
+                    resolved_unidade_id = cur.fetchone()["id"]
             cur.execute("""
                 INSERT INTO moradores (condominio_id, nome, cpf, telefone, email, unidade_id, observacao, ativo)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
@@ -485,13 +491,19 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
                     raise ValueError("Unidade inválida para este condomínio.")
             elif nova_unidade:
                 codigo = nova_unidade.strip().upper()
-                cur.execute("""
-                    INSERT INTO unidades (condominio_id, codigo, descricao)
-                    VALUES (%s, %s, NULL)
-                    ON CONFLICT (condominio_id, codigo) DO UPDATE SET codigo = EXCLUDED.codigo
-                    RETURNING id
-                """, (tenant_id, codigo))
-                resolved_unidade_id = cur.fetchone()["id"]
+                cur.execute("SELECT id, ativo FROM unidades WHERE condominio_id=%s AND codigo=%s FOR UPDATE", (tenant_id, codigo))
+                existente = cur.fetchone()
+                if existente:
+                    if not existente["ativo"]:
+                        raise ValueError("Esta unidade existe, mas está inativa. Reative a unidade antes de vinculá-la.")
+                    resolved_unidade_id = existente["id"]
+                else:
+                    cur.execute("""
+                        INSERT INTO unidades (condominio_id, codigo, descricao, ativo)
+                        VALUES (%s, %s, NULL, TRUE)
+                        RETURNING id
+                    """, (tenant_id, codigo))
+                    resolved_unidade_id = cur.fetchone()["id"]
             cur.execute("""
                 UPDATE moradores
                 SET nome = %s, cpf = %s, telefone = %s, email = %s,
