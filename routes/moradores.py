@@ -14,10 +14,8 @@ from database.models import (
 )
 from utils.validators import limpar_cpf, validar_cpf
 from utils.audit import registrar_auditoria
-from utils.authz import roles_required
 
 moradores_bp = Blueprint("moradores", __name__, url_prefix="/moradores")
-moradores_bp.before_request(roles_required("admin", "funcionario")(lambda: None))
 logger = logging.getLogger(__name__)
 
 
