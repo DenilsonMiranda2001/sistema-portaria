@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, g, redirect, url_for
 
 from database.models import (
     total_visitantes_ativos,
@@ -15,6 +15,8 @@ main_bp = Blueprint("main", __name__)
 
 @main_bp.route("/")
 def index():
+    if getattr(g, "current_user", None) and g.current_user.get("nivel") == "platform_admin":
+        return redirect(url_for("platform_admin.condominios"))
     cpf_pre = request.args.get("cpf", "")
     ultima_nome, ultima_hora = ultima_entrada()
 
@@ -34,6 +36,8 @@ def index():
 
 @main_bp.route("/resumo_ajax")
 def resumo_ajax():
+    if getattr(g, "current_user", None) and g.current_user.get("nivel") == "platform_admin":
+        return jsonify({"erro": "Recurso disponível apenas no contexto de um condomínio."}), 403
     ultima_nome, ultima_hora = ultima_entrada()
     return jsonify({
         "ativos": total_visitantes_ativos(),
