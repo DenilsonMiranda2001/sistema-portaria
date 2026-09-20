@@ -160,6 +160,18 @@ def buscar_platform_admin(usuario):
         liberar(conn)
 
 
+def buscar_platform_admin_por_id(admin_id):
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""SELECT id, nome, usuario, ativo
+                           FROM platform_admins
+                           WHERE id=%s AND ativo=TRUE""", (admin_id,))
+            return cur.fetchone()
+    finally:
+        liberar(conn)
+
+
 def verificar_senha(usuario_banco, senha_digitada):
     if not usuario_banco or not usuario_banco.get("ativo"):
         return False
