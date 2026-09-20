@@ -76,7 +76,7 @@ def criar_tabelas():
 # USUÁRIOS
 # ──────────────────────────────────────────────────────────────
 
-def criar_usuario(nome, usuario, senha, nivel):
+def criar_usuario(nome, usuario, senha, nivel, actor_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -100,6 +100,8 @@ def criar_usuario(nome, usuario, senha, nivel):
                 (nivel or "funcionario").strip().lower(),
             ))
             novo = cur.fetchone()
+            if actor_id:
+                registrar_auditoria_cursor(cur, "usuario.criado", usuario_id=actor_id, condominio_id=tenant_id, entidade="usuario", entidade_id=novo["id"], detalhes={"nivel": nivel})
         conn.commit()
         logger.info("Usuário criado: %s", usuario)
         return novo
@@ -197,7 +199,7 @@ def verificar_senha(usuario_banco, senha_digitada):
     return check_password_hash(usuario_banco.get("senha", ""), senha_digitada)
 
 
-def atualizar_usuario(usuario_id, nome, usuario, nivel):
+def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -218,7 +220,11 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel):
                 usuario_id,
                 tenant_id,
             ))
+            alterou = cur.rowcount > 0
+            if alterou and actor_id:
+                registrar_auditoria_cursor(cur, "usuario.atualizado", usuario_id=actor_id, condominio_id=tenant_id, entidade="usuario", entidade_id=usuario_id, detalhes={"nivel": nivel})
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
@@ -226,7 +232,7 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel):
         liberar(conn)
 
 
-def atualizar_senha_usuario(usuario_id, nova_senha):
+def atualizar_senha_usuario(usuario_id, nova_senha, actor_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -235,7 +241,11 @@ def atualizar_senha_usuario(usuario_id, nova_senha):
                 "UPDATE usuarios SET senha = %s WHERE id = %s AND condominio_id = %s",
                 (generate_password_hash(nova_senha), usuario_id, tenant_id)
             )
+            alterou = cur.rowcount > 0
+            if alterou and actor_id:
+                registrar_auditoria_cursor(cur, "usuario.senha_alterada", usuario_id=actor_id, condominio_id=tenant_id, entidade="usuario", entidade_id=usuario_id)
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
@@ -243,7 +253,7 @@ def atualizar_senha_usuario(usuario_id, nova_senha):
         liberar(conn)
 
 
-def inativar_usuario(usuario_id):
+def inativar_usuario(usuario_id, actor_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -257,6 +267,8 @@ def inativar_usuario(usuario_id):
                 if cur.fetchone()["total"] <= 1:
                     raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
             cur.execute("UPDATE usuarios SET ativo = FALSE WHERE id = %s AND condominio_id = %s", (usuario_id, tenant_id))
+            if actor_id:
+                registrar_auditoria_cursor(cur, "usuario.inativado", usuario_id=actor_id, condominio_id=tenant_id, entidade="usuario", entidade_id=usuario_id)
         conn.commit()
         return True
     except Exception:
@@ -266,13 +278,17 @@ def inativar_usuario(usuario_id):
         liberar(conn)
 
 
-def ativar_usuario(usuario_id):
+def ativar_usuario(usuario_id, actor_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s AND condominio_id = %s", (usuario_id, tenant_id))
+            cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s AND condominio_id = %s AND ativo=FALSE", (usuario_id, tenant_id))
+            alterou = cur.rowcount > 0
+            if alterou and actor_id:
+                registrar_auditoria_cursor(cur, "usuario.ativado", usuario_id=actor_id, condominio_id=tenant_id, entidade="usuario", entidade_id=usuario_id)
         conn.commit()
+        return alterou
     except Exception:
         conn.rollback()
         raise
