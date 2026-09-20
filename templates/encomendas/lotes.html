@@ -6,7 +6,7 @@
 <div class="compact-list-toolbar"><strong>Recebimentos</strong><a class="btn-principal" href="{{ url_for('encomendas.novo_lote') }}">Novo recebimento</a></div>
 <div class="card enc-tabela-wrap">
 <table class="tabela-padrao">
-    <thead><tr><th>Lote / chegada</th><th>Transportadora</th><th>Entregador</th><th>Total</th><th>Aguardando</th><th>Em custódia</th><th>Retiradas</th><th>Status</th></tr></thead>
+    <thead><tr><th>Lote / chegada</th><th>Transportadora</th><th>Entregador</th><th>Total</th><th>Legado</th><th>Em custódia</th><th>Retiradas</th><th>Status</th></tr></thead>
     <tbody>
     {% for lote in lotes %}
     <tr>
