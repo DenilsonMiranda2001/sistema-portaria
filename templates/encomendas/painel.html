@@ -3,17 +3,14 @@
 {% block title %}Painel de Encomendas{% endblock %}
 {% block content %}
 {{ subnav('painel') }}
-<div class="enc-header">
-    <div><h2>Gestão de encomendas</h2><p>Visão operacional da portaria.</p></div>
-    <a class="btn btn-submit" href="{{ url_for('encomendas.novo_lote') }}">+ Novo lote</a>
-</div>
+<div class="compact-list-toolbar"><strong>Encomendas</strong><a class="btn-principal" href="{{ url_for('encomendas.novo_lote') }}">Receber encomendas</a></div>
 
 <section class="enc-resumo">
     <a href="{{ url_for('encomendas.painel', filtro='hoje') }}"><span>Recebidas hoje</span><strong>{{ resumo.recebidas_hoje }}</strong></a>
-    <a href="{{ url_for('encomendas.painel', filtro='pendentes') }}"><span>Aguardando resposta</span><strong>{{ resumo.aguardando }}</strong></a>
-    <a href="{{ url_for('encomendas.retidas') }}"><span>Retidas na portaria</span><strong>{{ resumo.retidas }}</strong></a>
+    <a href="{{ url_for('encomendas.painel', filtro='pendentes') }}"><span>Pendentes de triagem</span><strong>{{ resumo.aguardando }}</strong></a>
+    <a href="{{ url_for('encomendas.retidas') }}"><span>Aguardando retirada</span><strong>{{ resumo.retidas }}</strong></a>
     <a href="{{ url_for('encomendas.painel', filtro='retiradas') }}"><span>Retiradas hoje</span><strong>{{ resumo.retiradas_hoje }}</strong></a>
-    <a href="{{ url_for('encomendas.painel', filtro='historico') }}"><span>Entregues na porta hoje</span><strong>{{ resumo.entregues_porta }}</strong></a>
+    <a href="{{ url_for('encomendas.painel', filtro='historico') }}"><span>Finalizadas hoje</span><strong>{{ resumo.entregues_porta }}</strong></a>
 </section>
 
 <form class="enc-filtros card" method="get">
