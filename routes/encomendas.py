@@ -94,7 +94,6 @@ def novo_lote():
                 request.form.get("observacao"),
                 session["usuario_id"],
             )
-            registrar_auditoria("encomenda.lote_criado", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="lote_encomenda", entidade_id=lote_id)
             flash("Lote criado. Cadastre as encomendas em sequência.", "sucesso")
             return redirect(url_for("encomendas.lote_detalhe", lote_id=lote_id))
         except Exception:
@@ -126,7 +125,6 @@ def lote_detalhe(lote_id):
                 request.form.get("observacao"),
                 session["usuario_id"],
             )
-            registrar_auditoria("encomenda.criada", usuario_id=session["usuario_id"], condominio_id=session["condominio_id"], entidade="encomenda", entidade_id=nova["id"], detalhes={"lote_id": lote_id})
             flash(f"Encomenda {nova['codigo_retirada']} adicionada.", "sucesso")
         except ValueError as exc:
             flash(str(exc), "erro")
