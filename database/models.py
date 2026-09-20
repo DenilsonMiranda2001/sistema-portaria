@@ -556,7 +556,8 @@ def cpf_ja_cadastrado(cpf, visitante_id=None):
         liberar(conn)
 
 
-def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao):
+def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
+                       entrada=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -577,6 +578,28 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao)
                 (observacao or "").strip().upper(),
             ))
             novo = cur.fetchone()
+            if entrada:
+                unidade_id = entrada.get("unidade_id") or None
+                morador_id = entrada.get("morador_id") or None
+                if unidade_id:
+                    cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (unidade_id, tenant_id))
+                    if not cur.fetchone():
+                        raise ValueError("Unidade inválida para este condomínio.")
+                if morador_id:
+                    cur.execute("SELECT 1 FROM moradores WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (morador_id, tenant_id))
+                    if not cur.fetchone():
+                        raise ValueError("Morador inválido para este condomínio.")
+                cur.execute("""
+                    INSERT INTO visitas
+                        (condominio_id, visitante_id, endereco, placa, marca, modelo, observacao,
+                         usuario_entrada_id, unidade_id, morador_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    tenant_id, novo["id"], (entrada.get("endereco") or "").strip().upper(),
+                    (placa or "").strip().upper(), (marca or "").strip().upper(),
+                    (modelo or "").strip().upper(), (observacao or "").strip().upper(),
+                    entrada.get("usuario_id"), unidade_id, morador_id,
+                ))
         conn.commit()
         return novo["id"]
     except Exception:
