@@ -6,12 +6,12 @@
 <div class="enc-lote-toolbar"><div><strong>Recebimento #{{ lote.id }} · {{ lote.transportadora }}</strong><small>{{ lote.nome_entregador or 'Entregador não informado' }} · {{ lote.data_chegada.strftime('%d/%m/%Y %H:%M') }} · {{ lote.total_encomendas }} pacote(s)</small></div><div class="enc-lote-status">{{ status_badge(lote.status) }}
         {% if lote.status not in ('concluido', 'cancelado') %}
         <form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="status" value="concluido"><button class="btn enc-btn enc-btn-success">Concluir lote</button>
         </form>
         <form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}"
               onsubmit="return confirm('Cancelar o lote e as encomendas ainda abertas?')">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="status" value="cancelado"><button class="btn enc-btn enc-btn-danger">Cancelar lote</button>
         </form>
         {% endif %}
@@ -21,7 +21,7 @@
 <section class="card enc-rajada">
     <div class="quick-section-title"><span>01</span><strong>Adicionar encomenda</strong></div>
     <form method="post" id="form-encomenda" autocomplete="off">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="enc-form-grid enc-form-grid-3">
             <label><span>Buscar morador / unidade</span>
                 <input id="morador_busca" list="moradores_lista" placeholder="Digite o nome ou unidade">
