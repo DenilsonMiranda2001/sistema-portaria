@@ -60,3 +60,13 @@ def test_visitor_edit_uses_current_compact_workspace():
     assert "quick-access-grid" in source
     assert "Salvar alterações" in source
     assert "📝 Editar Visitante" not in source
+
+
+def test_resident_screens_use_current_operational_standard():
+    listing = Path("templates/moradores/lista.html").read_text(encoding="utf-8")
+    form = Path("templates/moradores/form.html").read_text(encoding="utf-8")
+    assert "compact-list-toolbar" in listing
+    assert "csrf_token()" in listing
+    assert "resident-quick-form" in form
+    assert "quick-access-grid resident-access-grid" in form
+    assert "➕" not in listing and "✏️" not in listing and "👁" not in listing
