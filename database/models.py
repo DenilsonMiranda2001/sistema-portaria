@@ -660,12 +660,12 @@ def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, fot
                 cur.execute("""
                     UPDATE visitantes
                     SET nome=%s, cpf=%s, tipo=%s, placa=%s, modelo=%s, marca=%s, observacao=%s
-                    WHERE id=%s
+                    WHERE id=%s AND condominio_id=%s
                 """, (
                     (nome or "").strip().upper(), limpar_cpf(cpf),
                     (tipo or "").strip().upper(), (placa or "").strip().upper(),
                     (modelo or "").strip().upper(), (marca or "").strip().upper(),
-                    (observacao or "").strip().upper(), visitante_id,
+                    (observacao or "").strip().upper(), visitante_id, tenant_id,
                 ))
         conn.commit()
     except Exception:
@@ -839,7 +839,7 @@ def visitantes_ativos():
                     vi.id AS visita_id, vi.endereco, vi.data_entrada,
                     m.nome AS morador_nome, u.codigo AS unidade_codigo
                 FROM visitantes v
-                INNER JOIN visitas vi ON v.id = vi.visitante_id AND vi.data_saida IS NULL AND vi.condominio_id = %s
+                INNER JOIN visitas vi ON v.id = vi.visitante_id AND v.condominio_id = vi.condominio_id AND vi.data_saida IS NULL AND vi.condominio_id = %s
                 LEFT JOIN moradores m ON m.id = vi.morador_id
                 LEFT JOIN unidades u ON u.id = vi.unidade_id
                 ORDER BY vi.data_entrada DESC
@@ -861,7 +861,7 @@ def buscar_ativos(termo):
                     vi.id AS visita_id, vi.endereco, vi.data_entrada,
                     m.nome AS morador_nome, u.codigo AS unidade_codigo
                 FROM visitantes v
-                INNER JOIN visitas vi ON v.id = vi.visitante_id AND vi.data_saida IS NULL
+                INNER JOIN visitas vi ON v.id = vi.visitante_id AND v.condominio_id = vi.condominio_id AND vi.data_saida IS NULL
                 LEFT JOIN moradores m ON m.id = vi.morador_id
                 LEFT JOIN unidades u ON u.id = vi.unidade_id
                 WHERE vi.condominio_id = %s AND (v.nome ILIKE %s OR v.cpf ILIKE %s OR v.placa ILIKE %s OR vi.endereco ILIKE %s)
@@ -1000,7 +1000,7 @@ def ultimas_entradas_dashboard(limite=5):
                 SELECT v.nome, v.foto, vi.endereco, vi.data_entrada,
                        m.nome AS morador_nome, u.codigo AS unidade_codigo
                 FROM visitas vi
-                JOIN visitantes v ON v.id = vi.visitante_id
+                JOIN visitantes v ON v.id = vi.visitante_id AND v.condominio_id = vi.condominio_id
                 LEFT JOIN moradores m ON vi.morador_id = m.id
                 LEFT JOIN unidades u ON vi.unidade_id = u.id
                 WHERE vi.condominio_id = %s
