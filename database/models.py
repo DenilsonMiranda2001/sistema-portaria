@@ -464,15 +464,25 @@ def buscar_morador_por_id(morador_id):
         liberar(conn)
 
 
-def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observacao):
+def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observacao, nova_unidade=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            if unidade_id:
-                cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (unidade_id, tenant_id))
+            resolved_unidade_id = unidade_id or None
+            if resolved_unidade_id:
+                cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (resolved_unidade_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Unidade inválida para este condomínio.")
+            elif nova_unidade:
+                codigo = nova_unidade.strip().upper()
+                cur.execute("""
+                    INSERT INTO unidades (condominio_id, codigo, descricao)
+                    VALUES (%s, %s, NULL)
+                    ON CONFLICT (condominio_id, codigo) DO UPDATE SET codigo = EXCLUDED.codigo
+                    RETURNING id
+                """, (tenant_id, codigo))
+                resolved_unidade_id = cur.fetchone()["id"]
             cur.execute("""
                 UPDATE moradores
                 SET nome = %s, cpf = %s, telefone = %s, email = %s,
@@ -483,11 +493,13 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
                 limpar_cpf(cpf) or None,
                 (telefone or "").strip() or None,
                 (email or "").strip().lower() or None,
-                unidade_id or None,
+                resolved_unidade_id,
                 (observacao or "").strip().upper() or None,
                 morador_id,
                 tenant_id,
             ))
+            if cur.rowcount == 0:
+                raise ValueError("Morador não encontrado neste condomínio.")
         conn.commit()
     except Exception:
         conn.rollback()
