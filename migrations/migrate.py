@@ -4,12 +4,16 @@ from pathlib import Path
 from database.connection import conectar, liberar
 
 MIGRATIONS_DIR = Path(__file__).resolve().parent
+BASE_SCHEMA = MIGRATIONS_DIR.parent / "database" / "schema.sql"
 
 
 def migrate():
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            cur.execute("SELECT to_regclass('public.usuarios') AS usuarios")
+            if not cur.fetchone()["usuarios"]:
+                cur.execute(BASE_SCHEMA.read_text(encoding="utf-8"))
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS schema_migrations (
                     version VARCHAR(255) PRIMARY KEY,
