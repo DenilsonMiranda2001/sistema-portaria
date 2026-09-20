@@ -22,7 +22,8 @@ def _login_rate_limited():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT bloqueado_ate > CURRENT_TIMESTAMP AS bloqueado FROM login_attempts WHERE chave=%s", (_login_key(),))
+            cur.execute("""SELECT bloqueado_ate > CURRENT_TIMESTAMP AS bloqueado
+                           FROM login_attempts WHERE chave=%s""", (_login_key(),))
             row = cur.fetchone()
             return bool(row and row["bloqueado"])
     finally:
