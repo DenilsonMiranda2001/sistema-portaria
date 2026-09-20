@@ -663,9 +663,16 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
                     if not cur.fetchone():
                         raise ValueError("Unidade inválida para este condomínio.")
                 if morador_id:
-                    cur.execute("SELECT 1 FROM moradores WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (morador_id, tenant_id))
-                    if not cur.fetchone():
+                    cur.execute("SELECT unidade_id FROM moradores WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (morador_id, tenant_id))
+                    morador = cur.fetchone()
+                    if not morador:
                         raise ValueError("Morador inválido para este condomínio.")
+                    if unidade_id and morador["unidade_id"] != unidade_id:
+                        raise ValueError("O morador selecionado não pertence à unidade informada.")
+                    unidade_id = unidade_id or morador["unidade_id"]
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (entrada.get("usuario_id"), tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário de entrada inválido para este condomínio.")
                 cur.execute("""
                     INSERT INTO visitas
                         (condominio_id, visitante_id, endereco, placa, marca, modelo, observacao,
@@ -907,9 +914,16 @@ def registrar_entrada(visitante_id, endereco, placa=None, marca=None, modelo=Non
                 if not cur.fetchone():
                     raise ValueError("Unidade inválida para este condomínio.")
             if morador_id:
-                cur.execute("SELECT 1 FROM moradores WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (morador_id, tenant_id))
-                if not cur.fetchone():
+                cur.execute("SELECT unidade_id FROM moradores WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (morador_id, tenant_id))
+                morador = cur.fetchone()
+                if not morador:
                     raise ValueError("Morador inválido para este condomínio.")
+                if unidade_id and morador["unidade_id"] != unidade_id:
+                    raise ValueError("O morador selecionado não pertence à unidade informada.")
+                unidade_id = unidade_id or morador["unidade_id"]
+            cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+            if not cur.fetchone():
+                raise ValueError("Usuário de entrada inválido para este condomínio.")
             cur.execute("SELECT 1 FROM visitantes WHERE id = %s AND condominio_id = %s", (visitante_id, tenant_id))
             if not cur.fetchone():
                 raise ValueError("Visitante inválido para este condomínio.")
@@ -951,6 +965,9 @@ def registrar_saida(visitante_id, usuario_saida_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_saida_id, tenant_id))
+            if not cur.fetchone():
+                raise ValueError("Usuário de saída inválido para este condomínio.")
             cur.execute("""
                 UPDATE visitas
                 SET data_saida = CURRENT_TIMESTAMP, usuario_saida_id = %s
