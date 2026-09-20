@@ -52,3 +52,11 @@ def test_core_operator_screens_avoid_redundant_page_heroes():
     assert "compact-access-head" not in cadastro
     assert "compact-list-toolbar" in visitors
     assert "compact-list-toolbar" in residents
+
+
+def test_visitor_edit_uses_current_compact_workspace():
+    source = Path("templates/editar.html").read_text(encoding="utf-8")
+    assert "quick-access-form quick-edit-form" in source
+    assert "quick-access-grid" in source
+    assert "Salvar alterações" in source
+    assert "📝 Editar Visitante" not in source
