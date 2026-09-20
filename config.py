@@ -31,7 +31,6 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = _bool_env("SESSION_COOKIE_SECURE", APP_ENV == "production")
     PERMANENT_SESSION_LIFETIME = 60 * 60 * 8
-    STORAGE_REQUIRED = APP_ENV == "production"
 
     @classmethod
     def validate(cls):
@@ -40,6 +39,3 @@ class Config:
                 raise RuntimeError("SECRET_KEY must be configured with at least 32 characters in production.")
             if not cls.DATABASE_URL and (not cls.DB_HOST or not cls.DB_NAME or not cls.DB_USER):
                 raise RuntimeError("Database configuration is incomplete.")
-            storage_vars = [os.getenv("S3_ENDPOINT_URL"), os.getenv("S3_BUCKET"), os.getenv("S3_ACCESS_KEY_ID"), os.getenv("S3_SECRET_ACCESS_KEY")]
-            if not all(storage_vars):
-                raise RuntimeError("Production object storage configuration is incomplete.")
