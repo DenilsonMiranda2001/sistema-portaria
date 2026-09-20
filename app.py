@@ -2,6 +2,7 @@ import logging
 import os
 from flask import Flask, jsonify, session, redirect, url_for, request, g
 from flask_wtf.csrf import CSRFProtect
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from routes.admin import admin_bp
@@ -20,6 +21,7 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config.from_object(Config)
 Config.validate()
 csrf = CSRFProtect(app)
