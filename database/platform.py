@@ -69,6 +69,7 @@ def definir_status_condominio(condominio_id,ativo,actor_id=None):
             if not ativo:
                 cur.execute("SELECT id FROM condominios WHERE id=%s FOR UPDATE", (condominio_id,))
                 if not cur.fetchone():
+                    conn.rollback()
                     return False
                 cur.execute("SELECT COUNT(*) AS abertas FROM visitas WHERE condominio_id=%s AND data_saida IS NULL",(condominio_id,))
                 if cur.fetchone()["abertas"] > 0:
@@ -95,6 +96,7 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo,actor_id=None):
             cur.execute("SELECT id,nivel,ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE",(usuario_id,condominio_id))
             alvo=cur.fetchone()
             if not alvo or alvo["ativo"] == ativo:
+                conn.rollback()
                 return False
             if not ativo and alvo["nivel"] == "admin":
                 cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin' AND ativo=TRUE",(condominio_id,))
