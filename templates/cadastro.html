@@ -1,25 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}Cadastro{% endblock %}
+{% block title %}Cadastro<style>.access-form-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}.access-form-heading h1{margin:4px 0 6px}.access-form-heading p{margin:0;color:var(--pc-muted)}.access-form-shell{padding:24px}.access-form-shell .card-bloco{background:transparent;border:0;border-top:1px solid var(--pc-line);box-shadow:none;border-radius:0;padding:24px 0;margin:0}.access-form-shell .card-bloco:first-of-type{border-top:0;padding-top:3px}.access-form-shell .card-bloco h3{font-size:13px;letter-spacing:-.01em;color:#26354a}.access-form-shell .grid-blocos{gap:0}.access-form-shell .grid-blocos>.card-bloco{padding-right:18px}.access-form-shell .grid-blocos>.card-bloco+.card-bloco{padding-left:18px;border-left:1px solid var(--pc-line)}.access-form-shell .divisor{font-size:9px;letter-spacing:.08em;color:#9aa3b2}.access-form-shell .acao-formulario{border-top:1px solid var(--pc-line);padding-top:20px}@media(max-width:700px){.access-form-heading{align-items:flex-start;flex-direction:column}.access-form-shell{padding:16px}.access-form-shell .grid-blocos>.card-bloco{padding-left:0;padding-right:0;border-left:0}}</style>{% endblock %}
 
 {% block content %}
 
-<div class="card-padrao">
-    <div class="header-secao header-secao-flex">
-        <div>
-            <h2>➕ Cadastro de Visitante</h2>
-            <p class="texto-ajuda">
-                Preencha os dados abaixo para cadastrar um novo visitante no sistema.
-            </p>
-        </div>
-
-        <a class="link-voltar" href="/">⬅ Voltar</a>
-    </div>
+<section class="page-heading access-form-heading"><div><span class="page-eyebrow">NOVO ACESSO</span><h1>Cadastrar visitante</h1><p>Um fluxo direto para identificação, destino e informações de chegada.</p></div><a class="btn-secundario" href="{{ url_for('main.index') }}">Cancelar</a></section><div class="card-padrao access-form-shell">
 
     <form method="POST" enctype="multipart/form-data" autocomplete="off" class="form-cadastro-visitante">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="card-bloco">
-            <h3>👤 Dados do visitante</h3>
+            <h3>01 · Identificação</h3>
 
             <div class="grid-formulario">
                 <input class="input-padrao" type="text" name="nome" id="nome" placeholder="Nome completo" required>
@@ -37,7 +27,7 @@
         </div>
 
         <div class="card-bloco">
-            <h3>🏠 Destino / Morador</h3>
+            <h3>02 · Destino</h3>
             <p class="texto-ajuda">Selecione a unidade ou busque o morador que receberá este visitante.</p>
 
             <div class="grid-formulario">
@@ -75,7 +65,7 @@
 
         <div class="grid-blocos">
             <div class="card-bloco">
-                <h3>🏷 Tipo de visita</h3>
+                <h3>03 · Tipo de visita</h3>
 
                 <div class="campo-autocomplete">
                     <input class="input-padrao" type="text" name="tipo" id="tipo"
@@ -85,7 +75,7 @@
             </div>
 
             <div class="card-bloco">
-                <h3>📝 Observação</h3>
+                <h3>Observação</h3>
 
                 <textarea
                     class="input-padrao textarea-cadastro"
@@ -98,7 +88,7 @@
         </div>
 
         <div class="card-bloco">
-            <h3>🚗 Veículo</h3>
+            <h3>04 · Veículo</h3>
 
             <div class="grid-formulario">
                 <input class="input-padrao" type="text" name="placa" id="placa" placeholder="Placa">
@@ -116,19 +106,19 @@
         </div>
 
         <div class="card-bloco">
-        <h3>📷 Foto do visitante</h3>
+        <h3>05 · Identificação visual</h3>
 
         <div class="divisor">
             ───── ou usar método manual ─────
         </div>
 
-        <p class="preview-label preview-label-topo">📸 Tirar nova foto</p>
+        <p class="preview-label preview-label-topo">Tirar nova foto</p>
 
         <div class="camera-actions">
-            <button type="button" class="btn-principal btn-sm" id="btnAbrirCamera">📷 Abrir câmera</button>
-            <button type="button" class="btn-secundario btn-sm" id="btnCapturar" style="display:none;">📸 Capturar</button>
-            <button type="button" class="btn-remover btn-sm" id="btnFecharCamera" style="display:none;">❌ Fechar</button>
-            <button type="button" class="btn-principal btn-sm" id="btnNovaFoto" style="display:none;">🔄 Tirar novamente</button>
+            <button type="button" class="btn-principal btn-sm" id="btnAbrirCamera">Abrir câmera</button>
+            <button type="button" class="btn-secundario btn-sm" id="btnCapturar" style="display:none;">Capturar</button>
+            <button type="button" class="btn-remover btn-sm" id="btnFecharCamera" style="display:none;">Fechar</button>
+            <button type="button" class="btn-principal btn-sm" id="btnNovaFoto" style="display:none;">Tirar novamente</button>
         </div>
 
         <div class="foto-grid">
