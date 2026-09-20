@@ -15,7 +15,7 @@
     <!-- ── NAVBAR ─────────────────────────────────────── -->
     <header class="navbar-sistema">
         <div class="navbar-brand">
-            <div class="navbar-brand-icon">🏢</div>
+            <div class="navbar-brand-icon" aria-hidden="true">PC</div>
             <div class="navbar-brand-textos">
                 <h1>Portaria Control</h1>
                 <span>Sistema de controle de acesso</span>
@@ -42,7 +42,7 @@
 
             <div class="navbar-user-area">
                 <div class="usuario-logado-box">
-                    <div class="usuario-avatar">👤</div>
+                    <div class="usuario-avatar" aria-hidden="true">{{ session.get("usuario_nome", "U")[:1]|upper }}</div>
                     <div class="usuario-info">
                         <strong>{{ session.get("usuario_nome", "Usuário") }}</strong>
                         <span>{{ session.get("usuario_tipo", "").capitalize() }}</span>
@@ -50,7 +50,7 @@
                 </div>
                 <form method="post" action="{{ url_for('auth.logout') }}" class="logout-form">
                     <input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}">
-                    <button class="btn btn-sair" type="submit">Sair</button>
+                    <button class="btn btn-sair" type="submit" aria-label="Encerrar sessão">Sair</button>
                 </form>
             </div>
         </div>
