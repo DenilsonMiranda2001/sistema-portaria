@@ -33,10 +33,10 @@
                    href="{{ url_for('visitantes.cadastro') }}">Cadastro</a>
 
                 <a class="btn btn-nav {% if request.endpoint == 'visitantes.visitantes' %}btn-nav-ativo{% endif %}"
-                   href="{{ url_for('visitantes.visitantes') }}">Visitantes</a>
+                   href="{{ url_for('visitantes.visitantes') }}">Cadastros</a>
 
                 <a class="btn btn-nav {% if request.endpoint == 'visitantes.ativos' %}btn-nav-ativo{% endif %}"
-                   href="{{ url_for('visitantes.ativos') }}">Ativos</a>
+                   href="{{ url_for('visitantes.ativos') }}">Acessos ativos</a>
 
                 <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('moradores') %}btn-nav-ativo{% endif %}"
                    href="{{ url_for('moradores.listar') }}">Moradores</a>
