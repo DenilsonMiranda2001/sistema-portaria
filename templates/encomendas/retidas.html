@@ -2,19 +2,17 @@
 {% from "encomendas/_macros.html" import status_badge, subnav, acoes %}
 {% block title %}Encomendas Retidas{% endblock %}
 {% block content %}
+<div class="enc-premium enc-retidas-page">
 {{ subnav('retidas') }}
-<div class="compact-list-toolbar"><strong>Aguardando retirada</strong><span class="enc-context-label">Confirme a identidade de quem retirar</span></div>
-<form class="card enc-busca" method="get">
-    <input name="q" value="{{ termo }}" autofocus placeholder="Buscar por unidade, morador, código de retirada ou rastreio">
-    <button class="btn enc-btn enc-btn-primary">Buscar</button>
-</form>
-<div class="enc-lista">
+<div class="enc-header enc-premium-head"><div><span class="enc-eyebrow enc-warn">EM CUSTÓDIA</span><h2>Retidas na portaria</h2><p>Pacotes aguardando retirada e identificação do recebedor.</p></div></div>
+<form class="card enc-busca enc-premium-search" method="get"><span class="enc-search-icon">⌕</span><input name="q" value="{{ termo }}" autofocus placeholder="Unidade, morador, código de retirada ou rastreio"><button class="btn enc-btn enc-btn-primary">Buscar</button></form>
+<div class="enc-lista enc-premium-list">
 {% for encomenda in encomendas %}
-<article class="card enc-item">
-    <div class="enc-item-topo"><div><strong>Unidade {{ encomenda.unidade }}</strong><span>{{ encomenda.nome_morador or 'Morador não informado' }}</span></div>{{ status_badge(encomenda.status) }}</div>
-    <div class="enc-meta"><span><b>{{ encomenda.codigo_retirada }}</b></span><span>{{ encomenda.transportadora }} · Lote #{{ encomenda.lote_id }}</span><span>Desde {{ encomenda.data_chegada.strftime('%d/%m/%Y %H:%M') }}</span></div>
-    {{ acoes(encomenda, 'retidas') }}
-</article>
-{% else %}<div class="card enc-vazio">Nenhuma encomenda aguardando retirada.</div>{% endfor %}
-</div>
+<article class="card enc-item"><div class="enc-item-topo"><div><span class="enc-card-kicker">AGUARDANDO RETIRADA</span><strong>Unidade {{ encomenda.unidade }}</strong><span>{{ encomenda.nome_morador or 'Morador não informado' }}</span></div>{{ status_badge(encomenda.status) }}</div>
+<div class="enc-code"><span>CÓDIGO DE RETIRADA</span><b>{{ encomenda.codigo_retirada }}</b></div>
+<div class="enc-meta"><span>{{ encomenda.transportadora }} · Lote #{{ encomenda.lote_id }}</span><span>Recebida em {{ encomenda.data_chegada.strftime('%d/%m/%Y %H:%M') }}</span></div>{{ acoes(encomenda, 'retidas') }}</article>
+{% else %}<div class="card enc-vazio">Nenhuma encomenda retida encontrada.</div>{% endfor %}</div></div>
+<style>
+.enc-premium{display:grid;gap:14px}.enc-eyebrow{display:block;margin-bottom:5px;color:#2563eb;font-size:9px;font-weight:900;letter-spacing:.16em}.enc-warn{color:#a16207}.enc-premium-head{margin:0}.enc-premium-head h2{font-size:28px;letter-spacing:-.04em}.enc-premium-search{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:8px 9px;border-radius:15px;box-shadow:0 10px 28px rgba(15,38,66,.05)}.enc-search-icon{padding-left:8px;color:#6e8299;font-size:24px}.enc-premium-search input{min-height:40px;border:0!important;box-shadow:none!important}.enc-premium-list{grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:12px}.enc-premium-list .enc-item{position:relative;padding:16px;border-radius:17px;overflow:hidden;box-shadow:0 12px 30px rgba(15,38,66,.06)}.enc-premium-list .enc-item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#e5a11a}.enc-card-kicker{color:#a16207!important;font-size:8px!important;font-weight:900!important;letter-spacing:.1em}.enc-code{display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px;padding:10px 12px;border-radius:10px;background:#fff8e8;border:1px solid #f6e1aa}.enc-code span{color:#94711f;font-size:8px;font-weight:900;letter-spacing:.08em}.enc-code b{color:#72500a;font-size:16px;letter-spacing:.05em}@media(max-width:700px){.enc-premium-list{grid-template-columns:1fr}}
+</style>
 {% endblock %}
