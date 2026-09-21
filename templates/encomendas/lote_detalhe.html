@@ -1,70 +1,8 @@
-{% extends "base.html" %}
-{% from "encomendas/_macros.html" import status_badge, subnav, acoes %}
-{% block title %}Lote #{{ lote.id }}{% endblock %}
-{% block content %}
-<div class="enc-detail-premium">
-{{ subnav('lotes') }}
-<div class="enc-detail-kicker"><span></span> TRIAGEM EM ANDAMENTO</div>
-<div class="enc-header">
-    <div>
-        <h2>Lote #{{ lote.id }} · {{ lote.transportadora }}</h2>
-        <p>{{ lote.nome_entregador or 'Entregador não informado' }} · {{ lote.data_chegada.strftime('%d/%m/%Y %H:%M') }} · {{ lote.total_encomendas }} pacote(s)</p>
-    </div>
-    <div class="enc-lote-status">{{ status_badge(lote.status) }}
-        {% if lote.status not in ('concluido', 'cancelado') %}
-        <form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
-            <input type="hidden" name="status" value="concluido"><button class="btn enc-btn enc-btn-success">Concluir lote</button>
-        </form>
-        <form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}"
-              onsubmit="return confirm('Cancelar o lote e as encomendas ainda abertas?')">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
-            <input type="hidden" name="status" value="cancelado"><button class="btn enc-btn enc-btn-danger">Cancelar lote</button>
-        </form>
-        {% endif %}
-    </div>
-</div>
-
-{% if lote.status not in ('concluido', 'cancelado') %}
-<section class="card enc-rajada enc-rajada-premium">
-    <div class="enc-rajada-title"><span>CADASTRO RÁPIDO</span><h3>Adicionar próxima encomenda</h3><small>O foco retorna para o próximo pacote após cada registro.</small></div>
-    <form method="post" id="form-encomenda" autocomplete="off">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
-        <div class="enc-form-grid enc-form-grid-3">
-            <label><span>Buscar morador / unidade</span>
-                <input id="morador_busca" list="moradores_lista" placeholder="Digite o nome ou unidade">
-                <datalist id="moradores_lista">
-                    {% for morador in moradores %}<option data-id="{{ morador.id }}" data-unidade="{{ morador.unidade_codigo or '' }}" data-nome="{{ morador.nome }}" value="{{ morador.unidade_codigo or 'Sem unidade' }} — {{ morador.nome }}"></option>{% endfor %}
-                </datalist>
-                <input type="hidden" name="morador_id" id="morador_id">
-            </label>
-            <label><span>Unidade *</span><input name="unidade" id="unidade" maxlength="50" required></label>
-            <label><span>Morador</span><input name="nome_morador" id="nome_morador" maxlength="150"></label>
-            <label><span>Código de rastreio</span><input name="codigo_rastreio" maxlength="150"></label>
-            <label><span>Descrição curta</span><input name="descricao" maxlength="255" placeholder="Ex.: caixa média"></label>
-            <label><span>Observação</span><input name="observacao"></label>
-        </div>
-        <button class="btn btn-submit enc-salvar-proxima" type="submit">Salvar e adicionar próxima</button>
-    </form>
-</section>
-{% endif %}
-
-<div class="enc-package-heading"><h3 class="enc-secao-titulo">Pacotes deste lote</h3><span>{{ lote.total_encomendas }} registrado(s)</span></div>
-<div class="enc-lista">
-{% for encomenda in encomendas %}
-<article class="card enc-item">
-    <div class="enc-item-topo">
-        <div><strong>Unidade {{ encomenda.unidade }}</strong><span>{{ encomenda.nome_morador or 'Morador não informado' }}</span></div>
-        {{ status_badge(encomenda.status) }}
-    </div>
-    <div class="enc-meta"><span><b>{{ encomenda.codigo_retirada }}</b></span>{% if encomenda.codigo_rastreio %}<span>Rastreio: {{ encomenda.codigo_rastreio }}</span>{% endif %}<span>{{ encomenda.data_chegada.strftime('%H:%M:%S') }}</span></div>
-    {{ acoes(encomenda, 'lote') }}
-</article>
-{% else %}<div class="card enc-vazio">O lote ainda não possui encomendas.</div>{% endfor %}
-</div>
-<style>
-.enc-detail-premium{display:grid;gap:14px}.enc-detail-kicker{display:flex;align-items:center;gap:8px;color:#687e97;font-size:9px;font-weight:900;letter-spacing:.14em}.enc-detail-kicker span{width:7px;height:7px;border-radius:50%;background:#20b486;box-shadow:0 0 0 5px rgba(32,180,134,.09)}.enc-detail-premium>.enc-header{margin:0;padding:16px 18px;border:1px solid #dce5ef;border-radius:17px;background:linear-gradient(135deg,#fff,#f7faff);box-shadow:0 12px 30px rgba(15,38,66,.055)}.enc-detail-premium>.enc-header h2{margin:0;color:#0b203b;font-size:25px;letter-spacing:-.035em}.enc-detail-premium>.enc-header p{margin-top:5px}.enc-detail-premium .enc-lote-status{padding:8px;border-radius:12px;background:#f5f8fc}.enc-rajada-premium{padding:18px;border-radius:17px;box-shadow:0 14px 36px rgba(15,38,66,.07)}.enc-rajada-title{display:grid;gap:2px;margin-bottom:15px}.enc-rajada-title span{color:#2563eb;font-size:8px;font-weight:900;letter-spacing:.13em}.enc-rajada-title h3{margin:0;color:#0b203b;font-size:18px}.enc-rajada-title small{color:#8090a3}.enc-rajada-premium .enc-form-grid{gap:10px}.enc-rajada-premium input{background:#f8fafc;border-color:#dce5ef}.enc-rajada-premium .enc-salvar-proxima{min-height:42px;margin-top:12px;border-radius:10px;background:linear-gradient(135deg,#081d38,#0b3767);box-shadow:0 10px 22px rgba(8,29,56,.14)}.enc-package-heading{display:flex;align-items:end;justify-content:space-between;margin-top:4px}.enc-package-heading h3{margin:0}.enc-package-heading span{color:#8090a3;font-size:10px;font-weight:800}.enc-detail-premium>.enc-lista{grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:12px}.enc-detail-premium .enc-item{position:relative;padding:15px;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(15,38,66,.055)}.enc-detail-premium .enc-item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(#2563eb,#38bdf8)}.enc-detail-premium .enc-meta{padding:9px 10px;border-radius:9px;background:#f7f9fc}.enc-detail-premium .enc-meta b{color:#0b3767;font-size:14px}@media(max-width:760px){.enc-detail-premium>.enc-lista{grid-template-columns:1fr}.enc-detail-premium>.enc-header{align-items:stretch;flex-direction:column}}
-</style>
+{% extends "base.html" %}{% from "encomendas/_macros.html" import status_badge, subnav, acoes %}{% block title %}Lote #{{ lote.id }} · Portaria Control{% endblock %}{% block content %}
+<section class="pc-module pc-packages"><div class="pc-subnav">{{ subnav('lotes') }}</div>
+<header class="pc-lot-detail-head pc-panel"><div><span class="pc-eyebrow"><i></i> TRIAGEM DO LOTE</span><h2>Lote #{{ lote.id }} · {{ lote.transportadora }}</h2><p>{{ lote.nome_entregador or 'Entregador não informado' }} · {{ lote.data_chegada.strftime('%d/%m/%Y %H:%M') }} · {{ lote.total_encomendas }} pacote(s)</p></div><div class="pc-lot-controls">{{ status_badge(lote.status) }}{% if lote.status not in ('concluido','cancelado') %}<form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}"><input type="hidden" name="status" value="concluido"><button class="pc-btn pc-btn-primary">Concluir lote</button></form><form method="post" action="{{ url_for('encomendas.status_lote', lote_id=lote.id) }}" onsubmit="return confirm('Cancelar o lote e as encomendas ainda abertas?')"><input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}"><input type="hidden" name="status" value="cancelado"><button class="pc-btn pc-btn-danger">Cancelar</button></form>{% endif %}</div></header>
+{% if lote.status not in ('concluido','cancelado') %}<section class="pc-panel pc-triage"><div class="pc-form-heading"><span>＋</span><div><strong>Adicionar próxima encomenda</strong><small>Cadastro rápido para operação em sequência</small></div></div><form method="post" id="form-encomenda" autocomplete="off"><input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}"><div class="pc-form-grid pc-form-grid-3"><label class="pc-field"><span>Buscar morador / unidade</span><input id="morador_busca" list="moradores_lista" placeholder="Digite nome ou unidade"><datalist id="moradores_lista">{% for morador in moradores %}<option data-id="{{ morador.id }}" data-unidade="{{ morador.unidade_codigo or '' }}" data-nome="{{ morador.nome }}" value="{{ morador.unidade_codigo or 'Sem unidade' }} — {{ morador.nome }}"></option>{% endfor %}</datalist><input type="hidden" name="morador_id" id="morador_id"></label><label class="pc-field"><span>Unidade *</span><input name="unidade" id="unidade" maxlength="50" required></label><label class="pc-field"><span>Morador</span><input name="nome_morador" id="nome_morador" maxlength="150"></label><label class="pc-field"><span>Código de rastreio</span><input name="codigo_rastreio" maxlength="150"></label><label class="pc-field"><span>Descrição curta</span><input name="descricao" maxlength="255" placeholder="Ex.: caixa média"></label><label class="pc-field"><span>Observação</span><input name="observacao"></label></div><div class="pc-inline-actions"><button class="pc-btn pc-btn-primary" type="submit">Salvar e adicionar próxima →</button></div></form></section>{% endif %}
+<div class="pc-section-title"><div><span class="pc-kicker">PACOTES DO LOTE</span><strong>{{ lote.total_encomendas }} registrado(s)</strong></div></div><div class="pc-package-list pc-panel">{% for encomenda in encomendas %}<article class="pc-package-row"><div class="enc-item-topo"><div><strong>Unidade {{ encomenda.unidade }}</strong><span>{{ encomenda.nome_morador or 'Morador não informado' }}</span></div>{{ status_badge(encomenda.status) }}</div><div class="enc-meta"><span><b>{{ encomenda.codigo_retirada }}</b></span>{% if encomenda.codigo_rastreio %}<span>Rastreio: {{ encomenda.codigo_rastreio }}</span>{% endif %}<span>{{ encomenda.data_chegada.strftime('%H:%M:%S') }}</span></div>{{ acoes(encomenda, 'lote') }}</article>{% else %}<div class="pc-empty pc-empty-list"><span class="pc-empty-icon">□</span><div><strong>Lote sem encomendas</strong><small>Adicione o primeiro pacote usando o formulário acima.</small></div></div>{% endfor %}</div>
 <script>
 const buscaMorador = document.getElementById('morador_busca');
 if (buscaMorador) {
@@ -79,6 +17,4 @@ if (buscaMorador) {
         }
     });
 }
-</script>
-</div>
-{% endblock %}
+</script></section>{% endblock %}
