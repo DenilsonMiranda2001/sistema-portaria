@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}Moradores{% endblock %}
 {% block content %}
-<section class="resident-premium"><div class="module-commandbar"><strong>Moradores</strong><span>{{ moradores|length }} cadastros</span><a class="btn-principal" href="{{ url_for('moradores.novo') }}">+ Novo</a></div>
+<section class="resident-premium resident-command-center"><div class="module-commandbar resident-command-head"><div class="resident-title-lockup"><span class="resident-title-icon">⌂</span><div><strong>Moradores</strong><span>{{ moradores|length }} cadastros na base residencial</span></div></div><a class="btn-principal resident-new-action" href="{{ url_for('moradores.novo') }}"><span>+</span>Novo morador</a></div>
 
 <div class="resident-directory card-padrao">
 <form method="GET" class="resident-search"><div class="resident-search-field"><span>⌕</span><input type="text" name="q" value="{{ termo or '' }}" placeholder="Buscar morador por nome, CPF ou unidade" autofocus></div><button class="btn-principal" type="submit">Buscar</button>{% if termo %}<a class="btn-secundario" href="{{ url_for('moradores.listar') }}">Limpar</a>{% endif %}</form>
 {% if moradores %}
-<div class="resident-list-head"><span>{{ moradores|length }} cadastro(s)</span><span>BASE DO CONDOMÍNIO</span></div>
+<div class="resident-list-head"><span><b>{{ moradores|length }}</b> {{ 'morador cadastrado' if moradores|length == 1 else 'moradores cadastrados' }}</span><span><i></i> BASE RESIDENCIAL</span></div>
 <div class="resident-premium-list">
 {% for m in moradores %}
 <article class="resident-row {{ 'is-inactive' if not m.ativo else '' }}">
@@ -14,7 +14,7 @@
 <div class="resident-contact"><small>CONTATO</small><strong>{{ m.telefone or 'Não informado' }}</strong><span>{{ m.email or 'Sem e-mail cadastrado' }}</span></div>
 <div class="resident-unit"><small>UNIDADE</small>{% if m.unidade_codigo %}<strong>{{ m.unidade_codigo }}</strong>{% else %}<strong>—</strong>{% endif %}<span>{{ m.unidade_descricao or 'Residência vinculada' }}</span></div>
 <div class="resident-state"><small>STATUS</small><span class="badge-status {{ 'badge-ativo' if m.ativo else 'badge-inativo' }}">{{ 'Ativo' if m.ativo else 'Inativo' }}</span><em>{{ m.criado_em.strftime('%d/%m/%Y') if m.criado_em else '—' }}</em></div>
-<div class="resident-row-actions"><a href="{{ url_for('moradores.detalhe', id=m.id) }}">Ver cadastro</a><a href="{{ url_for('moradores.editar', id=m.id) }}">Editar</a></div>
+<div class="resident-row-actions"><a class="resident-view-action" href="{{ url_for('moradores.detalhe', id=m.id) }}">Abrir cadastro <span>→</span></a><a class="resident-edit-action" href="{{ url_for('moradores.editar', id=m.id) }}">Editar</a></div>
 </article>
 {% endfor %}
 </div>
