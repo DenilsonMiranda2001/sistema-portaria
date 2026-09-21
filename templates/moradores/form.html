@@ -2,7 +2,7 @@
 {% block title %}{{ titulo }} · Portaria Control{% endblock %}
 {% block content %}
 <section class="pc-module">
-<header class="pc-pagehead"><div><span class="pc-eyebrow">CADASTRO RESIDENCIAL</span><h2>{{ titulo }}</h2><p>Dados pessoais e vínculo do morador com a unidade.</p></div><div class="pc-page-actions"><a class="pc-btn pc-btn-secondary" href="{{ url_for('moradores.listar') }}">Cancelar</a></div></header>
+<header class="pc-pagehead pc-form-pagehead"><div><span class="pc-eyebrow">CADASTRO RESIDENCIAL</span><h2>{{ titulo }}</h2><p>Dados pessoais e vínculo do morador com a unidade.</p></div><div class="pc-page-actions"><a class="pc-btn pc-btn-secondary" href="{{ url_for('moradores.listar') }}">Cancelar</a></div></header>
 <form method="POST" autocomplete="off" class="pc-form-shell">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <main class="pc-form-main">
