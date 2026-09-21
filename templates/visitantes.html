@@ -1,206 +1,43 @@
 {% extends 'base.html' %}
-{% block title %}Visitantes Cadastrados{% endblock %}
-
+{% block title %}Visitantes cadastrados · Portaria Control{% endblock %}
 {% block content %}
-
-<div class="card-padrao">
-    <div class="header-secao header-secao-flex">
-        <div>
-        <h2>Visitantes cadastrados</h2>
-        <p class="texto-ajuda">
-            Consulte cadastros, histórico de visitas e dados de identificação.
-        </p>
-        </div>
-        <a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">Novo visitante</a>
+<section class="pc-module">
+  <header class="pc-pagehead">
+    <div><span class="pc-eyebrow">BASE DE ACESSO</span><h2>Visitantes cadastrados</h2><p>Consulte identificação, histórico e dados utilizados na portaria.</p></div>
+    <div class="pc-page-actions"><a class="pc-btn pc-btn-primary" href="{{ url_for('visitantes.cadastro') }}">＋ Novo visitante</a></div>
+  </header>
+  <section class="pc-panel pc-list-panel">
+    <div class="pc-list-toolbar">
+      <div class="pc-list-title"><strong>{% if total_registros is defined %}{{ total_registros }}{% else %}{{ visitantes|length }}{% endif %} cadastros</strong></div>
+      <div class="pc-search pc-search-compact"><span class="pc-search-icon"></span><input type="text" id="busca" class="busca-input" placeholder="Buscar nome, CPF ou placa..." autocomplete="off"></div>
     </div>
-
-    <div class="busca-box">
-        <input
-            type="text"
-            id="busca"
-            class="input-padrao busca-input"
-            placeholder="Digite nome, CPF ou placa..."
-            autocomplete="off"
-        >
-    </div>
-
     <div class="mensagem-box"></div>
-
-    <div id="lista" class="lista-resultados">
-        {% if visitantes %}
-            {% for v in visitantes %}
-                <div
-                    class="visitor-card {% if loop.index0 == 0 %}selecionado{% endif %}"
-                    data-index="{{ loop.index0 }}"
-                    onclick="selecionarVisitante({ loopindex0 })"
-                >
-                    <div class="visitor-photo-wrap">
-                        {% if v.foto %}
-                            <img
-                                src="{{ url_for('static', filename='fotos/' + v.foto) }}"
-                                class="visitor-photo"
-                                alt="Foto de {{ v.nome }}"
-                            >
-                        {% else %}
-                            <div class="visitor-photo placeholder">Sem foto</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="visitor-main">
-                        <div class="card-visitante">
-                            <div class="info-grid">
-                                <div class="info-item destaque">
-                                    <span class="label-ui">Nome</span>
-                                    <span class="valor-ui nome">{{ v.nome|upper }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">CPF</span>
-                                    <span class="valor-ui">{{ v.cpf }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">Observação</span>
-                                    <span class="valor-ui">{{ v.observacao if v.observacao else '-' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="extras-grid visitantes-grid-ajustada">
-                            <div class="extra-card">
-                                <span class="label-ui">Tipo de visita</span>
-                                <div class="badge-ui badge-tipo">
-                                    {{ (v.tipo or 'Sem tipo')|upper }}
-                                </div>
-                            </div>
-
-                            <div class="extra-card">
-                                <span class="label-ui">Veículo cadastrado</span>
-                                <div class="badge-ui badge-veiculo">
-                                    {% if v.marca or v.modelo or v.placa %}
-                                        {{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} - {{ v.placa }}{% endif %}
-                                    {% else %}
-                                        SEM VEÍCULO
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card-actions card-actions-visitantes">
-                            <a class="btn-secundario btn-sm" href="/historico/{{ v.id }}" onclick="event.stopPropagation()">Histórico</a>
-                            <a class="btn-principal btn-sm" href="/editar/{{ v.id }}" onclick="event.stopPropagation()">Editar</a>
-                            <form method="POST" action="/remover/{{ v.id }}" onclick="event.stopPropagation()"
-                                  onsubmit="return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')">
-                                <button class="btn-remover btn-sm" type="submit">Remover</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <div class="estado-vazio">
-                Nenhum visitante cadastrado.
-            </div>
-        {% endif %}
+    <div id="lista" class="pc-directory-list">
+      {% if visitantes %}
+      {% for v in visitantes %}
+      <article class="pc-directory-row {% if loop.index0 == 0 %}is-selected{% endif %}" data-index="{{ loop.index0 }}" onclick="selecionarVisitante({{ loop.index0 }})">
+        {% if v.foto %}<img src="{{ url_for('static', filename='fotos/' + v.foto) }}" alt="Foto de {{ v.nome }}" class="pc-access-photo">{% else %}<span class="pc-access-photo pc-access-photo-empty">{{ v.nome[:1]|upper }}</span>{% endif %}
+        <div class="pc-access-identity"><strong>{{ v.nome|upper }}</strong><small>{{ v.cpf or 'CPF não informado' }}</small></div>
+        <div class="pc-access-meta"><span>TIPO</span><strong>{{ (v.tipo or 'Não informado')|upper }}</strong></div>
+        <div class="pc-access-meta"><span>VEÍCULO</span><strong>{% if v.marca or v.modelo or v.placa %}{{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} · {{ v.placa }}{% endif %}{% else %}Sem veículo{% endif %}</strong></div>
+        <div class="pc-access-meta pc-observation"><span>OBSERVAÇÃO</span><strong>{{ v.observacao or '—' }}</strong></div>
+        <div class="pc-row-actions" onclick="event.stopPropagation()">
+          <a class="pc-icon-action" href="/historico/{{ v.id }}">Histórico</a><a class="pc-icon-action" href="/editar/{{ v.id }}">Editar</a>
+          <form method="POST" action="/remover/{{ v.id }}" onsubmit="return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')"><button class="pc-icon-action pc-danger-action" type="submit">Remover</button></form>
+        </div>
+      </article>
+      {% endfor %}
+      {% else %}<div class="pc-empty pc-empty-list"><span class="pc-empty-icon">⌕</span><div><strong>Nenhum visitante cadastrado</strong><small>Cadastre a primeira pessoa para iniciar a base.</small></div></div>{% endif %}
     </div>
-
     {% if total_paginas and total_paginas > 1 %}
-    <div id="paginacao" class="paginacao-wrapper">
-
-        <div class="paginacao-info">
-            Página <strong>{{ pagina }}</strong> de <strong>{{ total_paginas }}</strong>
-        </div>
-
-        <div class="paginacao-botoes">
-
-            {% if pagina > 1 %}
-                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=1) }}">⏮</a>
-                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=pagina-1) }}">⬅</a>
-            {% endif %}
-
-            {% if pagina > 3 %}
-                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=1) }}">1</a>
-                {% if pagina > 4 %}
-                    <span class="btn-paginacao reticencias">...</span>
-                {% endif %}
-            {% endif %}
-
-            {% for p in range(pagina - 2, pagina + 3) %}
-                {% if p >= 1 and p <= total_paginas %}
-                    {% if p == pagina %}
-                        <span class="btn-paginacao ativo">{{ p }}</span>
-                    {% else %}
-                        <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=p) }}">{{ p }}</a>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-
-            {% if pagina < total_paginas - 2 %}
-                {% if pagina < total_paginas - 3 %}
-                    <span class="btn-paginacao reticencias">...</span>
-                {% endif %}
-                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=total_paginas) }}">{{ total_paginas }}</a>
-            {% endif %}
-
-            {% if pagina < total_paginas %}
-                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=pagina+1) }}">➡</a>
-                <a class="btn-paginacao" href="{{ url_for('visitantes.visitantes', pagina=total_paginas) }}">⏭</a>
-            {% endif %}
-
-        </div>
-
-        <div class="paginacao-info">
-            Mostrando
-            <strong>{{ (pagina-1)*20 + 1 }}</strong>
-            até
-            <strong>{{ (pagina-1)*20 + visitantes|length }}</strong>
-            de
-            <strong>{{ total_registros }}</strong>
-            registros
-        </div>
-
-    </div>
+    <footer id="paginacao" class="pc-pagination">
+      <span>Página <b>{{ pagina }}</b> de <b>{{ total_paginas }}</b></span>
+      <nav>{% if pagina > 1 %}<a href="{{ url_for('visitantes.visitantes', pagina=pagina-1) }}">←</a>{% endif %}<span class="is-current">{{ pagina }}</span>{% if pagina < total_paginas %}<a href="{{ url_for('visitantes.visitantes', pagina=pagina+1) }}">→</a>{% endif %}</nav>
+      <span>{{ (pagina-1)*20 + 1 }}–{{ (pagina-1)*20 + visitantes|length }} de {{ total_registros }}</span>
+    </footer>
     {% endif %}
-</div>
-
-<style>
-.paginacao {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-top: 24px;
-    flex-wrap: wrap;
-}
-
-.btn-paginacao {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 42px;
-    padding: 8px 14px;
-    border-radius: 10px;
-    text-decoration: none;
-    background: rgba(255, 255, 255, 0.06);
-    color: #e8ecf1;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: all 0.2s ease;
-    font-weight: 600;
-}
-
-.btn-paginacao:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: translateY(-1px);
-}
-
-.btn-paginacao.ativo {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: white;
-    border-color: transparent;
-    pointer-events: none;
-    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
-}
-</style>
-
+  </section>
+</section>
 <script>
 const inputBusca = document.getElementById("busca");
 const lista = document.getElementById("lista");
@@ -234,7 +71,7 @@ function selecionarVisitante(index) {
 }
 
 function renderizarSelecionado() {
-    const cards = document.querySelectorAll("#lista .visitor-card");
+    const cards = document.querySelectorAll("#lista .pc-directory-row");
     cards.forEach((card, i) => {
         if (i === indiceSelecionado) {
             card.classList.add("selecionado");
@@ -247,13 +84,10 @@ function renderizarSelecionado() {
 function renderizarListaBusca(data) {
     visitantesAtuais = data;
     lista.innerHTML = "";
-
-    if (paginacao) {
-        paginacao.style.display = "none";
-    }
+    if (paginacao) paginacao.style.display = "none";
 
     if (!data || data.length === 0) {
-        lista.innerHTML = `<div class="estado-vazio">Nenhum resultado encontrado.</div>`;
+        lista.innerHTML = '<div class="pc-empty pc-empty-list"><span class="pc-empty-icon">⌕</span><div><strong>Nenhum visitante encontrado</strong><small>Tente outro nome, CPF ou placa.</small></div></div>';
         return;
     }
 
@@ -261,71 +95,23 @@ function renderizarListaBusca(data) {
     if (indiceSelecionado > data.length - 1) indiceSelecionado = data.length - 1;
 
     data.forEach((v, index) => {
-        const selecionado = index === indiceSelecionado;
-
         const fotoHtml = v.foto
-            ? `<img src="/static/fotos/${v.foto}" alt="Foto de ${v.nome}" class="visitor-photo">`
-            : `<div class="visitor-photo placeholder">Sem foto</div>`;
-
+            ? `<img src="/static/fotos/${v.foto}" alt="Foto de ${v.nome || ''}" class="pc-access-photo">`
+            : `<span class="pc-access-photo pc-access-photo-empty">${((v.nome || '?').slice(0,1)).toUpperCase()}</span>`;
         lista.innerHTML += `
-            <div
-                class="visitor-card ${selecionado ? "selecionado" : ""}"
-                data-index="${index}"
-                onclick="selecionarVisitante(${index})"
-            >
-                <div class="visitor-photo-wrap">
-                    ${fotoHtml}
-                </div>
-
-                <div class="visitor-main">
-                    <div class="card-visitante">
-                        <div class="info-grid">
-                            <div class="info-item destaque">
-                                <span class="label-ui">Nome</span>
-                                <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
-                            </div>
-
-                            <div class="info-item">
-                                <span class="label-ui">CPF</span>
-                                <span class="valor-ui">${v.cpf || "-"}</span>
-                            </div>
-
-                            <div class="info-item">
-                                <span class="label-ui">Observação</span>
-                                <span class="valor-ui">${v.observacao || "-"}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="extras-grid visitantes-grid-ajustada">
-                        <div class="extra-card">
-                            <span class="label-ui">Tipo de visita</span>
-                            <div class="badge-ui badge-tipo">
-                                ${((v.tipo || "Sem tipo")).toUpperCase()}
-                            </div>
-                        </div>
-
-                        <div class="extra-card">
-                            <span class="label-ui">Veículo cadastrado</span>
-                            <div class="badge-ui badge-veiculo">
-                                ${montarTextoVeiculo(v)}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-actions card-actions-visitantes">
-                        <a class="btn-secundario btn-sm" href="/historico/${v.id}" onclick="event.stopPropagation()">Histórico</a>
-                        <a class="btn-principal btn-sm" href="/editar/${v.id}" onclick="event.stopPropagation()">Editar</a>
-                        <form method="POST" action="/remover/${v.id}" onclick="event.stopPropagation()"
-                              onsubmit="return confirm('Remover ${v.nome}? Esta ação não pode ser desfeita.')">
-                            <button class="btn-remover btn-sm" type="submit">Remover</button>
-                        </form>
-                    </div>
-                </div>
+        <article class="pc-directory-row ${index === indiceSelecionado ? 'is-selected' : ''}" data-index="${index}" onclick="selecionarVisitante(${index})">
+            ${fotoHtml}
+            <div class="pc-access-identity"><strong>${(v.nome || '').toUpperCase()}</strong><small>${v.cpf || 'CPF não informado'}</small></div>
+            <div class="pc-access-meta"><span>TIPO</span><strong>${(v.tipo || 'Não informado').toUpperCase()}</strong></div>
+            <div class="pc-access-meta"><span>VEÍCULO</span><strong>${montarTextoVeiculo(v)}</strong></div>
+            <div class="pc-access-meta pc-observation"><span>OBSERVAÇÃO</span><strong>${v.observacao || '—'}</strong></div>
+            <div class="pc-row-actions" onclick="event.stopPropagation()">
+              <a class="pc-icon-action" href="/historico/${v.id}">Histórico</a>
+              <a class="pc-icon-action" href="/editar/${v.id}">Editar</a>
+              <form method="POST" action="/remover/${v.id}" onsubmit="return confirm('Remover ${v.nome}? Esta ação não pode ser desfeita.')"><button class="pc-icon-action pc-danger-action" type="submit">Remover</button></form>
             </div>
-        `;
+        </article>`;
     });
-
     renderizarSelecionado();
 }
 
@@ -393,5 +179,4 @@ if (inputBusca) {
     });
 }
 </script>
-
 {% endblock %}
