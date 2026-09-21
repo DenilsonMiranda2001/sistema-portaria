@@ -77,3 +77,76 @@ html,body{background:var(--pc-bg)}body{font-size:13px}.app-shell{background:line
 .alert{margin-bottom:7px!important;padding:7px 9px!important;border-radius:7px!important;font-size:9px!important}
 @media(max-width:1000px){.pc-operation-grid{grid-template-columns:1fr!important}}
 @media(max-width:680px){.navbar-sistema{min-height:54px!important}.container{width:calc(100% - 12px)!important;padding-top:7px!important}.pc-pagehead p{display:none}.pc-metrics{grid-template-columns:repeat(2,1fr)!important}.pc-operation-grid{grid-template-columns:1fr!important}}
+
+/* Wide operations workspace + distinctive Portaria palette */
+:root{
+  --pc-bg:#e9eeec;
+  --pc-surface:#ffffff;
+  --pc-ink:#111a1d;
+  --pc-muted:#5f6f70;
+  --pc-line:#ccd8d5;
+  --pc-soft:#f2f6f5;
+  --pc-accent:#132628;
+  --pc-accent-2:#008f72;
+  --pc-green:#008f72;
+  --pc-danger:#c73b43;
+  --pc-amber:#c98516;
+}
+.app-shell{background:linear-gradient(180deg,#dde7e4 0,#edf2f0 175px,#e8eeec 100%)!important}
+.navbar-sistema{
+  width:calc(100% - 28px)!important;
+  max-width:none!important;
+  margin:10px 14px 0!important;
+  padding-left:18px!important;
+  padding-right:18px!important;
+  background:#111c20!important;
+  border:1px solid #26383b!important;
+  box-shadow:0 8px 22px rgba(13,28,31,.20)!important
+}
+.navbar-brand-icon{background:#00a884!important}
+.navbar-acoes .btn-nav-ativo{background:#00a884!important;box-shadow:0 4px 12px rgba(0,168,132,.25)!important}
+.navbar-acoes .btn-nav-ativo:after{background:#80e0c8!important}
+.usuario-avatar{background:#d59628!important}
+.usuario-logado-box{background:#18272b!important;border-color:#304448!important}
+.btn-sair{background:#1b2c30!important;border-color:#34494d!important}
+.container{
+  width:calc(100% - 28px)!important;
+  max-width:none!important;
+  margin-left:14px!important;
+  margin-right:14px!important;
+}
+.pc-dashboard,.pc-module{width:100%!important;max-width:none!important}
+.pc-eyebrow,.pc-kicker,.pc-panel-link{color:#008f72!important}
+.pc-btn-primary{background:#008f72!important;box-shadow:0 3px 8px rgba(0,143,114,.20)!important}
+.pc-btn-primary:hover{background:#00765f!important}
+.pc-live-dot{background:#00ad7f!important}
+.pc-metrics article:before{background:#d59628!important}
+.pc-metrics article:first-child{background:#132628!important;border-color:#132628!important}
+.pc-metrics article:first-child:before{background:#00bd91!important}
+.pc-access-panel>.pc-panel-head,.pc-quick{background:#132628!important;border-color:#132628!important}
+.pc-access-panel>.pc-panel-head{border-bottom-color:#2d4547!important}
+.pc-access-panel>.pc-panel-head .pc-kicker,.pc-access-panel .pc-help,.pc-quick .pc-kicker{color:#8fc8ba!important}
+.pc-access-panel>.pc-search:focus-within,.pc-field input:focus,.pc-field select:focus{border-color:#008f72!important;box-shadow:0 0 0 3px rgba(0,143,114,.10)!important}
+.pc-count{background:#008f72!important}
+.pc-avatar{background:#dff4ee!important;color:#00765f!important}
+.pc-quick-grid a{background:#1b3436!important;border-color:#315053!important}
+.pc-quick-grid a:hover{background:#008f72!important;border-color:#008f72!important}
+.pc-quick-grid b{background:#254346!important;color:#80e0c8!important}
+.pc-directory-row.is-selected,.pc-access-row.is-selected{background:#e5f5f0!important;box-shadow:inset 3px 0 0 #008f72!important}
+.pc-icon-action:hover{border-color:#8ac6b7!important;background:#e6f5f1!important;color:#00765f!important}
+.pc-form-heading>span{background:#132628!important}
+.pc-form-footer{border-top-color:#d59628!important}
+.pc-subnav .enc-subnav{background:#132628!important;border-color:#132628!important}
+.pc-subnav .enc-subnav a.ativo{background:#008f72!important}
+.pc-package-metrics a:first-child{background:#132628!important}
+.pc-profile-avatar{background:#132628!important}
+.pc-lot-head>div>span{color:#008f72!important}
+.pc-search-results .pc-btn-primary{background:#008f72!important}
+@media(min-width:1600px){
+  .pc-operation-grid{grid-template-columns:minmax(0,2.25fr) minmax(330px,.52fr)!important}
+  .pc-metrics{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media(max-width:680px){
+  .navbar-sistema{width:calc(100% - 12px)!important;margin:6px 6px 0!important;padding-left:8px!important;padding-right:8px!important}
+  .container{width:calc(100% - 12px)!important;margin-left:6px!important;margin-right:6px!important}
+}
