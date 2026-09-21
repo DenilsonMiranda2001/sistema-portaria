@@ -3,7 +3,7 @@
 {% block title %}Painel de Encomendas{% endblock %}
 {% block content %}
 {{ subnav('painel') }}
-<div class="compact-list-toolbar"><strong>Encomendas</strong><a class="btn-principal" href="{{ url_for('encomendas.novo_lote') }}">Receber encomendas</a></div>
+<header class="resident-page-head module-premium-head"><div><span class="resident-kicker">CENTRAL DE RECEBIMENTO</span><h1>Encomendas</h1><p>Recebimento, custódia e retirada com rastreabilidade operacional.</p></div><a class="btn-principal" href="{{ url_for('encomendas.novo_lote') }}">+ Receber encomendas</a></header>
 
 <section class="enc-resumo">
     <a href="{{ url_for('encomendas.painel', filtro='hoje') }}"><span>Recebidas hoje</span><strong>{{ resumo.recebidas_hoje }}</strong></a>
