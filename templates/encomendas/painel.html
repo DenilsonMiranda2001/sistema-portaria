@@ -12,10 +12,10 @@
 
 <section class="pc-package-metrics">
     <a href="{{ url_for('encomendas.painel', filtro='hoje') }}"><span>Recebidas hoje</span><strong>{{ resumo.recebidas_hoje }}</strong></a>
-    <a href="{{ url_for('encomendas.painel', filtro='pendentes') }}"><span>Aguardando resposta</span><strong>{{ resumo.aguardando }}</strong></a>
+    <a href="{{ url_for('encomendas.painel', filtro='pendentes') }}"><span>Aguardando retirada</span><strong>{{ resumo.aguardando }}</strong></a>
     <a href="{{ url_for('encomendas.retidas') }}"><span>Retidas na portaria</span><strong>{{ resumo.retidas }}</strong></a>
     <a href="{{ url_for('encomendas.painel', filtro='retiradas') }}"><span>Retiradas hoje</span><strong>{{ resumo.retiradas_hoje }}</strong></a>
-    <a href="{{ url_for('encomendas.painel', filtro='historico') }}"><span>Entregues na porta hoje</span><strong>{{ resumo.entregues_porta }}</strong></a>
+    <a href="{{ url_for('encomendas.painel', filtro='historico') }}"><span>Finalizadas hoje</span><strong>{{ resumo.finalizadas_hoje }}</strong></a>
 </section>
 
 <div class="pc-section-title"><div><span class="pc-kicker">FILA OPERACIONAL</span><strong>Encomendas em operação</strong></div><small>Localize por unidade, morador, código ou rastreio.</small></div>
