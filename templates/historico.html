@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}Histórico do Visitante{% endblock %}
 {% block content %}
-<section class="history-premium">
-<header class="resident-page-head"><div><span class="resident-kicker">HISTÓRICO DE ACESSO</span><h1>{{ visitante.nome|upper }}</h1><p>Movimentações registradas e rastreabilidade do visitante.</p></div><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">← Visitantes</a></header>
+<section class="history-premium"><div class="module-commandbar"><strong>Histórico</strong><span>{{ visitante.nome }}</span><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">Voltar</a></div>
+
 <section class="history-person">
 <div class="history-avatar">{% if visitante.foto %}<img src="{{ url_for('visitantes.foto', id=visitante.id) }}" alt="Foto de {{ visitante.nome }}">{% else %}<span>{{ visitante.nome[:1]|upper }}</span>{% endif %}</div>
 <div><small>VISITANTE</small><strong>{{ visitante.nome|upper }}</strong><span>{{ visitante.cpf }}</span></div>
