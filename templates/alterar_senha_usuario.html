@@ -1,43 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Alterar Senha</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="page-wrap-sm">
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for cat, msg in messages %}
-                    <div class="msg-padrao">{{ msg }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="card-padrao">
-            <h2>Alterar senha de {{ user['nome'] }}</h2>
-
-            <form method="POST" class="form-coluna">
-                <div class="campo">
-                    <label>Nova senha</label>
-                    <input class="input-padrao" type="password" name="nova_senha" required>
-                </div>
-
-                <div class="campo">
-                    <label>Confirmar senha</label>
-                    <input class="input-padrao" type="password" name="confirmar_senha" required>
-                </div>
-
-                <button type="submit" class="btn-principal">Salvar nova senha</button>
-            </form>
-
-            <div class="acoes-topo" style="margin-top:16px;">
-                <a class="btn-topo btn-voltar" href="{{ url_for('admin.usuarios') }}">Voltar</a>
-                <a class="btn-topo btn-voltar" href="{{ url_for('main.index') }}">Início</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Alterar Senha{% endblock %}
+{% block content %}
+<section class="password-page"><header class="pw-head"><div><span>SEGURANÇA DA CONTA</span><h2>Alterar senha</h2><p>Defina uma nova credencial para {{ user['nome'] }}.</p></div><a class="btn-secundario" href="{{ url_for('admin.usuarios') }}">Cancelar</a></header>
+<section class="card pw-card"><div class="pw-identity"><span>{{ user['nome'][:1]|upper }}</span><div><small>USUÁRIO</small><strong>{{ user['nome'] }}</strong><em>@{{ user['usuario'] }}</em></div></div><div class="pw-note"><strong>Nova credencial</strong><span>Preencha e confirme a nova senha antes de salvar.</span></div><form method="POST" class="pw-form"><label><span>Nova senha</span><input class="input-padrao" type="password" name="nova_senha" required autocomplete="new-password"></label><label><span>Confirmar senha</span><input class="input-padrao" type="password" name="confirmar_senha" required autocomplete="new-password"></label><div class="pw-actions"><a class="btn-secundario" href="{{ url_for('admin.usuarios') }}">Voltar</a><button type="submit" class="btn-principal">Salvar nova senha</button></div></form></section></section>
+<style>
+.password-page{max-width:780px;margin:0 auto;display:grid;gap:14px}.pw-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px}.pw-head>div>span{color:#2868f2;font-size:9px;font-weight:900;letter-spacing:.15em}.pw-head h2{margin:5px 0 3px;color:#0b203a;font-size:27px;letter-spacing:-.04em}.pw-head p{margin:0;color:#7d8da1;font-size:12px}.pw-card{padding:20px;border-radius:18px;box-shadow:0 16px 38px rgba(15,38,66,.07)}.pw-identity{display:flex;align-items:center;gap:11px;padding-bottom:15px;border-bottom:1px solid #e5ebf2}.pw-identity>span{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:linear-gradient(145deg,#102c4e,#174b7d);color:#fff;font-weight:900}.pw-identity div{display:grid}.pw-identity small,.pw-form label>span{color:#8493a6;font-size:8px;font-weight:900;letter-spacing:.09em}.pw-identity strong{color:#132942;font-size:12px}.pw-identity em{color:#8291a3;font-size:9px;font-style:normal}.pw-note{display:grid;gap:2px;margin:15px 0 10px}.pw-note strong{color:#132942;font-size:13px}.pw-note span{color:#8291a3;font-size:10px}.pw-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pw-form label{display:grid;gap:4px}.pw-form input{height:42px!important;background:#f8fafc}.pw-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px;padding-top:7px}@media(max-width:620px){.pw-head{align-items:stretch;flex-direction:column}.pw-form{grid-template-columns:1fr}}
+</style>
+{% endblock %}
