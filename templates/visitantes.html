@@ -3,8 +3,16 @@
 
 {% block content %}
 
-
-<section class="visitor-command-center"><div class="module-commandbar visitor-command-head"><div class="visitor-title-lockup"><span class="visitor-title-icon">◎</span><div><strong>Visitantes cadastrados</strong><span>{{ total_registros }} registros na base de acesso</span></div></div><a class="btn-principal visitor-new-action" href="{{ url_for('visitantes.cadastro') }}"><span>+</span>Novo visitante</a></div><div class="card-padrao visitor-directory">
+<div class="card-padrao">
+    <div class="header-secao header-secao-flex">
+        <div>
+        <h2>Visitantes cadastrados</h2>
+        <p class="texto-ajuda">
+            Consulte cadastros, histórico de visitas e dados de identificação.
+        </p>
+        </div>
+        <a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">Novo visitante</a>
+    </div>
 
     <div class="busca-box">
         <input
@@ -16,7 +24,7 @@
         >
     </div>
 
-    
+    <div class="mensagem-box"></div>
 
     <div id="lista" class="lista-resultados">
         {% if visitantes %}
@@ -24,12 +32,12 @@
                 <div
                     class="visitor-card {% if loop.index0 == 0 %}selecionado{% endif %}"
                     data-index="{{ loop.index0 }}"
-                    onclick="selecionarVisitante({{ loop.index0 }})"
+                    onclick="selecionarVisitante({ loopindex0 })"
                 >
                     <div class="visitor-photo-wrap">
                         {% if v.foto %}
                             <img
-                                src="{{ url_for('visitantes.foto', id=v.id) }}"
+                                src="{{ url_for('static', filename='fotos/' + v.foto) }}"
                                 class="visitor-photo"
                                 alt="Foto de {{ v.nome }}"
                             >
@@ -79,10 +87,10 @@
                         </div>
 
                         <div class="card-actions card-actions-visitantes">
-                            <a class="btn-principal btn-sm" href="/historico/{{ v.id }}" onclick="event.stopPropagation()">Histórico</a>
+                            <a class="btn-secundario btn-sm" href="/historico/{{ v.id }}" onclick="event.stopPropagation()">Histórico</a>
                             <a class="btn-principal btn-sm" href="/editar/{{ v.id }}" onclick="event.stopPropagation()">Editar</a>
-                            <form method="POST" action="{{ url_for('visitantes.remover', id=v.id) }}" onclick="event.stopPropagation()" onsubmit="return confirm('Remover este visitante? O histórico de acessos será preservado.')">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <form method="POST" action="/remover/{{ v.id }}" onclick="event.stopPropagation()"
+                                  onsubmit="return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')">
                                 <button class="btn-remover btn-sm" type="submit">Remover</button>
                             </form>
                         </div>
@@ -153,7 +161,7 @@
 
     </div>
     {% endif %}
-</div></section>
+</div>
 
 <style>
 .paginacao {
@@ -237,25 +245,88 @@ function renderizarSelecionado() {
 }
 
 function renderizarListaBusca(data) {
-    visitantesAtuais=Array.isArray(data)?data:[];lista.replaceChildren();if(paginacao)paginacao.style.display="none";
-    if(!visitantesAtuais.length){const empty=document.createElement("div");empty.className="estado-vazio";empty.textContent="Nenhum resultado encontrado.";lista.appendChild(empty);return}
-    indiceSelecionado=Math.max(0,Math.min(indiceSelecionado,visitantesAtuais.length-1));
-    visitantesAtuais.forEach((v,index)=>{
-        const card=document.createElement("div");card.className="visitor-card"+(index===indiceSelecionado?" selecionado":"");card.dataset.index=index;card.addEventListener("click",()=>selecionarVisitante(index));
-        const photoWrap=document.createElement("div");photoWrap.className="visitor-photo-wrap";
-        if(v.foto_url){const img=document.createElement("img");img.src=v.foto_url;img.alt="Foto do visitante";img.className="visitor-photo";photoWrap.appendChild(img)}
-        else{const ph=document.createElement("div");ph.className="visitor-photo placeholder";ph.textContent="Sem foto";photoWrap.appendChild(ph)}
-        const main=document.createElement("div");main.className="visitor-main";const info=document.createElement("div");info.className="card-visitante";const grid=document.createElement("div");grid.className="info-grid";
-        [["Nome",(v.nome||"").toUpperCase(),"destaque"],["CPF",v.cpf||"—",""],["Observação",v.observacao||"—",""]].forEach(([label,value,extra])=>{const item=document.createElement("div");item.className="info-item "+extra;const l=document.createElement("span");l.className="label-ui";l.textContent=label;const val=document.createElement("span");val.className="valor-ui";val.textContent=value;item.append(l,val);grid.appendChild(item)});info.appendChild(grid);
-        const extras=document.createElement("div");extras.className="extras-grid visitantes-grid-ajustada";
-        [["Tipo de visita",(v.tipo||"SEM TIPO").toUpperCase()],["Veículo cadastrado",montarTextoVeiculo(v)]].forEach(([label,value])=>{const x=document.createElement("div");x.className="extra-card";const l=document.createElement("span");l.className="label-ui";l.textContent=label;const val=document.createElement("div");val.className="badge-ui";val.textContent=value;x.append(l,val);extras.appendChild(x)});
-        const actions=document.createElement("div");actions.className="card-actions card-actions-visitantes";
-        const history=document.createElement("a");history.className="btn-secundario btn-sm";history.href={{ url_for('visitantes.historico', id=0)|tojson }}.replace("/0","/"+encodeURIComponent(v.id));history.textContent="Histórico";
-        const edit=document.createElement("a");edit.className="btn-principal btn-sm";edit.href={{ url_for('visitantes.editar', id=0)|tojson }}.replace("/0","/"+encodeURIComponent(v.id));edit.textContent="Editar";
-        const form=document.createElement("form");form.method="POST";form.action={{ url_for('visitantes.remover', id=0)|tojson }}.replace("/0","/"+encodeURIComponent(v.id));form.addEventListener("submit",ev=>{if(!confirm("Remover este visitante? O histórico de acessos será preservado."))ev.preventDefault()});
-        const token=document.createElement("input");token.type="hidden";token.name="csrf_token";token.value=document.querySelector('meta[name="csrf-token"]').content;const remove=document.createElement("button");remove.className="btn-remover btn-sm";remove.type="submit";remove.textContent="Remover";form.append(token,remove);actions.append(history,edit,form);
-        main.append(info,extras,actions);card.append(photoWrap,main);lista.appendChild(card);
-    });renderizarSelecionado();
+    visitantesAtuais = data;
+    lista.innerHTML = "";
+
+    if (paginacao) {
+        paginacao.style.display = "none";
+    }
+
+    if (!data || data.length === 0) {
+        lista.innerHTML = `<div class="estado-vazio">Nenhum resultado encontrado.</div>`;
+        return;
+    }
+
+    if (indiceSelecionado < 0) indiceSelecionado = 0;
+    if (indiceSelecionado > data.length - 1) indiceSelecionado = data.length - 1;
+
+    data.forEach((v, index) => {
+        const selecionado = index === indiceSelecionado;
+
+        const fotoHtml = v.foto
+            ? `<img src="/static/fotos/${v.foto}" alt="Foto de ${v.nome}" class="visitor-photo">`
+            : `<div class="visitor-photo placeholder">Sem foto</div>`;
+
+        lista.innerHTML += `
+            <div
+                class="visitor-card ${selecionado ? "selecionado" : ""}"
+                data-index="${index}"
+                onclick="selecionarVisitante(${index})"
+            >
+                <div class="visitor-photo-wrap">
+                    ${fotoHtml}
+                </div>
+
+                <div class="visitor-main">
+                    <div class="card-visitante">
+                        <div class="info-grid">
+                            <div class="info-item destaque">
+                                <span class="label-ui">Nome</span>
+                                <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="label-ui">CPF</span>
+                                <span class="valor-ui">${v.cpf || "-"}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="label-ui">Observação</span>
+                                <span class="valor-ui">${v.observacao || "-"}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="extras-grid visitantes-grid-ajustada">
+                        <div class="extra-card">
+                            <span class="label-ui">Tipo de visita</span>
+                            <div class="badge-ui badge-tipo">
+                                ${((v.tipo || "Sem tipo")).toUpperCase()}
+                            </div>
+                        </div>
+
+                        <div class="extra-card">
+                            <span class="label-ui">Veículo cadastrado</span>
+                            <div class="badge-ui badge-veiculo">
+                                ${montarTextoVeiculo(v)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-actions card-actions-visitantes">
+                        <a class="btn-secundario btn-sm" href="/historico/${v.id}" onclick="event.stopPropagation()">Histórico</a>
+                        <a class="btn-principal btn-sm" href="/editar/${v.id}" onclick="event.stopPropagation()">Editar</a>
+                        <form method="POST" action="/remover/${v.id}" onclick="event.stopPropagation()"
+                              onsubmit="return confirm('Remover ${v.nome}? Esta ação não pode ser desfeita.')">
+                            <button class="btn-remover btn-sm" type="submit">Remover</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    renderizarSelecionado();
 }
 
 function restaurarListagemNormal() {
@@ -276,7 +347,7 @@ if (inputBusca) {
         }
 
         if (termo.length < 2) {
-            lista.replaceChildren(); const aviso=document.createElement("div"); aviso.className="estado-vazio"; aviso.textContent="Digite pelo menos 2 caracteres para buscar."; lista.appendChild(aviso);
+            lista.innerHTML = `<div class="estado-vazio">Digite pelo menos 2 caracteres para buscar.</div>`;
             if (paginacao) {
                 paginacao.style.display = "none";
             }
@@ -297,7 +368,7 @@ if (inputBusca) {
                     renderizarListaBusca(data);
                 })
                 .catch((erro) => {
-                    lista.replaceChildren(); const aviso=document.createElement("div"); aviso.className="estado-erro"; aviso.textContent=erro.message; lista.appendChild(aviso);
+                    lista.innerHTML = `<div class="estado-erro">${erro.message}</div>`;
                     console.error("Erro na busca:", erro);
                 });
         }, 300);
