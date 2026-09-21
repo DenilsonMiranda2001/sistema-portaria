@@ -4,7 +4,7 @@
 {% block content %}
 
 
-<div class="module-commandbar"><strong>Visitantes</strong><span>{{ total_registros }} cadastros</span><a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">+ Novo</a></div><div class="card-padrao visitor-directory">
+<section class="visitor-command-center"><div class="module-commandbar visitor-command-head"><div class="visitor-title-lockup"><span class="visitor-title-icon">◎</span><div><strong>Visitantes cadastrados</strong><span>{{ total_registros }} registros na base de acesso</span></div></div><a class="btn-principal visitor-new-action" href="{{ url_for('visitantes.cadastro') }}"><span>+</span>Novo visitante</a></div><div class="card-padrao visitor-directory">
 
     <div class="busca-box">
         <input
@@ -153,7 +153,7 @@
 
     </div>
     {% endif %}
-</div>
+</div></section>
 
 <style>
 .paginacao {
