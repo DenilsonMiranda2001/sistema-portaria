@@ -3,23 +3,63 @@
 
 {% block content %}
 
-<div class="card-padrao">
-    <div class="header-secao header-secao-flex">
+<style>
+.active-access-page{--aa-navy:#071b35;--aa-blue:#2563eb;--aa-green:#10b981;--aa-line:#dbe5f1;--aa-muted:#6f8198;--aa-soft:#f4f8fc;margin:-4px 0 0}
+.active-access-shell{display:grid;gap:14px}
+.active-access-topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:4px 2px 2px}
+.active-access-topbar h2{display:flex;align-items:center;gap:12px;margin:5px 0 2px;color:var(--aa-navy);font-size:30px;line-height:1;font-weight:900;letter-spacing:-.04em}
+.active-access-topbar .texto-ajuda{margin:7px 0 0;color:var(--aa-muted);font-size:13px;font-weight:600}
+.active-live-kicker{display:flex;align-items:center;gap:8px;color:#62758e;font-size:10px;font-weight:900;letter-spacing:.16em}
+.active-live-kicker span{width:8px;height:8px;border-radius:50%;background:var(--aa-green);box-shadow:0 0 0 5px rgba(16,185,129,.11)}
+.active-count{display:grid;place-items:center;min-width:32px;height:32px;padding:0 9px;border-radius:10px;background:#eaf1f8;color:#274260;font-size:15px;letter-spacing:0}
+.active-top-actions{display:flex;gap:9px}
+.active-top-actions .btn-principal,.active-top-actions .btn-secundario{min-height:44px;padding:0 17px;border-radius:12px;font-weight:850}
+.active-searchbar{display:grid;grid-template-columns:42px 1fr auto;align-items:center;min-height:58px;padding:6px 8px;border:1px solid var(--aa-line);border-radius:16px;background:#fff;box-shadow:0 12px 32px rgba(15,40,70,.06)}
+.active-searchbar .input-padrao{height:44px;border:0!important;box-shadow:none!important;background:transparent!important;font-size:14px;font-weight:650}
+.active-search-icon{display:grid;place-items:center;color:#617894;font-size:24px}
+.active-access-page .lista-resultados{grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:14px}
+.active-access-page .visitor-card{grid-template-columns:58px 1fr;gap:12px;padding:14px;border:1px solid #d6e1ee;border-radius:18px;background:linear-gradient(145deg,#fff 0%,#fbfdff 70%);box-shadow:0 14px 36px rgba(16,38,66,.07);cursor:default}
+.active-access-page .visitor-card::before{inset:14px auto 14px 0;width:4px;background:linear-gradient(180deg,var(--aa-blue),#60a5fa);opacity:1}
+.active-access-page .visitor-card.selecionado{border-color:#8bb6ff;box-shadow:0 16px 38px rgba(37,99,235,.11),0 0 0 1px rgba(37,99,235,.08)}
+.active-access-page .visitor-photo,.active-access-page .visitor-photo.placeholder{width:54px;height:54px;border-radius:14px;background:#edf3f9;border-color:#dfe8f2;font-size:10px;font-weight:800}
+.active-access-page .visitor-main{gap:9px}
+.active-access-page .card-visitante{padding:0;border:0;background:transparent}
+.active-access-page .info-grid{grid-template-columns:1.25fr .8fr 1.25fr 1fr;gap:8px}
+.active-access-page .info-item{min-height:62px;padding:10px 11px;border-color:#e2eaf3;border-radius:12px;background:#f7f9fc}
+.active-access-page .info-item.destaque{background:linear-gradient(135deg,#eef5ff,#f8fbff);border-color:#cfe0fb}
+.active-access-page .label-ui{color:#72839a;font-size:9px;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
+.active-access-page .valor-ui{margin-top:5px;color:#12233b;font-size:12px;font-weight:800}
+.active-access-page .valor-ui.nome{font-size:15px;font-weight:900;letter-spacing:-.015em}
+.active-access-page .extras-grid{grid-template-columns:.75fr 1.45fr 1fr;gap:8px}
+.active-access-page .extra-card{min-height:50px;padding:9px 11px;border-color:#e2eaf3;border-radius:12px;background:#f8fafc}
+.active-access-page .badge-ui{margin-top:5px;min-height:22px;padding:4px 8px;font-size:9px}
+.active-access-page .card-actions{padding-top:1px}
+.active-access-page .card-actions form{width:100%}
+.active-access-page .card-actions .btn-principal{width:100%;min-height:40px;justify-content:space-between;border-radius:11px;background:linear-gradient(135deg,#09213f,#0b2e56);box-shadow:0 8px 18px rgba(7,27,53,.15);font-size:12px}
+.active-access-page .card-actions .btn-principal::after{content:"→";margin-left:auto}
+.active-access-page .estado-vazio{grid-column:1/-1;min-height:260px;border-radius:18px;background:linear-gradient(145deg,#fff,#f8fbff)}
+@media(max-width:980px){.active-access-topbar{align-items:stretch;flex-direction:column}.active-top-actions{align-self:flex-start}.active-access-page .lista-resultados{grid-template-columns:1fr}.active-access-page .info-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.active-top-actions{width:100%}.active-top-actions>*{flex:1}.active-access-page .visitor-card{grid-template-columns:1fr}.active-access-page .visitor-photo-wrap{align-items:flex-start}.active-access-page .info-grid,.active-access-page .extras-grid{grid-template-columns:1fr}.active-access-topbar h2{font-size:26px}}
+</style>
+
+
+<section class="active-access-page"><div class="active-access-shell">
+    <div class="active-access-topbar">
         <div>
-        <h2>Visitantes ativos</h2>
+        <div class="active-live-kicker"><span></span> MONITORAMENTO AO VIVO</div><h2>Acessos ativos <span class="active-count">{{ visitantes|length }}</span></h2>
         <p class="texto-ajuda">
-            Identifique rapidamente quem ainda está dentro do condomínio e registre saídas.
+            Pessoas com entrada registrada e saída ainda não concluída.
         </p>
         </div>
-        <a class="btn-secundario" href="/">Voltar à central</a>
+        <div class="active-top-actions"><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">Consultar cadastros</a><a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">Registrar entrada</a></div>
     </div>
 
-    <div class="busca-box">
+    <div class="active-searchbar"><span class="active-search-icon">⌕</span>
         <input
             type="text"
             id="buscaAtivo"
             class="input-padrao busca-input"
-            placeholder="Digite nome, CPF ou placa para registrar a saída..."
+            placeholder="Buscar por nome, CPF ou placa..."
             autocomplete="off"
             autofocus
         >
@@ -367,4 +407,5 @@ inputAtivo.addEventListener("keydown", function(event) {
     }
 });
 </script>
+</div></section>
 {% endblock %}
