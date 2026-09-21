@@ -18,8 +18,8 @@
     <nav class="enterprise-nav premium-nav" aria-label="Navegação principal">
       <a class="{{ 'is-active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}"><span class="nav-glyph">⌂</span><span>Início</span></a>
       <a class="{{ 'is-active' if request.endpoint == 'visitantes.cadastro' else '' }}" href="{{ url_for('visitantes.cadastro') }}"><span class="nav-glyph">＋</span><span>Novo acesso</span></a>
-      <a class="{{ 'is-active' if request.endpoint == 'visitantes.visitantes' else '' }}" href="{{ url_for('visitantes.visitantes') }}"><span class="nav-glyph">◎</span><span>Visitantes</span></a>
-      <a class="{{ 'is-active' if request.endpoint == 'visitantes.ativos' else '' }}" href="{{ url_for('visitantes.ativos') }}"><span class="nav-glyph nav-live">●</span><span>Presentes</span></a>
+      <a class="{{ 'is-active' if request.endpoint == 'visitantes.visitantes' else '' }}" href="{{ url_for('visitantes.visitantes') }}"><span class="nav-glyph">◎</span><span>Cadastros</span></a>
+      <a class="{{ 'is-active' if request.endpoint == 'visitantes.ativos' else '' }}" href="{{ url_for('visitantes.ativos') }}"><span class="nav-glyph nav-live">●</span><span>Acessos ativos</span></a>
       <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('moradores') else '' }}" href="{{ url_for('moradores.listar') }}"><span class="nav-glyph">◇</span><span>Moradores</span></a>
       <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('encomendas') else '' }}" href="{{ url_for('encomendas.painel') }}"><span class="nav-glyph">□</span><span>Encomendas</span></a>
       {% if session.get("usuario_tipo") == "admin" %}<a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('admin') else '' }}" href="{{ url_for('admin.usuarios') }}"><span class="nav-glyph">⚙</span><span>Gestão</span></a>{% endif %}
