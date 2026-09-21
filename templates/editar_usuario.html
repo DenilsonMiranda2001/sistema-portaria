@@ -1,52 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Editar Usuário</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="page-wrap-sm">
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for cat, msg in messages %}
-                    <div class="msg-padrao">{{ msg }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="card-padrao">
-            <h2>Editar Usuário</h2>
-
-            <form method="POST" class="form-coluna">
-                <div class="campo">
-                    <label>Nome</label>
-                    <input class="input-padrao" type="text" name="nome" value="{{ user['nome'] }}" required>
-                </div>
-
-                <div class="campo">
-                    <label>Usuário</label>
-                    <input class="input-padrao" type="text" name="usuario" value="{{ user['usuario'] }}" required>
-                </div>
-
-                <div class="campo">
-                    <label>Tipo</label>
-                    <select class="select-padrao" name="tipo">
-                        <option value="funcionario" {% if user['tipo'] == 'funcionario' %}selected{% endif %}>Funcionário</option>
-                        <option value="admin" {% if user['tipo'] == 'admin' %}selected{% endif %}>Admin</option>
-                        
-                    </select>
-                </div>
-
-                <button type="submit" class="btn-principal">Salvar alterações</button>
-            </form>
-
-            <div class="acoes-topo" style="margin-top:16px;">
-                <a class="btn-topo btn-voltar" href="{{ url_for('admin.usuarios') }}">Voltar</a>
-                <a class="btn-topo btn-voltar" href="{{ url_for('main.index') }}">Início</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Editar Usuário{% endblock %}
+{% block content %}
+<section class="account-form-page"><header class="af-head"><div><span>ADMINISTRAÇÃO E ACESSO</span><h2>Editar usuário</h2><p>Atualize identidade e perfil de acesso sem alterar a senha.</p></div><a class="btn-secundario" href="{{ url_for('admin.usuarios') }}">Cancelar</a></header>
+<section class="card af-card"><div class="af-user"><span>{{ user['nome'][:1]|upper }}</span><div><small>CONTA</small><strong>{{ user['nome'] }}</strong><em>@{{ user['usuario'] }}</em></div></div><form method="POST" class="af-form"><label><span>Nome</span><input class="input-padrao" type="text" name="nome" value="{{ user['nome'] }}" required></label><label><span>Usuário</span><input class="input-padrao" type="text" name="usuario" value="{{ user['usuario'] }}" required></label><label><span>Perfil de acesso</span><select class="select-padrao" name="tipo"><option value="funcionario" {% if user['tipo'] == 'funcionario' %}selected{% endif %}>Funcionário</option><option value="admin" {% if user['tipo'] == 'admin' %}selected{% endif %}>Admin</option></select></label><div class="af-actions"><a class="btn-secundario" href="{{ url_for('admin.usuarios') }}">Voltar</a><button type="submit" class="btn-principal">Salvar alterações</button></div></form></section></section>
+<style>
+.account-form-page{max-width:920px;margin:0 auto;display:grid;gap:14px}.af-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px}.af-head>div>span{color:#2868f2;font-size:9px;font-weight:900;letter-spacing:.15em}.af-head h2{margin:5px 0 3px;color:#0b203a;font-size:27px;letter-spacing:-.04em}.af-head p{margin:0;color:#7d8da1;font-size:12px}.af-card{display:grid;grid-template-columns:220px 1fr;gap:20px;padding:20px;border-radius:18px;box-shadow:0 16px 38px rgba(15,38,66,.07)}.af-user{padding:16px;border-right:1px solid #e5ebf2;display:flex;align-items:flex-start;gap:11px}.af-user>span{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:linear-gradient(145deg,#102c4e,#174b7d);color:#fff;font-weight:900}.af-user div{display:grid}.af-user small,.af-form label>span{color:#8493a6;font-size:8px;font-weight:900;letter-spacing:.09em}.af-user strong{color:#132942;font-size:12px}.af-user em{color:#8291a3;font-size:9px;font-style:normal}.af-form{display:grid;grid-template-columns:1.4fr 1fr .8fr;gap:10px}.af-form label{display:grid;gap:4px}.af-form input,.af-form select{height:42px!important;background:#f8fafc}.af-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px;padding-top:7px}@media(max-width:700px){.af-head{align-items:stretch;flex-direction:column}.af-card{grid-template-columns:1fr}.af-user{border-right:0;border-bottom:1px solid #e5ebf2}.af-form{grid-template-columns:1fr}}
+</style>
+{% endblock %}
