@@ -1,172 +1,52 @@
 {% extends 'base.html' %}
-{% block title %}Visitantes Ativos{% endblock %}
-
+{% block title %}Acessos ativos · Portaria Control{% endblock %}
 {% block content %}
-
-<style>
-.active-access-page{--aa-navy:#071b35;--aa-blue:#2563eb;--aa-green:#10b981;--aa-line:#dbe5f1;--aa-muted:#6f8198;--aa-soft:#f4f8fc;margin:-4px 0 0}
-.active-access-shell{display:grid;gap:14px}
-.active-access-topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:4px 2px 2px}
-.active-access-topbar h2{display:flex;align-items:center;gap:12px;margin:5px 0 2px;color:var(--aa-navy);font-size:30px;line-height:1;font-weight:900;letter-spacing:-.04em}
-.active-access-topbar .texto-ajuda{margin:7px 0 0;color:var(--aa-muted);font-size:13px;font-weight:600}
-.active-live-kicker{display:flex;align-items:center;gap:8px;color:#62758e;font-size:10px;font-weight:900;letter-spacing:.16em}
-.active-live-kicker span{width:8px;height:8px;border-radius:50%;background:var(--aa-green);box-shadow:0 0 0 5px rgba(16,185,129,.11)}
-.active-count{display:grid;place-items:center;min-width:32px;height:32px;padding:0 9px;border-radius:10px;background:#eaf1f8;color:#274260;font-size:15px;letter-spacing:0}
-.active-top-actions{display:flex;gap:9px}
-.active-top-actions .btn-principal,.active-top-actions .btn-secundario{min-height:44px;padding:0 17px;border-radius:12px;font-weight:850}
-.active-searchbar{display:grid;grid-template-columns:42px 1fr auto;align-items:center;min-height:58px;padding:6px 8px;border:1px solid var(--aa-line);border-radius:16px;background:#fff;box-shadow:0 12px 32px rgba(15,40,70,.06)}
-.active-searchbar .input-padrao{height:44px;border:0!important;box-shadow:none!important;background:transparent!important;font-size:14px;font-weight:650}
-.active-search-icon{display:grid;place-items:center;color:#617894;font-size:24px}
-.active-access-page .lista-resultados{grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:14px}
-.active-access-page .visitor-card{grid-template-columns:58px 1fr;gap:12px;padding:14px;border:1px solid #d6e1ee;border-radius:18px;background:linear-gradient(145deg,#fff 0%,#fbfdff 70%);box-shadow:0 14px 36px rgba(16,38,66,.07);cursor:default}
-.active-access-page .visitor-card::before{inset:14px auto 14px 0;width:4px;background:linear-gradient(180deg,var(--aa-blue),#60a5fa);opacity:1}
-.active-access-page .visitor-card.selecionado{border-color:#8bb6ff;box-shadow:0 16px 38px rgba(37,99,235,.11),0 0 0 1px rgba(37,99,235,.08)}
-.active-access-page .visitor-photo,.active-access-page .visitor-photo.placeholder{width:54px;height:54px;border-radius:14px;background:#edf3f9;border-color:#dfe8f2;font-size:10px;font-weight:800}
-.active-access-page .visitor-main{gap:9px}
-.active-access-page .card-visitante{padding:0;border:0;background:transparent}
-.active-access-page .info-grid{grid-template-columns:1.25fr .8fr 1.25fr 1fr;gap:8px}
-.active-access-page .info-item{min-height:62px;padding:10px 11px;border-color:#e2eaf3;border-radius:12px;background:#f7f9fc}
-.active-access-page .info-item.destaque{background:linear-gradient(135deg,#eef5ff,#f8fbff);border-color:#cfe0fb}
-.active-access-page .label-ui{color:#72839a;font-size:9px;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
-.active-access-page .valor-ui{margin-top:5px;color:#12233b;font-size:12px;font-weight:800}
-.active-access-page .valor-ui.nome{font-size:15px;font-weight:900;letter-spacing:-.015em}
-.active-access-page .extras-grid{grid-template-columns:.75fr 1.45fr 1fr;gap:8px}
-.active-access-page .extra-card{min-height:50px;padding:9px 11px;border-color:#e2eaf3;border-radius:12px;background:#f8fafc}
-.active-access-page .badge-ui{margin-top:5px;min-height:22px;padding:4px 8px;font-size:9px}
-.active-access-page .card-actions{padding-top:1px}
-.active-access-page .card-actions form{width:100%}
-.active-access-page .card-actions .btn-principal{width:100%;min-height:40px;justify-content:space-between;border-radius:11px;background:linear-gradient(135deg,#09213f,#0b2e56);box-shadow:0 8px 18px rgba(7,27,53,.15);font-size:12px}
-.active-access-page .card-actions .btn-principal::after{content:"→";margin-left:auto}
-.active-access-page .estado-vazio{grid-column:1/-1;min-height:260px;border-radius:18px;background:linear-gradient(145deg,#fff,#f8fbff)}
-@media(max-width:980px){.active-access-topbar{align-items:stretch;flex-direction:column}.active-top-actions{align-self:flex-start}.active-access-page .lista-resultados{grid-template-columns:1fr}.active-access-page .info-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:620px){.active-top-actions{width:100%}.active-top-actions>*{flex:1}.active-access-page .visitor-card{grid-template-columns:1fr}.active-access-page .visitor-photo-wrap{align-items:flex-start}.active-access-page .info-grid,.active-access-page .extras-grid{grid-template-columns:1fr}.active-access-topbar h2{font-size:26px}}
-</style>
-
-
-<section class="active-access-page"><div class="active-access-shell">
-    <div class="active-access-topbar">
-        <div>
-        <div class="active-live-kicker"><span></span> MONITORAMENTO AO VIVO</div><h2>Acessos ativos <span class="active-count">{{ visitantes|length }}</span></h2>
-        <p class="texto-ajuda">
-            Pessoas com entrada registrada e saída ainda não concluída.
-        </p>
-        </div>
-        <div class="active-top-actions"><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">Consultar cadastros</a><a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">Registrar entrada</a></div>
+<section class="pc-module">
+  <header class="pc-pagehead">
+    <div>
+      <span class="pc-eyebrow"><i></i> MONITORAMENTO AO VIVO</span>
+      <h2>Acessos ativos</h2>
+      <p>Pessoas com entrada registrada e saída ainda não concluída.</p>
     </div>
-
-    <div class="active-searchbar"><span class="active-search-icon">⌕</span>
-        <input
-            type="text"
-            id="buscaAtivo"
-            class="input-padrao busca-input"
-            placeholder="Buscar por nome, CPF ou placa..."
-            autocomplete="off"
-            autofocus
-        >
+    <div class="pc-page-actions">
+      <a class="pc-btn pc-btn-secondary" href="{{ url_for('visitantes.visitantes') }}">Consultar visitantes</a>
+      <a class="pc-btn pc-btn-primary" href="{{ url_for('visitantes.cadastro') }}">＋ Registrar entrada</a>
     </div>
+  </header>
 
+  <section class="pc-panel pc-list-panel">
+    <div class="pc-list-toolbar">
+      <div class="pc-list-title"><span class="pc-live-dot"></span><strong>{{ visitantes|length }} dentro do condomínio</strong></div>
+      <div class="pc-search pc-search-compact">
+        <span class="pc-search-icon" aria-hidden="true"></span>
+        <input type="text" id="buscaAtivo" class="busca-input" placeholder="Buscar por nome, CPF ou placa..." autocomplete="off" autofocus>
+      </div>
+    </div>
     <div id="mensagemAtivo" class="mensagem-box"></div>
-
-    <div id="listaAtivos" class="lista-resultados">
-        {% if visitantes %}
-            {% for v in visitantes %}
-                <div class="visitor-card {% if loop.index0 == 0 %}selecionado{% endif %}" data-index="{{ loop.index0 }}">
-
-                    <div class="visitor-photo-wrap">
-                        {% if v.foto %}
-                            <img src="{{ url_for('static', filename='fotos/' + v.foto) }}" class="visitor-photo">
-                        {% else %}
-                            <div class="visitor-photo placeholder">Sem foto</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="visitor-main">
-
-                        <div class="card-visitante">
-                            <div class="info-grid">
-                                <div class="info-item destaque">
-                                    <span class="label-ui">Nome</span>
-                                    <span class="valor-ui nome">{{ v.nome|upper }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">CPF</span>
-                                    <span class="valor-ui">{{ v.cpf }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">Destino</span>
-                                    <span class="valor-ui">{{ v.endereco or '-' }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">Morador / Unidade</span>
-                                    <span class="valor-ui">
-                                        {% if v.morador_nome %}
-                                            {{ v.morador_nome }}
-                                            {% if v.unidade_codigo %}
-                                                <span class="badge-unidade">{{ v.unidade_codigo }}</span>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="texto-muted">—</span>
-                                        {% endif %}
-                                    </span>
-                                </div>
-
-                                <div class="info-item">
-                                    <span class="label-ui">Observação</span>
-                                    <span class="valor-ui">{{ v.observacao if v.observacao else '-' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="extras-grid">
-
-                            <div class="extra-card">
-                                <span class="label-ui">Tipo de visita</span>
-                                <div class="badge-ui badge-tipo">
-                                    {{ (v.tipo or 'Sem tipo')|upper }}
-                                </div>
-                            </div>
-
-                            <div class="extra-card">
-                                <span class="label-ui">Veículo desta entrada</span>
-                                <div class="badge-ui badge-veiculo">
-                                    {% if v.marca or v.modelo or v.placa %}
-                                        {{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} - {{ v.placa }}{% endif %}
-                                    {% else %}
-                                        SEM VEÍCULO
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <div class="extra-card">
-                                <span class="label-ui">Horário de entrada</span>
-                                <div class="badge-ui badge-entrada">
-                                    {{ v.data_entrada }}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="card-actions">
-                            <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}"
-                                  onsubmit="return confirm('Registrar saída de {{ v.nome }}?')">
-                                <button class="btn-principal btn-sm" type="submit">Registrar saída</button>
-                            </form>
-                        </div>
-
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <div class="estado-vazio">
-                Nenhum visitante ativo no momento.
-            </div>
-        {% endif %}
+    <div id="listaAtivos" class="pc-access-list">
+      {% if visitantes %}
+        {% for v in visitantes %}
+        <article class="pc-access-row {% if loop.index0 == 0 %}is-selected{% endif %}" data-index="{{ loop.index0 }}" onclick="selecionarAtivo({{ loop.index0 }})">
+          {% if v.foto %}
+            <img src="{{ url_for('static', filename='fotos/' + v.foto) }}" alt="Foto de {{ v.nome }}" class="pc-access-photo">
+          {% else %}
+            <span class="pc-access-photo pc-access-photo-empty">{{ v.nome[:1]|upper }}</span>
+          {% endif %}
+          <div class="pc-access-identity"><strong>{{ v.nome|upper }}</strong><small>{{ v.cpf or 'CPF não informado' }}</small></div>
+          <div class="pc-access-meta"><span>DESTINO</span><strong>{% if v.unidade_codigo %}{{ v.unidade_codigo }}{% elif v.endereco %}{{ v.endereco }}{% else %}—{% endif %}</strong></div>
+          <div class="pc-access-meta"><span>VEÍCULO</span><strong>{% if v.marca or v.modelo or v.placa %}{{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} · {{ v.placa }}{% endif %}{% else %}Sem veículo{% endif %}</strong></div>
+          <div class="pc-access-meta"><span>ENTRADA</span><strong>{{ v.data_entrada }}</strong></div>
+          <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}" onclick="event.stopPropagation()" onsubmit="return confirm('Registrar saída de {{ v.nome }}?')">
+            <button class="pc-btn pc-btn-primary pc-exit-btn" type="submit">Registrar saída →</button>
+          </form>
+        </article>
+        {% endfor %}
+      {% else %}
+        <div class="pc-empty pc-empty-list"><span class="pc-empty-icon">✓</span><div><strong>Nenhum acesso ativo</strong><small>A portaria não possui entradas em aberto neste momento.</small></div></div>
+      {% endif %}
     </div>
-</div>
-
+  </section>
+</section>
 <script>
 const inputAtivo = document.getElementById("buscaAtivo");
 const listaAtivos = document.getElementById("listaAtivos");
@@ -223,7 +103,7 @@ function renderizarAtivos(data) {
     listaAtivos.innerHTML = "";
 
     if (!data || data.length === 0) {
-        listaAtivos.innerHTML = "<p>Nenhum visitante ativo encontrado.</p>";
+        listaAtivos.innerHTML = '<div class="pc-empty pc-empty-list"><span class="pc-empty-icon">✓</span><div><strong>Nenhum acesso ativo</strong><small>Nenhuma pessoa encontrada com entrada em aberto.</small></div></div>';
         return;
     }
 
@@ -231,104 +111,24 @@ function renderizarAtivos(data) {
     if (indiceSelecionadoAtivo > data.length - 1) indiceSelecionadoAtivo = data.length - 1;
 
     data.forEach((v, index) => {
-        const selecionado = index === indiceSelecionadoAtivo;
-
-        const estiloCard = selecionado
-            ? "display:flex; gap:15px; align-items:flex-start; flex-wrap:wrap; border:2px solid #007bff; background:#f4f9ff; cursor:pointer;"
-            : "display:flex; gap:15px; align-items:flex-start; flex-wrap:wrap; cursor:pointer;";
-
         const fotoHtml = v.foto
-            ? `<img src="/static/fotos/${v.foto}"
-                    alt="Foto de ${v.nome}"
-                    style="width:90px; height:90px; object-fit:cover; border-radius:10px; border:1px solid #ddd;">`
-            : `<div style="
-                    width:90px;
-                    height:90px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    border-radius:10px;
-                    border:1px solid #ddd;
-                    background:#f8f9fa;
-                    color:#777;
-                    font-size:13px;
-                    text-align:center;
-                    padding:8px;
-                ">
-                    Sem foto
-               </div>`;
+            ? `<img src="/static/fotos/${v.foto}" alt="Foto de ${v.nome || ''}" class="pc-access-photo">`
+            : `<span class="pc-access-photo pc-access-photo-empty">${((v.nome || '?').slice(0,1)).toUpperCase()}</span>`;
 
         listaAtivos.innerHTML += `
-        <div
-            class="visitor-card ${selecionado ? "selecionado" : ""}"
-            data-index="${index}"
-            onclick="selecionarAtivo(${index})"
-        >
-            <div class="visitor-photo-wrap">
-                ${fotoHtml}
+        <article class="pc-access-row ${index === indiceSelecionadoAtivo ? 'is-selected' : ''}" data-index="${index}" onclick="selecionarAtivo(${index})">
+            ${fotoHtml}
+            <div class="pc-access-identity">
+                <strong>${(v.nome || '').toUpperCase()}</strong>
+                <small>${v.cpf || 'CPF não informado'}</small>
             </div>
-
-            <div class="visitor-main">
-
-                <div class="card-visitante">
-                    <div class="info-grid">
-                        <div class="info-item destaque">
-                            <span class="label-ui">Nome</span>
-                            <span class="valor-ui nome">${(v.nome || "").toUpperCase()}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">CPF</span>
-                            <span class="valor-ui">${v.cpf || "-"}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">Destino</span>
-                            <span class="valor-ui">${v.endereco || "-"}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="label-ui">Observação</span>
-                            <span class="valor-ui">${v.observacao || "-"}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="extras-grid">
-
-                    <div class="extra-card">
-                        <span class="label-ui">Tipo</span>
-                        <div class="badge-ui badge-tipo">
-                            ${(v.tipo || "SEM TIPO").toUpperCase()}
-                        </div>
-                    </div>
-
-                    <div class="extra-card">
-                        <span class="label-ui">Veículo</span>
-                        <div class="badge-ui badge-veiculo">
-                            ${montarTextoVeiculo(v)}
-                        </div>
-                    </div>
-
-                    <div class="extra-card">
-                        <span class="label-ui">Entrada</span>
-                        <div class="badge-ui badge-entrada">
-                            ${formatarEntrada(v.data_entrada)}
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="card-actions">
-                    <form method="POST" action="/saida/${v.id}"
-                          onsubmit="event.stopPropagation(); return confirm('Registrar saída de ${(v.nome||'').replace(/'/g,'')}?')">
-                        <button class="btn-principal btn-sm" type="submit">Registrar saída</button>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    `;
+            <div class="pc-access-meta"><span>DESTINO</span><strong>${v.endereco || '—'}</strong></div>
+            <div class="pc-access-meta"><span>VEÍCULO</span><strong>${montarTextoVeiculo(v)}</strong></div>
+            <div class="pc-access-meta"><span>ENTRADA</span><strong>${formatarEntrada(v.data_entrada)}</strong></div>
+            <form method="POST" action="/saida/${v.id}" onclick="event.stopPropagation()" onsubmit="return confirm('Registrar saída de ${(v.nome||'').replace(/'/g,'')}?')">
+                <button class="pc-btn pc-btn-primary pc-exit-btn" type="submit">Registrar saída →</button>
+            </form>
+        </article>`;
     });
 }
 
@@ -407,5 +207,4 @@ inputAtivo.addEventListener("keydown", function(event) {
     }
 });
 </script>
-</div></section>
 {% endblock %}
