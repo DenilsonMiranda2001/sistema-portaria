@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<section class="module-form-premium"><header class="resident-page-head"><div><span class="resident-kicker">NOVO CADASTRO</span><h1>Cadastrar visitante</h1><p>Identificação permanente para agilizar os próximos acessos.</p></div><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">← Visitantes</a></header><form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form">
+<section class="module-form-premium"><div class="module-commandbar"><strong>Novo visitante</strong><span>Cadastro de acesso</span><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">Cancelar</a></div><form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="quick-access-grid">
   <section class="quick-panel quick-main">
