@@ -3,23 +3,15 @@
 
 {% block content %}
 <section class="desk-v2">
-  <header class="desk-v2-head">
-    <div>
-      <span class="desk-v2-eyebrow"><i></i> CENTRAL DE PORTARIA</span>
-      <h1>Bom trabalho, {{ session.get("usuario_nome", "Operador").split(" ")[0] }}.</h1>
-      <p>Quem entra, quem está dentro e o que exige atenção — sem sair desta tela.</p>
-    </div>
-    <div class="desk-v2-actions">
-      <a href="{{ url_for('visitantes.cadastro') }}" class="desk-v2-btn ghost"><b>＋</b><span>Novo cadastro<small>Visitante ou prestador</small></span></a>
-      <a href="{{ url_for('visitantes.ativos') }}" class="desk-v2-btn dark"><span class="desk-v2-live"></span><span>No condomínio<small>{{ total_ativos }} acesso{{ '' if total_ativos == 1 else 's' }} ativo{{ '' if total_ativos == 1 else 's' }}</small></span><b>→</b></a>
-    </div>
-  </header>
+  <div class="desk-v2-commandline">
+    <div><span class="desk-v2-eyebrow"><i></i> PORTARIA ONLINE</span><strong>{{ session.get("condominio_nome", "Condomínio") }}</strong></div>
+    <nav><a href="{{ url_for('visitantes.cadastro') }}">+ Novo visitante</a><a class="is-live" href="{{ url_for('visitantes.ativos') }}"><i></i>{{ total_ativos }} no condomínio</a></nav>
+  </div>
 
   <div class="desk-v2-grid">
     <main class="desk-v2-workspace">
       <div class="desk-v2-search-head">
-        <div><span class="desk-v2-step">ACESSO RÁPIDO</span><h2>Quem está chegando?</h2></div>
-        <span class="desk-v2-hint">Busque e libere a entrada em segundos</span>
+        <div><span class="desk-v2-step">CONTROLE DE ACESSO</span><h2>Localizar pessoa</h2></div><span class="desk-v2-hint">Nome, CPF ou placa</span>
       </div>
       <div class="desk-v2-search">
         <span class="search-symbol"></span>
