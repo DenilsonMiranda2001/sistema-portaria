@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Portaria Control{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js" defer></script>
@@ -16,20 +17,20 @@
     <!-- ── NAVBAR ─────────────────────────────────────── -->
     <header class="navbar-sistema">
         <div class="navbar-brand">
-            <div class="navbar-brand-icon">🏢</div>
+            <div class="navbar-brand-icon" aria-hidden="true">PC</div>
             <div class="navbar-brand-textos">
                 <h1>Portaria Control</h1>
-                <span>Sistema de controle de acesso</span>
+                <span>Operação de acesso e portaria</span>
             </div>
         </div>
 
         <div class="navbar-direita">
             <nav class="navbar-acoes">
                 <a class="btn btn-nav {% if request.endpoint == 'main.index' %}btn-nav-ativo{% endif %}"
-                   href="{{ url_for('main.index') }}">Início</a>
+                   href="{{ url_for('main.index') }}">Central</a>
 
                 <a class="btn btn-nav {% if request.endpoint == 'visitantes.cadastro' %}btn-nav-ativo{% endif %}"
-                   href="{{ url_for('visitantes.cadastro') }}">Cadastrar</a>
+                   href="{{ url_for('visitantes.cadastro') }}">Cadastro</a>
 
                 <a class="btn btn-nav {% if request.endpoint == 'visitantes.visitantes' %}btn-nav-ativo{% endif %}"
                    href="{{ url_for('visitantes.visitantes') }}">Visitantes</a>
@@ -45,7 +46,7 @@
 
                 {% if session.get("usuario_tipo") == "admin" %}
                     <a class="btn btn-nav {% if request.endpoint == 'visitantes.importar_visitantes' %}btn-nav-ativo{% endif %}"
-                       href="{{ url_for('visitantes.importar_visitantes') }}">Importar CSV</a>
+                       href="{{ url_for('visitantes.importar_visitantes') }}">Importar</a>
 
                     <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('admin') %}btn-nav-ativo{% endif %}"
                        href="{{ url_for('admin.usuarios') }}">Usuários</a>
@@ -54,7 +55,7 @@
 
             <div class="navbar-user-area">
                 <div class="usuario-logado-box">
-                    <div class="usuario-avatar">👤</div>
+                    <div class="usuario-avatar" aria-hidden="true"></div>
                     <div class="usuario-info">
                         <strong>{{ session.get("usuario_nome", "Usuário") }}</strong>
                         <span>{{ session.get("usuario_tipo", "").capitalize() }}</span>

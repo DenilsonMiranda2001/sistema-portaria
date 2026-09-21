@@ -3,12 +3,18 @@
 
 {% block content %}
 
-<div class="card-padrao">
-    <div class="header-secao">
-        <h2>🚪 Controle de Acesso</h2>
-        <p class="texto-ajuda">
-            Digite CPF, nome ou placa para localizar o visitante e registrar a entrada.
-        </p>
+<div class="card-padrao dashboard-hero">
+    <div class="header-secao header-secao-flex">
+        <div>
+            <h2>Central operacional da portaria</h2>
+            <p class="texto-ajuda">
+                Localize visitantes por CPF, nome ou placa e registre entradas com rapidez.
+            </p>
+        </div>
+        <div class="acoes-topo">
+            <a class="btn-secundario" href="{{ url_for('visitantes.ativos') }}">Ver ativos</a>
+            <a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">Novo visitante</a>
+        </div>
     </div>
 
     <div class="busca-box">
@@ -26,7 +32,7 @@
 
     <div id="lista" class="lista-resultados">
         <div class="estado-vazio-inicial">
-            🔎 Aguardando busca...
+            Comece digitando para buscar um visitante.
         </div>
     </div>
 </div>
@@ -35,7 +41,7 @@
 
     <div class="card-mini hover-anim">
         <div class="card-topo">
-            <span class="card-icon">🚨</span>
+            <span class="card-icon" aria-hidden="true"></span>
             <h3>Ativos agora</h3>
         </div>
         <p id="ativos" class="valor-destaque contador" data-valor="{{ total_ativos }}">0</p>
@@ -43,7 +49,7 @@
 
     <div class="card-mini hover-anim">
         <div class="card-topo">
-            <span class="card-icon">📅</span>
+            <span class="card-icon" aria-hidden="true"></span>
             <h3>Entradas hoje</h3>
         </div>
         <p id="entradas" class="valor-destaque contador" data-valor="{{ entradas_hoje }}">0</p>
@@ -51,7 +57,7 @@
 
     <div class="card-mini hover-anim">
         <div class="card-topo">
-            <span class="card-icon">🚪</span>
+            <span class="card-icon" aria-hidden="true"></span>
             <h3>Saídas hoje</h3>
         </div>
         <p id="saidas" class="valor-destaque contador" data-valor="{{ saidas_hoje }}">0</p>
@@ -59,7 +65,7 @@
 
     <div class="card-mini hover-anim">
         <div class="card-topo">
-            <span class="card-icon">👥</span>
+            <span class="card-icon" aria-hidden="true"></span>
             <h3>Moradores</h3>
         </div>
         <p id="moradores" class="valor-destaque contador" data-valor="{{ total_moradores }}">0</p>
@@ -67,7 +73,7 @@
 
     <div class="card-mini hover-anim">
         <div class="card-topo">
-            <span class="card-icon">👤</span>
+            <span class="card-icon" aria-hidden="true"></span>
             <h3>Cadastrados</h3>
         </div>
         <p id="cadastrados" class="valor-destaque contador" data-valor="{{ total_cadastrados }}">0</p>
@@ -75,7 +81,7 @@
 
     <div class="card-mini destaque hover-anim">
         <div class="card-topo">
-            <span class="card-icon">🕒</span>
+            <span class="card-icon" aria-hidden="true"></span>
             <h3>Última entrada</h3>
         </div>
         <p id="ultima_nome" class="nome-destaque">{{ ultima_nome }}</p>
@@ -87,7 +93,7 @@
 {% if ultimas_entradas %}
 <div class="card-padrao" style="margin-top:16px;">
     <div class="header-secao">
-        <h2>🕒 Últimas entradas</h2>
+        <h2>Últimas entradas</h2>
     </div>
     <table class="tabela-padrao">
         <thead>

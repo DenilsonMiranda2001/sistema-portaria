@@ -7,6 +7,7 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY") or "dev-secret-troque-em-producao"
 
+    DATABASE_URL = os.getenv("DATABASE_URL", "")
     DB_HOST     = os.getenv("DB_HOST", "localhost")
     DB_NAME     = os.getenv("DB_NAME", "portaria_db")
     DB_USER     = os.getenv("DB_USER", "postgres")

@@ -4,11 +4,14 @@
 {% block content %}
 
 <div class="card-padrao">
-    <div class="header-secao">
-        <h2>👤 Visitantes Cadastrados</h2>
+    <div class="header-secao header-secao-flex">
+        <div>
+        <h2>Visitantes cadastrados</h2>
         <p class="texto-ajuda">
-            Busque por nome, CPF ou placa para localizar um cadastro rapidamente.
+            Consulte cadastros, histórico de visitas e dados de identificação.
         </p>
+        </div>
+        <a class="btn-principal" href="{{ url_for('visitantes.cadastro') }}">Novo visitante</a>
     </div>
 
     <div class="busca-box">
@@ -21,9 +24,7 @@
         >
     </div>
 
-    <div class="mensagem-box">
-        <a class="link-voltar" href="/">⬅ Voltar</a>
-    </div>
+    <div class="mensagem-box"></div>
 
     <div id="lista" class="lista-resultados">
         {% if visitantes %}
@@ -69,14 +70,13 @@
                             <div class="extra-card">
                                 <span class="label-ui">Tipo de visita</span>
                                 <div class="badge-ui badge-tipo">
-                                    🏷 {{ (v.tipo or 'Sem tipo')|upper }}
+                                    {{ (v.tipo or 'Sem tipo')|upper }}
                                 </div>
                             </div>
 
                             <div class="extra-card">
                                 <span class="label-ui">Veículo cadastrado</span>
                                 <div class="badge-ui badge-veiculo">
-                                    🚗
                                     {% if v.marca or v.modelo or v.placa %}
                                         {{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} - {{ v.placa }}{% endif %}
                                     {% else %}
@@ -87,15 +87,12 @@
                         </div>
 
                         <div class="card-actions card-actions-visitantes">
-                            <a class="btn-principal btn-sm" href="/historico/{{ v.id }}" onclick="event.stopPropagation()">👁️ Histórico</a>
-                            <a class="btn-principal btn-sm" href="/editar/{{ v.id }}" onclick="event.stopPropagation()">📝 Editar</a>
-                            <a
-                                class="btn-remover btn-sm"
-                                href="/remover/{{ v.id }}"
-                                onclick="event.stopPropagation(); return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')"
-                            >
-                                🗑️ Remover
-                            </a>
+                            <a class="btn-secundario btn-sm" href="/historico/{{ v.id }}" onclick="event.stopPropagation()">Histórico</a>
+                            <a class="btn-principal btn-sm" href="/editar/{{ v.id }}" onclick="event.stopPropagation()">Editar</a>
+                            <form method="POST" action="/remover/{{ v.id }}" onclick="event.stopPropagation()"
+                                  onsubmit="return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')">
+                                <button class="btn-remover btn-sm" type="submit">Remover</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -304,25 +301,25 @@ function renderizarListaBusca(data) {
                         <div class="extra-card">
                             <span class="label-ui">Tipo de visita</span>
                             <div class="badge-ui badge-tipo">
-                                🏷 ${((v.tipo || "Sem tipo")).toUpperCase()}
+                                ${((v.tipo || "Sem tipo")).toUpperCase()}
                             </div>
                         </div>
 
                         <div class="extra-card">
                             <span class="label-ui">Veículo cadastrado</span>
                             <div class="badge-ui badge-veiculo">
-                                🚗 ${montarTextoVeiculo(v)}
+                                ${montarTextoVeiculo(v)}
                             </div>
                         </div>
                     </div>
 
                     <div class="card-actions card-actions-visitantes">
-                        <a class="btn-secundario btn-sm" href="/historico/${v.id}" onclick="event.stopPropagation()">👁️ Histórico</a>
-                        <a class="btn-principal btn-sm" href="/editar/${v.id}" onclick="event.stopPropagation()">📝 Editar</a>
-                        <a class="btn-remover btn-sm" href="/remover/${v.id}"
-                           onclick="event.stopPropagation(); return confirm('Remover ${v.nome}? Esta ação não pode ser desfeita.')">
-                           🗑️ Remover
-                        </a>
+                        <a class="btn-secundario btn-sm" href="/historico/${v.id}" onclick="event.stopPropagation()">Histórico</a>
+                        <a class="btn-principal btn-sm" href="/editar/${v.id}" onclick="event.stopPropagation()">Editar</a>
+                        <form method="POST" action="/remover/${v.id}" onclick="event.stopPropagation()"
+                              onsubmit="return confirm('Remover ${v.nome}? Esta ação não pode ser desfeita.')">
+                            <button class="btn-remover btn-sm" type="submit">Remover</button>
+                        </form>
                     </div>
                 </div>
             </div>

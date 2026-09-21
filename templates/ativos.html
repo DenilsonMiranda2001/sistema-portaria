@@ -4,11 +4,14 @@
 {% block content %}
 
 <div class="card-padrao">
-    <div class="header-secao">
-        <h2>🚨 Visitantes Ativos</h2>
+    <div class="header-secao header-secao-flex">
+        <div>
+        <h2>Visitantes ativos</h2>
         <p class="texto-ajuda">
-            Busque por nome, CPF ou placa para localizar rapidamente quem está no condomínio.
+            Identifique rapidamente quem ainda está dentro do condomínio e registre saídas.
         </p>
+        </div>
+        <a class="btn-secundario" href="/">Voltar à central</a>
     </div>
 
     <div class="busca-box">
@@ -23,9 +26,6 @@
     </div>
 
     <div id="mensagemAtivo" class="mensagem-box"></div>
-
-    <a class="link-voltar" href="/">⬅ Voltar</a>
-
 
     <div id="listaAtivos" class="lista-resultados">
         {% if visitantes %}
@@ -85,14 +85,13 @@
                             <div class="extra-card">
                                 <span class="label-ui">Tipo de visita</span>
                                 <div class="badge-ui badge-tipo">
-                                    🏷 {{ (v.tipo or 'Sem tipo')|upper }}
+                                    {{ (v.tipo or 'Sem tipo')|upper }}
                                 </div>
                             </div>
 
                             <div class="extra-card">
                                 <span class="label-ui">Veículo desta entrada</span>
                                 <div class="badge-ui badge-veiculo">
-                                    🚗
                                     {% if v.marca or v.modelo or v.placa %}
                                         {{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} - {{ v.placa }}{% endif %}
                                     {% else %}
@@ -104,7 +103,7 @@
                             <div class="extra-card">
                                 <span class="label-ui">Horário de entrada</span>
                                 <div class="badge-ui badge-entrada">
-                                    ⏰ {{ v.data_entrada }}
+                                    {{ v.data_entrada }}
                                 </div>
                             </div>
 
@@ -113,7 +112,7 @@
                         <div class="card-actions">
                             <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}"
                                   onsubmit="return confirm('Registrar saída de {{ v.nome }}?')">
-                                <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
+                                <button class="btn-principal btn-sm" type="submit">Registrar saída</button>
                             </form>
                         </div>
 
@@ -122,7 +121,7 @@
             {% endfor %}
         {% else %}
             <div class="estado-vazio">
-                Nenhum visitante no momento.
+                Nenhum visitante ativo no momento.
             </div>
         {% endif %}
     </div>
@@ -260,21 +259,21 @@ function renderizarAtivos(data) {
                     <div class="extra-card">
                         <span class="label-ui">Tipo</span>
                         <div class="badge-ui badge-tipo">
-                            🏷 ${(v.tipo || "SEM TIPO").toUpperCase()}
+                            ${(v.tipo || "SEM TIPO").toUpperCase()}
                         </div>
                     </div>
 
                     <div class="extra-card">
                         <span class="label-ui">Veículo</span>
                         <div class="badge-ui badge-veiculo">
-                            🚗 ${montarTextoVeiculo(v)}
+                            ${montarTextoVeiculo(v)}
                         </div>
                     </div>
 
                     <div class="extra-card">
                         <span class="label-ui">Entrada</span>
                         <div class="badge-ui badge-entrada">
-                            ⏰ ${formatarEntrada(v.data_entrada)}
+                            ${formatarEntrada(v.data_entrada)}
                         </div>
                     </div>
 
@@ -283,7 +282,7 @@ function renderizarAtivos(data) {
                 <div class="card-actions">
                     <form method="POST" action="/saida/${v.id}"
                           onsubmit="event.stopPropagation(); return confirm('Registrar saída de ${(v.nome||'').replace(/'/g,'')}?')">
-                        <button class="btn-principal btn-sm" type="submit">🚪 Registrar Saída</button>
+                        <button class="btn-principal btn-sm" type="submit">Registrar saída</button>
                     </form>
                 </div>
 

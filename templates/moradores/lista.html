@@ -5,10 +5,10 @@
 <div class="card-padrao">
     <div class="header-secao header-secao-flex">
         <div>
-            <h2>🏠 Moradores</h2>
-            <p class="texto-ajuda">Gerencie os moradores do condomínio.</p>
+            <h2>Moradores</h2>
+            <p class="texto-ajuda">Gerencie moradores, unidades e contatos de referência.</p>
         </div>
-        <a class="btn-principal" href="{{ url_for('moradores.novo') }}">➕ Novo morador</a>
+        <a class="btn-principal" href="{{ url_for('moradores.novo') }}">Novo morador</a>
     </div>
 
     <!-- Busca -->
@@ -22,6 +22,7 @@
     </form>
 
     {% if moradores %}
+    <div class="tabela-wrap">
     <table class="tabela-padrao">
         <thead>
             <tr>
@@ -63,18 +64,18 @@
                 </td>
                 <td>{{ m.criado_em.strftime('%d/%m/%Y') if m.criado_em else '—' }}</td>
                 <td class="acoes-tabela">
-                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.editar', id=m.id) }}">✏️ Editar</a>
-                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.detalhe', id=m.id) }}">👁 Ver</a>
+                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.editar', id=m.id) }}">Editar</a>
+                    <a class="btn-secundario btn-sm" href="{{ url_for('moradores.detalhe', id=m.id) }}">Ver</a>
 
                     {% if m.ativo %}
                     <form method="POST" action="{{ url_for('moradores.inativar', id=m.id) }}"
                           style="display:inline;"
                           onsubmit="return confirm('Inativar {{ m.nome }}?')">
-                        <button class="btn-remover btn-sm" type="submit">⛔ Inativar</button>
+                        <button class="btn-remover btn-sm" type="submit">Inativar</button>
                     </form>
                     {% else %}
                     <form method="POST" action="{{ url_for('moradores.ativar', id=m.id) }}" style="display:inline;">
-                        <button class="btn-principal btn-sm" type="submit">✅ Ativar</button>
+                        <button class="btn-principal btn-sm" type="submit">Ativar</button>
                     </form>
                     {% endif %}
                 </td>
@@ -82,6 +83,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 
     <p class="texto-ajuda" style="margin-top:12px;">
         {{ moradores|length }} morador(es) encontrado(s).
@@ -90,7 +92,7 @@
     {% else %}
     <div class="estado-vazio">
         <div>Nenhum morador encontrado.</div>
-        <a class="btn-principal btn-sm" href="{{ url_for('moradores.novo') }}">➕ Cadastrar primeiro morador</a>
+        <a class="btn-principal btn-sm" href="{{ url_for('moradores.novo') }}">Cadastrar primeiro morador</a>
     </div>
     {% endif %}
 </div>
