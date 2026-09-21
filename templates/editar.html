@@ -3,7 +3,7 @@
 
 {% block content %}
 {% if visitante %}
-<section class="module-form-premium"><div class="module-commandbar"><strong>Editar visitante</strong><span>{{ visitante.nome }}</span><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">Cancelar</a></div><form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form quick-edit-form">
+<section class="module-form-premium pc-compact-legacy-form"><div class="module-commandbar"><strong>Editar visitante</strong><span>{{ visitante.nome }}</span><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">Cancelar</a></div><form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form quick-edit-form">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="quick-access-grid">
 <section class="quick-panel quick-main">
