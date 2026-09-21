@@ -2,6 +2,10 @@
 {% block title %}Início{% endblock %}
 
 {% block content %}
+<section class="home-commandbar">
+  <div><span class="home-kicker">CENTRAL OPERACIONAL</span><h1>Controle de acesso</h1><p>Entrada, presença e movimentação em uma única tela.</p></div>
+  <div class="home-actions"><a href="{{ url_for('visitantes.cadastro') }}" class="home-action secondary">+ Novo cadastro</a><a href="{{ url_for('visitantes.ativos') }}" class="home-action primary"><span class="live-dot"></span>{{ total_ativos }} no condomínio</a></div>
+</section>
 <section class="command-grid command-grid-home">
   <div class="command-search">
     <div class="command-search-head"><span>01</span><div><strong>Localizar visitante</strong><small>Pesquisa inteligente no cadastro da operação</small></div></div>
