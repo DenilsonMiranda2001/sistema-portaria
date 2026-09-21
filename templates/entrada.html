@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Registrar entrada{% endblock %}
 {% block content %}
-<section class="module-form-premium"><header class="resident-page-head"><div><span class="resident-kicker">CONTROLE DE ACESSO</span><h1>Registrar entrada</h1><p>Confirme a pessoa e o destino antes de liberar o acesso.</p></div><a class="btn-secundario" href="{{ url_for('main.index') }}">← Início</a></header><form method="POST" autocomplete="off" class="quick-access-form entry-workstation">
+<section class="module-form-premium"><div class="module-commandbar"><strong>Registrar entrada</strong><span>Controle de acesso</span><a class="btn-secundario" href="{{ url_for('main.index') }}">Cancelar</a></div><form method="POST" autocomplete="off" class="quick-access-form entry-workstation">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="quick-access-grid entry-access-grid">
 <section class="quick-panel quick-main">
