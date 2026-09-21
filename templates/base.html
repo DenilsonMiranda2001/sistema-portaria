@@ -16,9 +16,9 @@
   <div class="enterprise-header-main">
     <a class="enterprise-brand" href="{{ url_for('main.index') }}" aria-label="Portaria Control - Início">
       <span class="enterprise-mark"><span>PC</span></span>
-      <span class="brand-copy"><strong>Portaria Control</strong><small>ACCESS OPERATIONS</small></span>
+      <span class="brand-copy"><strong>Portaria Control</strong><small>CONTROLE DE ACESSO</small></span>
     </a>
-    <div class="enterprise-operation"><span class="operation-live"><i></i> OPERAÇÃO ATIVA</span><strong>{{ session.get("condominio_nome", "Condomínio") }}</strong></div>
+    <div class="enterprise-operation"><span class="operation-kicker">POSTO DE CONTROLE</span><strong>{{ session.get("condominio_nome", "Condomínio") }}</strong><span class="operation-live"><i></i> ONLINE</span></div>
     <div class="enterprise-account">
       <span class="enterprise-avatar">{{ session.get("usuario_nome", "U")[:1]|upper }}</span>
       <div class="account-copy"><strong>{{ session.get("usuario_nome", "Usuário") }}</strong><small>{{ 'Administrador' if session.get("usuario_tipo") == 'admin' else 'Operação' }}</small></div>
