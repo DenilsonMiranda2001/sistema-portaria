@@ -3,58 +3,14 @@
 {% block title %}Painel de Encomendas{% endblock %}
 {% block content %}
 
-<style>
-.packages-ops{--pk-navy:#071b35;--pk-blue:#2563eb;--pk-cyan:#0891b2;--pk-line:#dbe5f1;--pk-muted:#70839a;display:grid;gap:14px}
-.packages-kicker{display:flex;align-items:center;gap:8px;margin:2px 2px -4px;color:#667b95;font-size:10px;font-weight:900;letter-spacing:.16em}
-.packages-kicker span{width:8px;height:8px;border-radius:50%;background:#2563eb;box-shadow:0 0 0 5px rgba(37,99,235,.09)}
-.packages-ops .enc-subnav{margin:0;padding:5px;width:max-content;max-width:100%;border:1px solid var(--pk-line);border-radius:14px;background:#f5f8fc;box-shadow:inset 0 1px 0 #fff}
-.packages-ops .enc-subnav a{min-height:34px;padding:0 14px;border:0;background:transparent}
-.packages-ops .enc-subnav a.ativo{color:#fff;background:var(--pk-navy);box-shadow:0 6px 14px rgba(7,27,53,.16)}
-.packages-ops .enc-header{align-items:flex-end;margin:2px 0 0;padding:4px 2px 0}
-.packages-ops .enc-header h2{margin:0;color:var(--pk-navy);font-size:30px;line-height:1;font-weight:900;letter-spacing:-.04em}
-.packages-ops .enc-header p{margin:8px 0 0;color:var(--pk-muted);font-size:13px;font-weight:600}
-.packages-new{min-height:44px!important;padding:0 18px!important;border-radius:12px!important;background:linear-gradient(135deg,#0a2444,#0d3767)!important;box-shadow:0 10px 22px rgba(7,27,53,.16)!important}
-.packages-new::before{content:"+";font-size:18px;margin-right:7px}
-.packages-summary{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:4px 0}
-.packages-summary a{min-height:112px;padding:15px;border-radius:16px;box-shadow:0 10px 26px rgba(16,38,66,.055)}
-.packages-summary a::before{height:3px}
-.packages-summary span{font-size:9px;letter-spacing:.08em}
-.packages-summary strong{font-size:27px}
-.packages-section-label{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-top:8px;padding:0 2px}
-.packages-section-label strong{color:var(--pk-navy);font-size:16px;font-weight:900}
-.packages-section-label span{color:var(--pk-muted);font-size:11px;font-weight:650}
-.packages-filters{grid-template-columns:minmax(260px,2fr) repeat(3,minmax(135px,1fr)) auto;margin:0;padding:10px;border-radius:16px;background:#fff;box-shadow:0 10px 28px rgba(16,38,66,.05)}
-.packages-filters input,.packages-filters select{min-height:42px;border-color:#dce6f1;border-radius:10px;background:#f8fafc;font-size:12px;font-weight:650}
-.packages-filters .enc-btn-primary{min-height:42px;border-radius:10px;background:var(--pk-navy);color:#fff}
-.packages-list{grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:12px}
-.packages-list .enc-item{position:relative;padding:15px;border-color:#d9e4ef;border-radius:17px;box-shadow:0 12px 30px rgba(16,38,66,.06);overflow:hidden}
-.packages-list .enc-item::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:linear-gradient(180deg,#2563eb,#38bdf8)}
-.packages-list .enc-item-topo strong{color:#10243e;font-size:16px;font-weight:900}
-.packages-list .enc-item-topo span:not(.enc-badge){margin-top:3px;font-size:12px}
-.packages-list .enc-meta{gap:7px 12px;margin:11px 0;padding:10px 11px;border:1px solid #e5ecf4;border-radius:11px;background:#f8fafc;font-size:11px}
-.packages-list .enc-meta b{color:#0b3767;font-size:13px;letter-spacing:.04em}
-.packages-list .enc-acoes{gap:6px;padding-top:11px}
-.packages-list .enc-btn{min-height:34px;padding:0 10px;border-radius:9px;font-size:10px;font-weight:850}
-.packages-list .enc-retirada-form{flex:1 1 100%;display:grid;grid-template-columns:1fr auto}
-.packages-list .enc-retirada-form input{width:auto;min-width:0;min-height:36px;border-radius:9px;background:#fbfdff}
-.packages-list .enc-btn-success{background:#08785e}
-.packages-list .enc-btn-whatsapp{background:#0d766c}
-.packages-list .enc-btn-danger{color:#b42318;background:#fff1f0;border-color:#ffd7d3}
-.packages-list .enc-vazio{grid-column:1/-1;min-height:220px}
-@media(max-width:1180px){.packages-summary{grid-template-columns:repeat(3,1fr)}.packages-filters{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:760px){.packages-summary,.packages-filters,.packages-list{grid-template-columns:1fr}.packages-ops .enc-header,.packages-section-label{align-items:stretch;flex-direction:column}.packages-new{width:100%}.packages-ops .enc-subnav{width:100%;overflow:auto;flex-wrap:nowrap}.packages-list .enc-retirada-form{grid-template-columns:1fr}.packages-section-label span{display:none}}
-@media(prefers-color-scheme:dark){.packages-ops .enc-header h2,.packages-section-label strong,.packages-list .enc-item-topo strong{color:var(--text)}.packages-filters{background:rgba(22,32,51,.92)}.packages-filters input,.packages-filters select,.packages-list .enc-meta{background:rgba(17,24,39,.72);border-color:var(--border)}.packages-ops .enc-subnav{background:rgba(17,24,39,.72);border-color:var(--border)}}
-</style>
 
-<div class="packages-ops">
-<div class="packages-kicker"><span></span> OPERAÇÃO DE RECEBIMENTO</div>
-{{ subnav('painel') }}
-<div class="enc-header">
-    <div><h2>Central de encomendas</h2><p>Receba, localize e conclua entregas com rastreabilidade operacional.</p></div>
-    <a class="btn btn-submit packages-new" href="{{ url_for('encomendas.novo_lote') }}">Novo lote</a>
-</div>
 
-<section class="enc-resumo packages-summary">
+<section class="pc-module pc-packages">
+
+<div class="pc-subnav">{{ subnav('painel') }}</div>
+<header class="pc-pagehead"><div><span class="pc-eyebrow">OPERAÇÃO DE RECEBIMENTO</span><h2>Encomendas</h2><p>Recebimento, retenção e retirada com rastreabilidade.</p></div><div class="pc-page-actions"><a class="pc-btn pc-btn-primary" href="{{ url_for('encomendas.novo_lote') }}">＋ Novo lote</a></div></header>
+
+<section class="pc-package-metrics">
     <a href="{{ url_for('encomendas.painel', filtro='hoje') }}"><span>Recebidas hoje</span><strong>{{ resumo.recebidas_hoje }}</strong></a>
     <a href="{{ url_for('encomendas.painel', filtro='pendentes') }}"><span>Aguardando resposta</span><strong>{{ resumo.aguardando }}</strong></a>
     <a href="{{ url_for('encomendas.retidas') }}"><span>Retidas na portaria</span><strong>{{ resumo.retidas }}</strong></a>
@@ -62,8 +18,8 @@
     <a href="{{ url_for('encomendas.painel', filtro='historico') }}"><span>Entregues na porta hoje</span><strong>{{ resumo.entregues_porta }}</strong></a>
 </section>
 
-<div class="packages-section-label"><strong>Fila operacional</strong><span>Use os filtros para localizar uma entrega rapidamente.</span></div>
-<form class="enc-filtros card packages-filters" method="get">
+<div class="pc-section-title"><div><span class="pc-kicker">FILA OPERACIONAL</span><strong>Encomendas em operação</strong></div><small>Localize por unidade, morador, código ou rastreio.</small></div>
+<form class="pc-package-filters pc-panel" method="get">
     <input name="q" value="{{ termo }}" placeholder="Unidade, morador, código ou rastreio">
     <select name="filtro">
         <option value="">Todas</option>
@@ -81,12 +37,12 @@
         <option value="">Todas as transportadoras</option>
         {% for item in transportadoras %}<option {{ 'selected' if transportadora == item }}>{{ item }}</option>{% endfor %}
     </select>
-    <button class="btn enc-btn enc-btn-primary" type="submit">Filtrar</button>
+    <button class="pc-btn pc-btn-primary" type="submit">Filtrar</button>
 </form>
 
-<div class="enc-lista packages-list">
+<div class="pc-package-list pc-panel">
 {% for encomenda in encomendas %}
-    <article class="card enc-item">
+    <article class="pc-package-row">
         <div class="enc-item-topo">
             <div><strong>Unidade {{ encomenda.unidade }}</strong><span>{{ encomenda.nome_morador or 'Morador não informado' }}</span></div>
             {{ status_badge(encomenda.status) }}
@@ -100,7 +56,8 @@
         {{ acoes(encomenda, 'painel') }}
     </article>
 {% else %}
-    <div class="card enc-vazio">Nenhuma encomenda encontrada para os filtros informados.</div>
+    <div class="pc-empty pc-empty-list">Nenhuma encomenda encontrada para os filtros informados.</div>
 {% endfor %}
 </div>
+</section>
 {% endblock %}
