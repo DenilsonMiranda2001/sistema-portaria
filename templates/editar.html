@@ -3,7 +3,7 @@
 
 {% block content %}
 {% if visitante %}
-<form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form quick-edit-form">
+<section class="module-form-premium"><header class="resident-page-head"><div><span class="resident-kicker">ATUALIZAÇÃO DE CADASTRO</span><h1>Editar visitante</h1><p>Revise identificação, veículo, observações e fotografia.</p></div><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">← Visitantes</a></header><form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form quick-edit-form">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="quick-access-grid">
 <section class="quick-panel quick-main">
@@ -37,7 +37,7 @@
 </aside>
 </div>
 <footer class="quick-submit"><span><b>Editando cadastro.</b> Revise os dados antes de salvar.</span><div class="quick-submit-actions"><a href="{{ url_for('visitantes.visitantes') }}">Cancelar</a><button class="btn-principal" type="submit">Salvar alterações</button></div></footer>
-</form>
+</form></section>
 {% else %}<div class="estado-erro">Visitante não encontrado.</div>{% endif %}
 
 <script>
