@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Registrar entrada{% endblock %}
 {% block content %}
-<form method="POST" autocomplete="off" class="quick-access-form entry-workstation">
+<section class="module-form-premium"><header class="resident-page-head"><div><span class="resident-kicker">CONTROLE DE ACESSO</span><h1>Registrar entrada</h1><p>Confirme a pessoa e o destino antes de liberar o acesso.</p></div><a class="btn-secundario" href="{{ url_for('main.index') }}">← Início</a></header><form method="POST" autocomplete="off" class="quick-access-form entry-workstation">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="quick-access-grid entry-access-grid">
 <section class="quick-panel quick-main">
@@ -22,7 +22,7 @@
 </aside>
 </div>
 <footer class="quick-submit"><span><b>Registrar presença.</b> Confirme visitante e destino.</span><div class="quick-submit-actions"><a href="{{ url_for('main.index') }}">Cancelar</a><button class="btn-principal" type="submit">Registrar entrada</button></div></footer>
-</form>
+</form></section>
 <script>
 const unidade=document.getElementById("entrada_unidade"),destino=document.getElementById("entrada_destino");
 if(unidade&&destino){unidade.addEventListener("change",()=>{const opt=unidade.options[unidade.selectedIndex];if(unidade.value&&!destino.value.trim())destino.value=(opt.textContent||"").split(" — ")[0].trim()})}
