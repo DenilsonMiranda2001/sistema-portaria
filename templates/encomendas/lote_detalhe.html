@@ -2,7 +2,9 @@
 {% from "encomendas/_macros.html" import status_badge, subnav, acoes %}
 {% block title %}Lote #{{ lote.id }}{% endblock %}
 {% block content %}
+<div class="enc-detail-premium">
 {{ subnav('lotes') }}
+<div class="enc-detail-kicker"><span></span> TRIAGEM EM ANDAMENTO</div>
 <div class="enc-header">
     <div>
         <h2>Lote #{{ lote.id }} · {{ lote.transportadora }}</h2>
@@ -24,8 +26,8 @@
 </div>
 
 {% if lote.status not in ('concluido', 'cancelado') %}
-<section class="card enc-rajada">
-    <h3>Adicionar próxima encomenda</h3>
+<section class="card enc-rajada enc-rajada-premium">
+    <div class="enc-rajada-title"><span>CADASTRO RÁPIDO</span><h3>Adicionar próxima encomenda</h3><small>O foco retorna para o próximo pacote após cada registro.</small></div>
     <form method="post" id="form-encomenda" autocomplete="off">
         <input type="hidden" name="_csrf_token" value="{{ csrf_encomendas() }}">
         <div class="enc-form-grid enc-form-grid-3">
@@ -47,7 +49,7 @@
 </section>
 {% endif %}
 
-<h3 class="enc-secao-titulo">Pacotes deste lote</h3>
+<div class="enc-package-heading"><h3 class="enc-secao-titulo">Pacotes deste lote</h3><span>{{ lote.total_encomendas }} registrado(s)</span></div>
 <div class="enc-lista">
 {% for encomenda in encomendas %}
 <article class="card enc-item">
@@ -60,6 +62,9 @@
 </article>
 {% else %}<div class="card enc-vazio">O lote ainda não possui encomendas.</div>{% endfor %}
 </div>
+<style>
+.enc-detail-premium{display:grid;gap:14px}.enc-detail-kicker{display:flex;align-items:center;gap:8px;color:#687e97;font-size:9px;font-weight:900;letter-spacing:.14em}.enc-detail-kicker span{width:7px;height:7px;border-radius:50%;background:#20b486;box-shadow:0 0 0 5px rgba(32,180,134,.09)}.enc-detail-premium>.enc-header{margin:0;padding:16px 18px;border:1px solid #dce5ef;border-radius:17px;background:linear-gradient(135deg,#fff,#f7faff);box-shadow:0 12px 30px rgba(15,38,66,.055)}.enc-detail-premium>.enc-header h2{margin:0;color:#0b203b;font-size:25px;letter-spacing:-.035em}.enc-detail-premium>.enc-header p{margin-top:5px}.enc-detail-premium .enc-lote-status{padding:8px;border-radius:12px;background:#f5f8fc}.enc-rajada-premium{padding:18px;border-radius:17px;box-shadow:0 14px 36px rgba(15,38,66,.07)}.enc-rajada-title{display:grid;gap:2px;margin-bottom:15px}.enc-rajada-title span{color:#2563eb;font-size:8px;font-weight:900;letter-spacing:.13em}.enc-rajada-title h3{margin:0;color:#0b203b;font-size:18px}.enc-rajada-title small{color:#8090a3}.enc-rajada-premium .enc-form-grid{gap:10px}.enc-rajada-premium input{background:#f8fafc;border-color:#dce5ef}.enc-rajada-premium .enc-salvar-proxima{min-height:42px;margin-top:12px;border-radius:10px;background:linear-gradient(135deg,#081d38,#0b3767);box-shadow:0 10px 22px rgba(8,29,56,.14)}.enc-package-heading{display:flex;align-items:end;justify-content:space-between;margin-top:4px}.enc-package-heading h3{margin:0}.enc-package-heading span{color:#8090a3;font-size:10px;font-weight:800}.enc-detail-premium>.enc-lista{grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:12px}.enc-detail-premium .enc-item{position:relative;padding:15px;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(15,38,66,.055)}.enc-detail-premium .enc-item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(#2563eb,#38bdf8)}.enc-detail-premium .enc-meta{padding:9px 10px;border-radius:9px;background:#f7f9fc}.enc-detail-premium .enc-meta b{color:#0b3767;font-size:14px}@media(max-width:760px){.enc-detail-premium>.enc-lista{grid-template-columns:1fr}.enc-detail-premium>.enc-header{align-items:stretch;flex-direction:column}}
+</style>
 <script>
 const buscaMorador = document.getElementById('morador_busca');
 if (buscaMorador) {
@@ -75,4 +80,5 @@ if (buscaMorador) {
     });
 }
 </script>
+</div>
 {% endblock %}
