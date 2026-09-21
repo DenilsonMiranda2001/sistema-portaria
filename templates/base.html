@@ -14,27 +14,19 @@
 <div class="app-shell">
 <header class="enterprise-header premium-header">
   <div class="enterprise-header-main">
-    <a class="enterprise-brand" href="{{ url_for('main.index') }}" aria-label="Portaria Control - Início">
-      <span class="enterprise-mark"><span>PC</span></span>
-      <span class="brand-copy"><strong>Portaria</strong><small>CONTROL</small></span>
-    </a>
-    <div class="enterprise-operation"><span class="operation-live"><i></i></span><div><small>CONDOMÍNIO ATIVO</small><strong>{{ session.get("condominio_nome", "Condomínio") }}</strong></div></div>
-    <div class="enterprise-account">
-      <span class="enterprise-avatar">{{ session.get("usuario_nome", "U")[:1]|upper }}</span>
-      <div class="account-copy"><strong>{{ session.get("usuario_nome", "Usuário") }}</strong><small>{{ 'Administrador' if session.get("usuario_tipo") == 'admin' else 'Operação' }}</small></div>
-      <form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button type="submit" class="account-exit" aria-label="Sair">Sair</button></form>
-    </div>
+    <a class="enterprise-brand" href="{{ url_for('main.index') }}"><span class="enterprise-mark"><span>PC</span></span><span class="brand-copy"><strong>Portaria Control</strong><small>ACESSO & SEGURANÇA</small></span></a>
+    <nav class="enterprise-nav premium-nav" aria-label="Navegação principal">
+      <a class="{{ 'is-active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}"><span class="nav-glyph">⌂</span><span>Início</span></a>
+      <a class="{{ 'is-active' if request.endpoint == 'visitantes.cadastro' else '' }}" href="{{ url_for('visitantes.cadastro') }}"><span class="nav-glyph">＋</span><span>Novo acesso</span></a>
+      <a class="{{ 'is-active' if request.endpoint == 'visitantes.visitantes' else '' }}" href="{{ url_for('visitantes.visitantes') }}"><span class="nav-glyph">◎</span><span>Visitantes</span></a>
+      <a class="{{ 'is-active' if request.endpoint == 'visitantes.ativos' else '' }}" href="{{ url_for('visitantes.ativos') }}"><span class="nav-glyph nav-live">●</span><span>Presentes</span></a>
+      <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('moradores') else '' }}" href="{{ url_for('moradores.listar') }}"><span class="nav-glyph">◇</span><span>Moradores</span></a>
+      <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('encomendas') else '' }}" href="{{ url_for('encomendas.painel') }}"><span class="nav-glyph">□</span><span>Encomendas</span></a>
+      {% if session.get("usuario_tipo") == "admin" %}<a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('admin') else '' }}" href="{{ url_for('admin.usuarios') }}"><span class="nav-glyph">⚙</span><span>Gestão</span></a>{% endif %}
+    </nav>
+    <div class="enterprise-account"><span class="operation-live"><i></i>ONLINE</span><div class="account-copy"><strong>{{ session.get("usuario_nome", "Usuário") }}</strong><small>{{ session.get("condominio_nome", "Condomínio") }}</small></div><span class="enterprise-avatar">{{ session.get("usuario_nome", "U")[:1]|upper }}</span><form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button type="submit" class="account-exit">Sair</button></form></div>
     <button class="enterprise-menu-button" type="button" aria-label="Abrir navegação" onclick="document.body.classList.toggle('topnav-open')"><span></span><span></span></button>
   </div>
-  <nav class="enterprise-nav premium-nav" aria-label="Navegação principal">
-    <a class="{{ 'is-active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}"><span class="nav-glyph">⌂</span>Início</a>
-    <a class="{{ 'is-active' if request.endpoint == 'visitantes.cadastro' else '' }}" href="{{ url_for('visitantes.cadastro') }}"><span class="nav-glyph">＋</span>Cadastro</a>
-    <a class="{{ 'is-active' if request.endpoint == 'visitantes.visitantes' else '' }}" href="{{ url_for('visitantes.visitantes') }}"><span class="nav-glyph">◎</span>Visitantes</a>
-    <a class="{{ 'is-active' if request.endpoint == 'visitantes.ativos' else '' }}" href="{{ url_for('visitantes.ativos') }}"><span class="nav-glyph nav-live">●</span>No condomínio</a>
-    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('moradores') else '' }}" href="{{ url_for('moradores.listar') }}"><span class="nav-glyph">◇</span>Moradores</a>
-    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('encomendas') else '' }}" href="{{ url_for('encomendas.painel') }}"><span class="nav-glyph">□</span>Encomendas</a>
-    {% if session.get("usuario_tipo") == "admin" %}<span class="enterprise-nav-separator"></span><a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('admin') else '' }}" href="{{ url_for('admin.usuarios') }}"><span class="nav-glyph">⚙</span>Gestão</a>{% endif %}
-  </nav>
 </header>
 <div class="enterprise-stage">
     <!-- ── CONTEÚDO ────────────────────────────────────── -->
