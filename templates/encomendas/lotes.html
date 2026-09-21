@@ -2,21 +2,19 @@
 {% from "encomendas/_macros.html" import status_badge, subnav %}
 {% block title %}Lotes de Encomendas{% endblock %}
 {% block content %}
+<div class="enc-premium enc-lotes-page">
 {{ subnav('lotes') }}
-<div class="compact-list-toolbar"><strong>Recebimentos</strong><a class="btn-principal" href="{{ url_for('encomendas.novo_lote') }}">Novo recebimento</a></div>
-<div class="card enc-tabela-wrap">
-<table class="tabela-padrao">
-    <thead><tr><th>Lote / chegada</th><th>Transportadora</th><th>Entregador</th><th>Total</th><th>Legado</th><th>Em custódia</th><th>Retiradas</th><th>Status</th></tr></thead>
-    <tbody>
-    {% for lote in lotes %}
-    <tr>
-        <td><a class="link-tabela" href="{{ url_for('encomendas.lote_detalhe', lote_id=lote.id) }}">#{{ lote.id }}</a><br><small>{{ lote.data_chegada.strftime('%d/%m/%Y %H:%M') }}</small></td>
-        <td>{{ lote.transportadora }}</td><td>{{ lote.nome_entregador or '—' }}</td>
-        <td>{{ lote.total }}</td><td>{{ lote.pendentes }}</td><td>{{ lote.retidas }}</td><td>{{ lote.retiradas }}</td>
-        <td>{{ status_badge(lote.status) }}</td>
-    </tr>
-    {% else %}<tr><td colspan="8">Nenhum lote cadastrado.</td></tr>{% endfor %}
-    </tbody>
-</table>
-</div>
+<div class="enc-header enc-premium-head"><div><span class="enc-eyebrow">RECEBIMENTOS</span><h2>Lotes</h2><p>Acompanhe cada chegada e o andamento da triagem.</p></div><a class="btn btn-submit enc-primary" href="{{ url_for('encomendas.novo_lote') }}">+ Novo lote</a></div>
+<div class="enc-lote-grid">
+{% for lote in lotes %}
+<a class="card enc-lote-card" href="{{ url_for('encomendas.lote_detalhe', lote_id=lote.id) }}">
+<div class="enc-lote-top"><div><span class="enc-lote-id">LOTE #{{ lote.id }}</span><strong>{{ lote.transportadora }}</strong><small>{{ lote.data_chegada.strftime('%d/%m/%Y · %H:%M') }}</small></div>{{ status_badge(lote.status) }}</div>
+<div class="enc-lote-entregador"><span>Entregador</span><b>{{ lote.nome_entregador or 'Não informado' }}</b></div>
+<div class="enc-lote-stats"><div><b>{{ lote.total }}</b><span>Pacotes</span></div><div><b>{{ lote.pendentes }}</b><span>Pendentes</span></div><div><b>{{ lote.retidas }}</b><span>Retidas</span></div><div><b>{{ lote.retiradas }}</b><span>Retiradas</span></div></div>
+<div class="enc-open">Abrir lote <span>→</span></div></a>
+{% else %}<div class="card enc-vazio">Nenhum lote cadastrado.</div>{% endfor %}
+</div></div>
+<style>
+.enc-premium{display:grid;gap:14px}.enc-eyebrow{display:block;margin-bottom:5px;color:#2563eb;font-size:9px;font-weight:900;letter-spacing:.16em}.enc-premium-head{margin:0}.enc-premium-head h2{font-size:28px;letter-spacing:-.04em}.enc-primary{border-radius:11px!important;background:linear-gradient(135deg,#081d38,#0c3767)!important}.enc-lote-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px}.enc-lote-card{display:grid;gap:13px;padding:17px;text-decoration:none;border-radius:17px;border:1px solid #dce5ef;box-shadow:0 12px 30px rgba(15,38,66,.055);transition:.18s}.enc-lote-card:hover{transform:translateY(-2px);border-color:#9fc0f4;box-shadow:0 18px 38px rgba(15,38,66,.1)}.enc-lote-top{display:flex;justify-content:space-between;gap:12px}.enc-lote-top>div{display:grid;gap:2px}.enc-lote-id{color:#2a67d5;font-size:9px;font-weight:900;letter-spacing:.12em}.enc-lote-top strong{color:#0b203b;font-size:18px}.enc-lote-top small{color:#8191a4}.enc-lote-entregador{display:grid;gap:2px;padding:10px 12px;border-radius:10px;background:#f7f9fc}.enc-lote-entregador span,.enc-lote-stats span{color:#7c8ca0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.enc-lote-entregador b{color:#263b54;font-size:12px}.enc-lote-stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #e4eaf1;border-radius:11px;overflow:hidden}.enc-lote-stats div{display:grid;gap:1px;padding:9px 10px;border-right:1px solid #e4eaf1}.enc-lote-stats div:last-child{border:0}.enc-lote-stats b{color:#0b203b;font-size:17px}.enc-open{display:flex;justify-content:space-between;color:#153a68;font-size:11px;font-weight:900}.enc-open span{font-size:16px}@media(max-width:700px){.enc-lote-grid{grid-template-columns:1fr}}
+</style>
 {% endblock %}
