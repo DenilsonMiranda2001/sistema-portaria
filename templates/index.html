@@ -1,73 +1,98 @@
 {% extends 'base.html' %}
-{% block title %}Início{% endblock %}
+{% block title %}Central · Portaria Control{% endblock %}
 
 {% block content %}
-<section class="desk-v2">
-  <div class="desk-v2-commandline">
-    <div><span class="desk-v2-eyebrow"><i></i> PORTARIA ONLINE</span><strong>{{ session.get("condominio_nome", "Condomínio") }}</strong></div>
-    <nav><a href="{{ url_for('visitantes.cadastro') }}">+ Novo visitante</a><a class="is-live" href="{{ url_for('visitantes.ativos') }}"><i></i>{{ total_ativos }} no condomínio</a></nav>
-  </div>
+<section class="pc-dashboard">
+  <header class="pc-pagehead">
+    <div>
+      <span class="pc-eyebrow"><i></i> PORTARIA ONLINE</span>
+      <h2>Central da portaria</h2>
+      <p>{{ session.get("condominio_nome", "Condomínio") }} · operação em tempo real</p>
+    </div>
+    <div class="pc-page-actions">
+      <a class="pc-btn pc-btn-secondary" href="{{ url_for('visitantes.ativos') }}"><span class="pc-live-dot"></span>{{ total_ativos }} ativos</a>
+      <a class="pc-btn pc-btn-primary" href="{{ url_for('visitantes.cadastro') }}">＋ Cadastrar visitante</a>
+    </div>
+  </header>
 
-  <div class="desk-v2-grid">
-    <main class="desk-v2-workspace">
-      <div class="desk-v2-search-head">
-        <div><span class="desk-v2-step">CONTROLE DE ACESSO</span><h2>Localizar pessoa</h2></div><span class="desk-v2-hint">Nome, CPF ou placa</span>
+  <section class="pc-metrics" aria-label="Resumo operacional">
+    <article><span>NO CONDOMÍNIO</span><strong id="ativos" class="contador" data-valor="{{ total_ativos }}">0</strong><small>Acessos ativos agora</small></article>
+    <article><span>ENTRADAS HOJE</span><strong id="entradas" class="contador" data-valor="{{ entradas_hoje }}">0</strong><small>Desde o início do dia</small></article>
+    <article><span>SAÍDAS HOJE</span><strong id="saidas" class="contador" data-valor="{{ saidas_hoje }}">0</strong><small>Saídas registradas</small></article>
+    <article><span>BASE</span><strong id="cadastrados" class="contador" data-valor="{{ total_cadastrados }}">0</strong><small>Visitantes cadastrados</small></article>
+  </section>
+
+  <div class="pc-operation-grid">
+    <main class="pc-panel pc-access-panel">
+      <div class="pc-panel-head">
+        <div><span class="pc-kicker">CONTROLE DE ACESSO</span><h3>Localizar pessoa</h3></div>
+        <span class="pc-help">Nome, CPF ou placa</span>
       </div>
-      <div class="desk-v2-search">
-        <span class="search-symbol"></span>
-        <input type="text" id="busca" class="input-padrao busca-input" placeholder="Digite nome, CPF ou placa..." autofocus autocomplete="off">
+      <div class="pc-search">
+        <span class="pc-search-icon" aria-hidden="true"></span>
+        <input type="text" id="busca" class="busca-input" placeholder="Digite nome, CPF ou placa..." autofocus autocomplete="off">
         <kbd>ENTER</kbd>
       </div>
       <div id="mensagem" class="mensagem-box"></div>
-      <div id="lista" class="lista-resultados desk-v2-results">
-        <div class="estado-vazio-inicial desk-v2-empty">
-          <div class="desk-v2-empty-icon">⌕</div>
-          <strong>Aguardando o próximo acesso</strong>
-          <span>Digite acima para localizar um cadastro.</span>
+      <div id="lista" class="lista-resultados pc-search-results">
+        <div class="estado-vazio-inicial pc-empty">
+          <span class="pc-empty-icon">⌕</span>
+          <div><strong>Pronto para o próximo acesso</strong><small>Pesquise um cadastro para registrar a movimentação.</small></div>
         </div>
       </div>
     </main>
 
-    <aside class="desk-v2-side">
-      <section class="desk-v2-inside">
-        <div class="desk-v2-inside-top"><span><i></i> AGORA NO CONDOMÍNIO</span><strong id="ativos" class="contador" data-valor="{{ total_ativos }}">0</strong></div>
-        <div class="desk-v2-inside-list">
+    <aside class="pc-rail">
+      <section class="pc-panel">
+        <div class="pc-panel-head pc-panel-head-tight">
+          <div><span class="pc-kicker">AGORA</span><h3>Dentro do condomínio</h3></div>
+          <span class="pc-count">{{ total_ativos }}</span>
+        </div>
+        <div class="pc-active-list">
           {% for a in visitantes_ativos_resumo[:4] %}
-          <a href="{{ url_for('visitantes.ativos') }}" class="desk-v2-person"><span class="person-initial">{{ a.nome[:1]|upper }}</span><div><strong>{{ a.nome }}</strong><small>{% if a.unidade_codigo %}Unidade {{ a.unidade_codigo }}{% elif a.endereco %}{{ a.endereco }}{% else %}Destino não informado{% endif %}</small></div><time>{{ a.data_entrada.strftime('%H:%M') if a.data_entrada else '—' }}</time></a>
+          <a href="{{ url_for('visitantes.ativos') }}" class="pc-person">
+            <span class="pc-avatar">{{ a.nome[:1]|upper }}</span>
+            <span class="pc-person-copy"><strong>{{ a.nome }}</strong><small>{% if a.unidade_codigo %}Unidade {{ a.unidade_codigo }}{% elif a.endereco %}{{ a.endereco }}{% else %}Destino não informado{% endif %}</small></span>
+            <time>{{ a.data_entrada.strftime('%H:%M') if a.data_entrada else '—' }}</time>
+          </a>
           {% else %}
-          <div class="desk-v2-clear"><span>✓</span><div><strong>Portaria livre</strong><small>Nenhum acesso ativo agora</small></div></div>
+          <div class="pc-clear"><span>✓</span><div><strong>Portaria livre</strong><small>Nenhum acesso ativo agora</small></div></div>
           {% endfor %}
         </div>
-        <a class="desk-v2-inside-foot" href="{{ url_for('visitantes.ativos') }}">Gerenciar acessos <b>→</b></a>
+        <a class="pc-panel-link" href="{{ url_for('visitantes.ativos') }}">Gerenciar acessos <b>→</b></a>
       </section>
 
-      <section class="desk-v2-today">
-        <div class="desk-v2-today-title"><span>HOJE</span><small>Movimentação da portaria</small></div>
-        <div class="desk-v2-stat"><strong id="entradas" class="contador" data-valor="{{ entradas_hoje }}">0</strong><span>Entradas</span></div>
-        <div class="desk-v2-stat"><strong id="saidas" class="contador" data-valor="{{ saidas_hoje }}">0</strong><span>Saídas</span></div>
+      <section class="pc-panel pc-quick">
+        <div class="pc-panel-head pc-panel-head-tight"><div><span class="pc-kicker">ATALHOS</span><h3>Ações rápidas</h3></div></div>
+        <div class="pc-quick-grid">
+          <a href="{{ url_for('visitantes.cadastro') }}"><b>＋</b><span>Novo visitante</span></a>
+          <a href="{{ url_for('encomendas.painel') }}"><b>□</b><span>Encomendas</span></a>
+          <a href="{{ url_for('moradores.listar') }}"><b>⌂</b><span>Moradores</span></a>
+          <a href="{{ url_for('visitantes.ativos') }}"><b>→</b><span>Registrar saída</span></a>
+        </div>
       </section>
     </aside>
   </div>
 
-  <section class="desk-v2-bottom">
-    <div class="desk-v2-recent">
-      <div class="desk-v2-section-head"><div><span>MOVIMENTO RECENTE</span><h3>Últimas entradas</h3></div><a href="{{ url_for('visitantes.ativos') }}">Ver todos →</a></div>
-      {% if ultimas_entradas %}
-      <div class="desk-v2-recent-list">
-        {% for e in ultimas_entradas[:4] %}
-        <div class="desk-v2-recent-row"><span class="person-initial">{{ e.nome[:1]|upper }}</span><div class="desk-v2-recent-name"><strong>{{ e.nome }}</strong><small>{% if e.morador_nome %}{{ e.morador_nome }}{% elif e.endereco %}{{ e.endereco }}{% else %}Destino não informado{% endif %}</small></div><span class="desk-v2-destination">{% if e.unidade_codigo %}{{ e.unidade_codigo }}{% else %}{{ e.endereco or '—' }}{% endif %}</span><time>{{ e.data_entrada.strftime('%H:%M') if e.data_entrada else '—' }}</time></div>
-        {% endfor %}
+  <section class="pc-panel pc-recent">
+    <div class="pc-panel-head">
+      <div><span class="pc-kicker">MOVIMENTO RECENTE</span><h3>Últimas entradas</h3></div>
+      <a href="{{ url_for('visitantes.ativos') }}">Ver todos →</a>
+    </div>
+    {% if ultimas_entradas %}
+    <div class="pc-recent-list">
+      {% for e in ultimas_entradas[:4] %}
+      <div class="pc-recent-row">
+        <span class="pc-avatar">{{ e.nome[:1]|upper }}</span>
+        <span class="pc-person-copy"><strong>{{ e.nome }}</strong><small>{% if e.morador_nome %}{{ e.morador_nome }}{% elif e.endereco %}{{ e.endereco }}{% else %}Destino não informado{% endif %}</small></span>
+        <span class="pc-destination">{% if e.unidade_codigo %}{{ e.unidade_codigo }}{% else %}{{ e.endereco or '—' }}{% endif %}</span>
+        <time>{{ e.data_entrada.strftime('%H:%M') if e.data_entrada else '—' }}</time>
       </div>
-      {% else %}
-      <div class="desk-v2-no-recent">Nenhuma entrada registrada hoje.</div>
-      {% endif %}
+      {% endfor %}
     </div>
-    <div class="desk-v2-snapshot">
-      <span>BASE CADASTRADA</span>
-      <div><strong id="moradores" class="contador" data-valor="{{ total_moradores }}">0</strong><small>Moradores</small></div>
-      <div><strong id="cadastrados" class="contador" data-valor="{{ total_cadastrados }}">0</strong><small>Visitantes</small></div>
-      <footer><span>Última entrada</span><strong id="ultima_nome">{{ ultima_nome }}</strong><small id="ultima_hora">{{ ultima_hora }}</small></footer>
-    </div>
+    {% else %}
+    <div class="pc-no-data">Nenhuma entrada registrada hoje.</div>
+    {% endif %}
   </section>
 </section>
 

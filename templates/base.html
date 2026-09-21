@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Portaria Control{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='portaria-premium-v3.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='portaria-control.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js" defer></script>
@@ -21,7 +20,7 @@
             <div class="navbar-brand-icon" aria-hidden="true">PC</div>
             <div class="navbar-brand-textos">
                 <h1>Portaria Control</h1>
-                <span>Operação de acesso e portaria</span>
+                <span>Central de operação</span>
             </div>
         </div>
 
@@ -34,10 +33,10 @@
                    href="{{ url_for('visitantes.cadastro') }}">Cadastro</a>
 
                 <a class="btn btn-nav {% if request.endpoint == 'visitantes.visitantes' %}btn-nav-ativo{% endif %}"
-                   href="{{ url_for('visitantes.visitantes') }}">Cadastros</a>
+                   href="{{ url_for('visitantes.visitantes') }}">Visitantes</a>
 
                 <a class="btn btn-nav {% if request.endpoint == 'visitantes.ativos' %}btn-nav-ativo{% endif %}"
-                   href="{{ url_for('visitantes.ativos') }}">Acessos ativos</a>
+                   href="{{ url_for('visitantes.ativos') }}">Ativos</a>
 
                 <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('moradores') %}btn-nav-ativo{% endif %}"
                    href="{{ url_for('moradores.listar') }}">Moradores</a>
