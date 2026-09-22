@@ -437,24 +437,31 @@ def listar_moradores(apenas_ativos=True):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            filtro = "AND m.ativo = TRUE" if apenas_ativos else ""
-            query = (  # nosec B608 - filtro is a local boolean-controlled constant
-                f"""
-                SELECT
-                    m.id, m.nome, m.cpf, m.telefone, m.email,
-                    m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
-                    m.ativo, m.observacao, m.criado_em
-                FROM moradores m
-                LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
-                WHERE m.condominio_id = %s {filtro}
-                ORDER BY m.nome
-                """
-            )
-            cur.execute(query, (tenant_id,))
+            if apenas_ativos:
+                cur.execute("""
+                    SELECT
+                        m.id, m.nome, m.cpf, m.telefone, m.email,
+                        m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
+                        m.ativo, m.observacao, m.criado_em
+                    FROM moradores m
+                    LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
+                    WHERE m.condominio_id = %s AND m.ativo = TRUE
+                    ORDER BY m.nome
+                """, (tenant_id,))
+            else:
+                cur.execute("""
+                    SELECT
+                        m.id, m.nome, m.cpf, m.telefone, m.email,
+                        m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
+                        m.ativo, m.observacao, m.criado_em
+                    FROM moradores m
+                    LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
+                    WHERE m.condominio_id = %s
+                    ORDER BY m.nome
+                """, (tenant_id,))
             return cur.fetchall()
     finally:
         liberar(conn)
-
 
 def buscar_moradores(termo):
     tenant_id = _tenant_id()
