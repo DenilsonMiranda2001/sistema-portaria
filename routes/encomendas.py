@@ -106,7 +106,13 @@ def novo_lote():
             logger.exception("Erro ao criar lote de encomendas")
             flash("Não foi possível criar o lote.", "erro")
             return redirect(url_for("encomendas.novo_lote"))
-    return render_template("encomendas/novo_lote.html", transportadoras=TRANSPORTADORAS, entregadores=listar_entregadores(apenas_ativos=True))
+    entregador_selecionado = request.args.get("entregador_id", type=int)
+    return render_template(
+        "encomendas/novo_lote.html",
+        transportadoras=TRANSPORTADORAS,
+        entregadores=listar_entregadores(apenas_ativos=True),
+        entregador_selecionado=entregador_selecionado,
+    )
 
 
 @encomendas_bp.route("/lotes/<int:lote_id>", methods=["GET", "POST"])
