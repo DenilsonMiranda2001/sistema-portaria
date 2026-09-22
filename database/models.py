@@ -27,6 +27,10 @@ def criar_usuario(nome, usuario, senha, nivel, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Administrador inválido para este condomínio.")
             login = (usuario or "").strip()
             cur.execute("SELECT 1 FROM platform_admins WHERE usuario = %s", (login,))
             if cur.fetchone():
