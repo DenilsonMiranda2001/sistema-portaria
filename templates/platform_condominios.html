@@ -2,17 +2,7 @@
 {% block title %}Administração Geral | Portaria Control{% endblock %}
 {% block content %}
 <section class="platform-admin">
-  <section class="platform-hero">
-    <div>
-      <span class="platform-eyebrow">PAINEL DA PLATAFORMA</span>
-      <h1>Administração Geral</h1>
-      <p>Gerencie condomínios e crie os acessos iniciais de cada operação.</p>
-    </div>
-    <div class="platform-user">
-      <span>Admin geral</span>
-      <strong>{{ session.get("usuario_nome", "Administrador") }}</strong>
-    </div>
-  </section>
+  <header class="platform-workspace-head"><div><span class="platform-eyebrow">CONTROL PLANE</span><h1>Operações</h1><p>Tenants, acessos e disponibilidade da plataforma.</p></div><span class="platform-count">{{ resumo.ativos or 0 }} ativas</span></header>
 
   <section class="platform-summary">
     <div><strong>{{ resumo.total or 0 }}</strong><span>Condomínios</span></div>
@@ -20,7 +10,7 @@
     <div><strong>{{ condominios|sum(attribute='usuarios_ativos') }}</strong><span>Usuários ativos</span></div>
   </section>
 
-  <section class="platform-card platform-create">
+  <details class="platform-card platform-create"><summary><span><b>＋ Nova operação</b><small>Cadastrar condomínio e preparar o tenant</small></span><i>Expandir</i></summary><div class="platform-create-body">
     <div class="platform-card-head">
       <div><span class="platform-step">01</span><h2>Novo condomínio</h2></div>
       <p>Cadastre uma nova operação com um identificador único.</p>
@@ -31,7 +21,7 @@
       <label><span>Código único</span><input name="slug" placeholder="ex.: residencial-brasilia" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" maxlength="80" required autocomplete="off"></label>
       <button class="platform-primary" type="submit">Criar condomínio</button>
     </form>
-  </section>
+  </div></details>
 
   <section class="platform-list">
     <div class="platform-section-title">
@@ -48,19 +38,7 @@
         </header>
         <div class="platform-metrics"><span><strong>{{ c.usuarios_ativos }}</strong> usuários ativos</span><span><strong>{{ c.admins_ativos }}</strong> administradores</span></div>
         <a class="platform-manage" href="{{ url_for('platform_admin.detalhe_condominio', condominio_id=c.id) }}">Gerenciar operação →</a>
-        <div class="platform-divider"></div>
-        <div class="platform-user-create">
-          <div><h4>Criar acesso</h4><p>Adicione a administração ou equipe de portaria deste condomínio.</p></div>
-          <form class="platform-user-form" method="post" action="{{ url_for('platform_admin.criar_usuario_condominio', condominio_id=c.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <label><span>Nome</span><input name="nome" placeholder="Nome completo" required autocomplete="name"></label>
-            <label><span>Login</span><input name="usuario" placeholder="Usuário de acesso" required autocomplete="off"></label>
-            <label><span>Senha inicial</span><input type="password" name="senha" placeholder="Mínimo 12 caracteres" minlength="12" required autocomplete="new-password"></label>
-            <label><span>Perfil</span><select name="nivel"><option value="admin">Administração</option><option value="funcionario">Porteiro / Funcionário</option></select></label>
-            <button class="platform-secondary" type="submit">Criar usuário</button>
-          </form>
-        </div>
-      </article>
+        </article>
       {% else %}
       <div class="platform-empty"><strong>Nenhum condomínio cadastrado.</strong><span>Use o formulário acima para criar a primeira operação.</span></div>
       {% endfor %}
