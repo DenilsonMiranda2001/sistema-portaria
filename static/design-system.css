@@ -301,3 +301,29 @@ body{font-size:14px}
 @media(min-width:1000px){.pc-reference-dashboard{height:calc(100vh - 72px);overflow:hidden}.pc-reference-grid{align-items:start}.pc-dashboard-head{min-height:58px}.pc-access-hero{min-height:0}}
 @media(max-width:900px){.container{padding-left:18px;padding-right:18px}.pc-reference-dashboard{height:auto;overflow:visible}.pc-reference-grid{grid-template-columns:1fr}.pc-home-summary{grid-template-columns:1fr 1fr 1fr}}
 @media(max-width:600px){.container{padding-left:12px;padding-right:12px}.pc-home-summary{grid-template-columns:1fr}.pc-home-summary>a,.pc-home-summary>div{border-right:0;border-bottom:1px solid var(--line)}.pc-home-summary>*:last-child{border-bottom:0}.pc-pagehead h2{font-size:24px}}
+
+/* 2026 spacing correction: readable density without dead space */
+.pc-reference-dashboard{padding-top:18px}
+.pc-dashboard-head{margin-bottom:12px}
+.pc-pagehead{padding-block:0}
+.pc-home-summary{margin-bottom:12px}
+.pc-home-summary>a,.pc-home-summary>div{min-height:68px;padding:12px 18px}
+.pc-reference-grid{gap:14px}
+.pc-access-hero{padding:18px 20px}
+.pc-access-hero-copy{margin-bottom:12px}
+.pc-access-hero-copy h3{margin-top:4px;margin-bottom:4px}
+.pc-hero-search{margin-top:0}
+.pc-search-results{min-height:74px;margin-top:10px}
+.pc-hero-actions{margin-top:10px}
+.pc-active-card .pc-panel-head{padding:16px}
+.pc-active-list{min-height:72px}
+@media(min-width:1000px){
+ .pc-reference-dashboard{height:auto;min-height:calc(100vh - 72px);overflow:visible}
+ .pc-dashboard-head{min-height:0}
+}
+
+/* Shared desktop rhythm for every operational screen */
+.pc-page,.pc-dashboard,.pc-packages,.pc-residents,.pc-visitors,.pc-users,.pc-audit,.pc-history{padding-top:18px;padding-bottom:28px}
+.pc-pagehead{margin-bottom:14px}
+.pc-panel+.pc-panel,.pc-panel+.pc-section,.pc-section+.pc-panel{margin-top:12px}
+.pc-form-grid,.pc-data-grid,.pc-lot-grid{gap:12px}
