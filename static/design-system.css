@@ -409,3 +409,53 @@ body{font-size:14px}
 .navbar-logout-form .btn-sair{min-height:40px;padding-inline:14px}
 @media(max-width:1100px){.navbar-sistema{padding-left:18px;padding-right:18px}.navbar-brand{min-width:174px}.btn-nav{padding-inline:10px}}
 @media(max-width:820px){.navbar-sistema{min-height:auto;padding:10px 14px}.navbar-brand-icon{width:36px;height:36px}.btn-nav-ativo::after{bottom:3px}}
+
+/* Encomendas — operational module aligned with current product scale */
+.pc-packages{gap:12px}
+.pc-packages .pc-subnav{margin:0 0 2px}
+.pc-packages .enc-subnav{min-height:44px;margin:0;padding:5px;gap:4px;border-radius:10px}
+.pc-packages .enc-subnav a{min-height:32px;display:inline-flex;align-items:center;padding:0 12px;font-size:10px}
+.pc-packages .pc-pagehead-compact{margin-bottom:2px}
+.pc-packages .pc-pagehead-compact h2{font-size:22px}
+.pc-packages .pc-pagehead-compact .pc-eyebrow{font-size:8px}
+.pc-packages .pc-package-metrics{border-radius:12px}
+.pc-packages .pc-package-metrics a{padding:15px 16px}
+.pc-packages .pc-package-metrics span{font-size:9px}
+.pc-packages .pc-package-metrics strong{margin-top:6px;font-size:25px}
+.pc-packages .pc-section-title{padding-top:8px}
+.pc-packages .pc-section-title strong{font-size:15px}
+.pc-packages .pc-section-title small{font-size:10px}
+.pc-packages .pc-package-filters{gap:9px;padding:11px;border-radius:11px}
+.pc-packages .pc-package-filters input,.pc-packages .pc-package-filters select{min-height:44px;font-size:12px}
+.pc-packages .pc-package-filters .pc-btn{min-height:44px;padding-inline:16px}
+.pc-packages .pc-package-row{grid-template-columns:minmax(210px,.9fr) minmax(280px,1.45fr) auto;gap:18px;min-height:82px;padding:14px 16px}
+.pc-packages .pc-package-row .enc-item-topo strong{font-size:13px}
+.pc-packages .pc-package-row .enc-item-topo>div>span{font-size:10px}
+.pc-packages .pc-package-row .enc-meta{gap:14px;align-items:center;flex-wrap:wrap}
+.pc-packages .pc-package-row .enc-meta span{font-size:10px}
+.pc-packages .enc-acoes{justify-content:flex-end;gap:8px}
+.pc-packages .enc-retirada-form{display:flex;align-items:center;gap:7px;padding:8px;border-radius:8px}
+.pc-packages .enc-retirada-form input{width:190px;min-height:38px;font-size:11px}
+.pc-packages .enc-btn,.pc-packages .pc-btn{min-height:38px;font-size:10px}
+.pc-packages .enc-badge{min-height:25px;padding:4px 8px;font-size:9px}
+.pc-packages .pc-package-search{padding:11px;border-radius:11px}
+.pc-packages .pc-package-search .pc-search input{min-height:42px;font-size:12px}
+.pc-packages .pc-package-intake,.pc-packages .pc-triage{padding:16px;border-radius:12px}
+.pc-packages .pc-form-heading strong{font-size:13px}.pc-packages .pc-form-heading small{font-size:9px}
+.pc-packages .pc-field>span{font-size:9px}.pc-packages .pc-field small{font-size:9px}
+.pc-packages .pc-field input,.pc-packages .pc-field select,.pc-packages .pc-field textarea{min-height:44px;font-size:12px}
+.pc-packages .pc-field textarea{min-height:76px}
+.pc-packages .pc-lot-grid{gap:14px}
+.pc-packages .pc-lot-card{border-radius:12px}
+.pc-packages .pc-lot-head{padding:15px 16px}.pc-packages .pc-lot-head>div>span{font-size:8px}.pc-packages .pc-lot-head strong{font-size:14px}.pc-packages .pc-lot-head small{font-size:9px}
+.pc-packages .pc-lot-owner{padding:11px 16px}.pc-packages .pc-lot-owner span{font-size:8px}.pc-packages .pc-lot-owner b{font-size:11px}
+.pc-packages .pc-lot-stats div{padding:11px 8px}.pc-packages .pc-lot-stats b{font-size:16px}.pc-packages .pc-lot-stats span{font-size:8px}
+.pc-packages .pc-open-row{padding:11px 16px;font-size:10px}
+.pc-packages .pc-lot-detail-head{padding:14px 16px;border-radius:12px}
+.pc-packages .pc-lot-detail-head h2{font-size:20px}.pc-packages .pc-lot-detail-head p{font-size:10px}
+.pc-packages .pc-pickup-code{padding:9px 12px}.pc-packages .pc-pickup-code span{font-size:8px}.pc-packages .pc-pickup-code b{font-size:14px}
+.pc-packages .pc-history-row{min-height:68px;gap:16px;padding:12px 15px}
+.pc-packages .pc-history-person time{font-size:9px}.pc-packages .pc-history-person time b{font-size:11px}.pc-packages .pc-history-person strong{font-size:12px}.pc-packages .pc-history-person small{font-size:9px}
+.pc-packages .pc-history-status small{font-size:8px}
+@media(max-width:1050px){.pc-packages .pc-package-row{grid-template-columns:1fr}.pc-packages .enc-acoes{justify-content:flex-start}.pc-packages .pc-lot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.pc-packages{gap:10px}.pc-packages .enc-subnav{width:100%}.pc-packages .pc-lot-grid{grid-template-columns:1fr}.pc-packages .enc-retirada-form{align-items:stretch;flex-direction:column}.pc-packages .enc-retirada-form input{width:100%}}
