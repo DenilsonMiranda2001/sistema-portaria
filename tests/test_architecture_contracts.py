@@ -36,3 +36,9 @@ def test_package_constraints_are_eventually_validated():
     migration = Path("migrations/0016_validate_package_constraints.sql").read_text(encoding="utf-8")
     assert "VALIDATE CONSTRAINT ck_encomendas_status_known" in migration
     assert "VALIDATE CONSTRAINT ck_encomendas_retirada_evidence" in migration
+
+
+def test_request_telemetry_keeps_request_id_status_and_duration():
+    source = Path("app.py").read_text(encoding="utf-8")
+    assert "request_complete request_id=%s method=%s path=%s status=%s duration_ms=%.1f" in source
+    assert "time.perf_counter()" in source
