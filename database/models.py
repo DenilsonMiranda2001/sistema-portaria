@@ -715,6 +715,10 @@ def cadastrar_visitante(nome, cpf, tipo, placa, modelo, marca, foto, observacao,
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("""
                 INSERT INTO visitantes (condominio_id, nome, cpf, tipo, placa, modelo, marca, foto, observacao, endereco)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
