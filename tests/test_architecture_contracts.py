@@ -26,3 +26,7 @@ def test_audit_schema_supports_non_tenant_platform_actor():
     assert "actor_tipo" in sql
     assert "actor_id" in sql
     assert "idx_audit_actor_time" in sql
+
+
+def test_legacy_sqlite_database_module_is_removed():
+    assert not Path("database/database.py").exists()
