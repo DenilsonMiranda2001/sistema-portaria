@@ -209,3 +209,11 @@ def test_delivery_people_routes_enforce_roles_and_admin_only_status():
     assert source.count('@roles_required("admin", "funcionario")') >= 3
     status = source[source.index('def status(entregador_id)') - 120:]
     assert '@roles_required("admin")' in status
+
+
+def test_platform_queries_expose_tenant_health_metrics():
+    source = Path("database/platform.py").read_text(encoding="utf-8")
+    for metric in ("acessos_abertos", "encomendas_pendentes", "ultima_atividade", "admins_ativos"):
+        assert metric in source
+    assert "moradores_ativos" in source
+    assert "visitantes_cadastrados" in source
