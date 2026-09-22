@@ -176,3 +176,10 @@ def test_visitor_delete_route_logs_unexpected_failures():
     section = source[source.index("def remover(id)"):source.index("def historico(id)")]
     assert 'logger.exception("Erro ao remover visitante")' in section
     assert 'flash("Não foi possível remover o visitante.", "erro")' in section
+
+
+def test_request_timing_handles_csrf_rejection_before_before_request():
+    source = Path("app.py").read_text(encoding="utf-8")
+    assert 'started_at = getattr(g, "request_started_at", None)' in source
+    assert 'if started_at is not None else None' in source
+    assert 'duration_ms if duration_ms is not None else 0.0' in source
