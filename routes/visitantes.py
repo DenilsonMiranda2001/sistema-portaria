@@ -499,6 +499,11 @@ def atualizar_foto_ajax():
         if not foto_base64:
             return jsonify({"status": "erro", "mensagem": "Nenhuma imagem enviada."}), 400
 
+        visitante = buscar_visitante_por_id(visitante_id)
+        if not visitante:
+            return jsonify({"status": "erro", "mensagem": "Visitante não encontrado."}), 404
+        foto_anterior = visitante.get("foto")
+
         if current_app.config.get("APP_ENV") == "production":
             if not _storage_ready():
                 return jsonify({"status": "erro", "mensagem": "Armazenamento privado de fotos não está configurado."}), 503
@@ -515,8 +520,28 @@ def atualizar_foto_ajax():
             if not nome_arquivo:
                 return jsonify({"status": "erro", "mensagem": "Falha ao salvar imagem."}), 400
 
-        atualizar_foto_visitante(visitante_id, nome_arquivo, session["usuario_id"])
-        return jsonify({"status": "ok", "mensagem": "Foto atualizada.", "foto": nome_arquivo})
+        try:
+            alterou = atualizar_foto_visitante(visitante_id, nome_arquivo, session["usuario_id"])
+        except Exception:
+            if current_app.config.get("APP_ENV") == "production":
+                try:
+                    delete_image(nome_arquivo)
+                except Exception:
+                    logger.exception("Falha ao limpar foto órfã após erro no AJAX")
+            raise
+        if not alterou:
+            if current_app.config.get("APP_ENV") == "production":
+                try:
+                    delete_image(nome_arquivo)
+                except Exception:
+                    logger.exception("Falha ao limpar foto órfã de visitante inexistente")
+            return jsonify({"status": "erro", "mensagem": "Visitante não encontrado."}), 404
+        if current_app.config.get("APP_ENV") == "production" and foto_anterior and "/" in foto_anterior:
+            try:
+                delete_image(foto_anterior)
+            except Exception:
+                logger.exception("Falha ao remover foto anterior após atualização AJAX")
+        return jsonify({"status": "ok", "mensagem": "Foto atualizada.", "foto_url": url_for("visitantes.foto", id=visitante_id)})
 
     except Exception:
         logger.exception("Erro em /atualizar_foto_ajax")
