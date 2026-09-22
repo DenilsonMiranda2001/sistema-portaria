@@ -868,6 +868,10 @@ def atualizar_visitante(visitante_id, nome, cpf, tipo, placa, modelo, marca, fot
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             if foto:
                 cur.execute("""
                     UPDATE visitantes
