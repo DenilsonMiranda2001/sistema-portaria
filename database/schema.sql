@@ -80,10 +80,24 @@ CREATE TABLE IF NOT EXISTS visitas (
     usuario_saida_id   INTEGER      REFERENCES usuarios(id) ON DELETE SET NULL
 );
 
+-- ENTREGADORES
+CREATE TABLE IF NOT EXISTS entregadores (
+    id BIGSERIAL PRIMARY KEY,
+    condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
+    nome VARCHAR(150) NOT NULL,
+    documento VARCHAR(50),
+    telefone VARCHAR(30),
+    transportadora VARCHAR(80),
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- LOTES DE ENCOMENDAS
 CREATE TABLE IF NOT EXISTS lotes_encomendas (
     id                SERIAL PRIMARY KEY,
     condominio_id     INTEGER REFERENCES condominios(id) ON DELETE RESTRICT,
+    entregador_id     BIGINT REFERENCES entregadores(id) ON DELETE RESTRICT,
     nome_entregador   VARCHAR(150),
     transportadora    VARCHAR(50)  NOT NULL,
     observacao        TEXT,
@@ -153,6 +167,7 @@ CREATE INDEX IF NOT EXISTS idx_moradores_unidade     ON moradores(unidade_id);
 CREATE INDEX IF NOT EXISTS idx_visitas_visitante     ON visitas(visitante_id);
 CREATE INDEX IF NOT EXISTS idx_visitas_data_entrada  ON visitas(data_entrada);
 CREATE INDEX IF NOT EXISTS idx_visitas_sem_saida     ON visitas(visitante_id) WHERE data_saida IS NULL;
+CREATE INDEX IF NOT EXISTS idx_entregadores_tenant_ativos_nome ON entregadores(condominio_id, ativo, nome);
 CREATE INDEX IF NOT EXISTS idx_lotes_encomendas_data ON lotes_encomendas(data_chegada);
 CREATE INDEX IF NOT EXISTS idx_lotes_encomendas_status ON lotes_encomendas(status);
 CREATE INDEX IF NOT EXISTS idx_encomendas_lote       ON encomendas(lote_id);

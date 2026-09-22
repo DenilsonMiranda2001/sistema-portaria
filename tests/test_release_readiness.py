@@ -183,3 +183,14 @@ def test_request_timing_handles_csrf_rejection_before_before_request():
     assert 'started_at = getattr(g, "request_started_at", None)' in source
     assert 'if started_at is not None else None' in source
     assert 'duration_ms if duration_ms is not None else 0.0' in source
+
+
+def test_delivery_people_ui_is_csrf_protected_and_package_intake_supports_linking():
+    listing = Path("templates/entregadores/lista.html").read_text(encoding="utf-8")
+    form = Path("templates/entregadores/form.html").read_text(encoding="utf-8")
+    intake = Path("templates/encomendas/novo_lote.html").read_text(encoding="utf-8")
+    app = Path("app.py").read_text(encoding="utf-8")
+    assert 'name="csrf_token"' in listing
+    assert 'name="csrf_token"' in form
+    assert 'name="entregador_id"' in intake
+    assert "entregadores_bp" in app
