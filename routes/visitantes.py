@@ -473,14 +473,20 @@ def atualizar_foto_ajax():
             return jsonify({"status": "erro", "mensagem": "Nenhuma imagem enviada."}), 400
 
         if current_app.config.get("APP_ENV") == "production":
-            return jsonify({"status": "erro", "mensagem": "Captura por webcam está temporariamente indisponível até o armazenamento privado ser configurado."}), 503
+            if not _storage_ready():
+                return jsonify({"status": "erro", "mensagem": "Armazenamento privado de fotos não está configurado."}), 503
+            try:
+                nome_arquivo = save_webcam_image(foto_base64, g.tenant_id)
+            except (ValueError, RuntimeError):
+                logger.exception("Falha ao persistir captura de webcam")
+                return jsonify({"status": "erro", "mensagem": "Não foi possível armazenar a foto com segurança."}), 400
+        else:
+            pasta = os.path.join(current_app.root_path, "static", "fotos")
+            os.makedirs(pasta, exist_ok=True)
+            nome_arquivo = salvar_foto_webcam(foto_base64, pasta)
 
-        pasta = os.path.join(current_app.root_path, "static", "fotos")
-        os.makedirs(pasta, exist_ok=True)
-        nome_arquivo = salvar_foto_webcam(foto_base64, pasta)
-
-        if not nome_arquivo:
-            return jsonify({"status": "erro", "mensagem": "Falha ao salvar imagem."}), 400
+            if not nome_arquivo:
+                return jsonify({"status": "erro", "mensagem": "Falha ao salvar imagem."}), 400
 
         atualizar_foto_visitante(visitante_id, nome_arquivo, session["usuario_id"])
         return jsonify({"status": "ok", "mensagem": "Foto atualizada.", "foto": nome_arquivo})
