@@ -350,3 +350,19 @@ body{font-size:14px}
 .pc-empty{padding:34px}.pc-empty strong{font-size:13px}.pc-empty small{font-size:10px}
 @media(max-width:1050px){.pc-directory-row,.pc-access-row{grid-template-columns:44px minmax(160px,1fr) minmax(120px,.7fr) auto}}
 @media(max-width:760px){.pc-directory-row,.pc-access-row{grid-template-columns:42px minmax(0,1fr) auto;gap:11px;padding:11px 12px}.pc-search-compact{min-width:0}.pc-access-photo{width:40px;height:40px}}
+
+/* Task-first forms: keep primary work above the fold */
+.pc-taskbar{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px}
+.pc-taskbar>div{display:flex;align-items:baseline;gap:10px}.pc-taskbar strong{font-size:18px;line-height:1.1}.pc-taskbar span{color:var(--muted);font-size:10px}
+.pc-form-shell{gap:10px}.pc-form-main{gap:10px}
+.pc-form-section,.pc-photo-panel{padding:14px}
+.pc-form-heading{margin-bottom:10px}
+.pc-form-grid{gap:9px 11px}
+.pc-photo-stage{min-height:190px}
+.pc-form-footer{margin-top:0}
+@media(min-width:1100px) and (min-height:720px){
+ .pc-module:has(.pc-form-shell){gap:10px}
+ .pc-module:has(.pc-form-shell) .pc-form-section{padding-top:12px;padding-bottom:12px}
+ .pc-module:has(.pc-form-shell) .pc-photo-panel{padding-top:12px;padding-bottom:12px}
+}
+@media(max-width:760px){.pc-taskbar{align-items:stretch;flex-direction:column}.pc-taskbar>div{display:block}.pc-taskbar span{display:block;margin-top:3px}}
