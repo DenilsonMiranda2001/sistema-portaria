@@ -217,3 +217,15 @@ def test_platform_queries_expose_tenant_health_metrics():
         assert metric in source
     assert "moradores_ativos" in source
     assert "visitantes_cadastrados" in source
+
+
+def test_platform_control_plane_has_real_operational_overview():
+    source = Path("database/platform.py").read_text(encoding="utf-8")
+    route = Path("routes/platform_admin.py").read_text(encoding="utf-8")
+    template = Path("templates/platform_condominios.html").read_text(encoding="utf-8")
+    assert "def resumo_operacional_plataforma" in source
+    assert "eventos_24h" in source
+    assert "actor_tipo='platform_admin'" in source
+    assert "resumo_operacional_plataforma()" in route
+    assert "platform-audit-feed" in template
+    assert "encomendas_pendentes" in template
