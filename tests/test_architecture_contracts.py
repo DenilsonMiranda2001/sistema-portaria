@@ -42,3 +42,9 @@ def test_request_telemetry_keeps_request_id_status_and_duration():
     source = Path("app.py").read_text(encoding="utf-8")
     assert "request_complete request_id=%s method=%s path=%s status=%s duration_ms=%.1f" in source
     assert "time.perf_counter()" in source
+
+
+def test_visit_indexes_avoid_duplicate_open_visit_barriers():
+    migration = Path("migrations/0017_visit_index_cleanup.sql").read_text(encoding="utf-8")
+    assert "DROP INDEX IF EXISTS uq_visitas_tenant_visitante_ativa" in migration
+    assert "idx_visitas_tenant_saida" in migration
