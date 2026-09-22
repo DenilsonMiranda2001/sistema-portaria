@@ -180,3 +180,11 @@ def test_visitor_lookup_endpoints_reject_unbounded_or_invalid_searches():
     assert "if len(termo) < 2" in buscar_ajax
     assert "if len(cpf) != 11 or not validar_cpf(cpf)" in buscar_cpf
     assert "if len(termo) < 2" in buscar_ativos
+
+
+def test_resident_activation_routes_do_not_report_false_success():
+    source = Path("routes/moradores.py").read_text(encoding="utf-8")
+    assert 'alterou = inativar_morador(id, session["usuario_id"])' in source
+    assert '"Morador já estava inativo."' in source
+    assert 'alterou = ativar_morador(id, session["usuario_id"])' in source
+    assert '"Morador já estava ativo."' in source
