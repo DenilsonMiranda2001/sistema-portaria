@@ -93,3 +93,12 @@ def test_production_config_validates_private_storage_and_audit_salt():
     config = Path("config.py").read_text(encoding="utf-8")
     for name in ("S3_ENDPOINT_URL", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "AUDIT_IP_SALT"):
         assert name in config
+
+
+def test_private_storage_validates_decoded_image_content():
+    source = Path("utils/storage.py").read_text(encoding="utf-8")
+    assert "Image.open(stream)" in source
+    assert "image.verify()" in source
+    assert "FORMAT_EXTENSIONS" in source
+    assert "_require_tenant(tenant_id)" in source
+    assert 'file_storage.mimetype or "application/octet-stream"' not in source
