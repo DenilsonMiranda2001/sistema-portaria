@@ -48,3 +48,9 @@ def test_visit_indexes_avoid_duplicate_open_visit_barriers():
     migration = Path("migrations/0017_visit_index_cleanup.sql").read_text(encoding="utf-8")
     assert "DROP INDEX IF EXISTS uq_visitas_tenant_visitante_ativa" in migration
     assert "idx_visitas_tenant_saida" in migration
+
+
+def test_web_startup_never_mutates_database_schema():
+    source = Path("app.py").read_text(encoding="utf-8")
+    assert "criar_tabelas" not in source
+    assert "migrations.migrate" not in source
