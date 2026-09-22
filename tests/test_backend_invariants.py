@@ -169,7 +169,7 @@ def test_database_connections_bound_query_and_idle_transaction_time():
 def test_visitor_profile_mutations_validate_actor_inside_tenant_transaction():
     source = Path("database/models.py").read_text(encoding="utf-8")
     visitor_section = source[source.index("def cpf_ja_cadastrado"):]
-    assert visitor_section.count('raise ValueError("Usuário inválido para este condomínio.")') >= 6
+    assert visitor_section.count('raise ValueError("Usuário inválido para este condomínio.")') >= 7
 
 
 def test_visitor_lookup_endpoints_reject_unbounded_or_invalid_searches():
