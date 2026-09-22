@@ -67,3 +67,27 @@ def test_login_limiter_has_continuous_retention_and_fails_closed():
     auth = Path("routes/auth.py").read_text(encoding="utf-8")
     assert "DELETE FROM login_attempts" in auth
     assert "return True" in auth[auth.index("def _login_rate_limited"):auth.index("def _record_failed_login")]
+
+
+def test_admin_mutation_forms_keep_csrf_and_post_semantics():
+    users = Path("templates/usuarios.html").read_text(encoding="utf-8")
+    edit = Path("templates/editar_usuario.html").read_text(encoding="utf-8")
+    password = Path("templates/alterar_senha_usuario.html").read_text(encoding="utf-8")
+    assert 'action="{{ url_for(\'admin.inativar_usuario_rota\'' in users
+    assert 'action="{{ url_for(\'admin.ativar_usuario_rota\'' in users
+    assert users.count('name="csrf_token"') >= 3
+    assert 'name="csrf_token"' in edit
+    assert 'name="csrf_token"' in password
+
+
+def test_production_webcam_update_uses_private_object_storage():
+    route = Path("routes/visitantes.py").read_text(encoding="utf-8")
+    block = route[route.index("def atualizar_foto_ajax"):route.index("# IMPORTAÇÃO CSV")]
+    assert "save_webcam_image(foto_base64, g.tenant_id)" in block
+    assert "temporariamente indisponível" not in block
+
+
+def test_production_config_requires_private_storage_and_audit_salt():
+    config = Path("config.py").read_text(encoding="utf-8")
+    for name in ("S3_ENDPOINT_URL", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "AUDIT_IP_SALT"):
+        assert name in config
