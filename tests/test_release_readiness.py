@@ -49,7 +49,7 @@ def test_visitor_photos_use_authorized_route_not_public_static_paths():
     for name in ("ativos.html", "visitantes.html", "editar.html", "historico.html"):
         source = Path("templates", name).read_text(encoding="utf-8")
         assert "static/fotos/" not in source
-        assert "visitantes.foto" in source if name == "historico.html" else True
+        assert "visitantes.foto" in source
     routes = Path("routes/visitantes.py").read_text(encoding="utf-8")
     assert '@visitantes_bp.route("/foto/<int:id>")' in routes
     assert "presigned_image_url" in routes
