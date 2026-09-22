@@ -141,8 +141,8 @@ def inativar(id):
         flash("Morador não encontrado.", "erro")
         return redirect(url_for("moradores.listar"))
 
-    inativar_morador(id, session["usuario_id"])
-    flash(f"Morador {morador['nome']} inativado.", "sucesso")
+    alterou = inativar_morador(id, session["usuario_id"])
+    flash(f"Morador {morador['nome']} inativado." if alterou else "Morador já estava inativo.", "sucesso" if alterou else "aviso")
     return redirect(url_for("moradores.listar"))
 
 
@@ -154,6 +154,6 @@ def ativar(id):
         flash("Morador não encontrado.", "erro")
         return redirect(url_for("moradores.listar"))
 
-    ativar_morador(id, session["usuario_id"])
-    flash(f"Morador {morador['nome']} reativado.", "sucesso")
+    alterou = ativar_morador(id, session["usuario_id"])
+    flash(f"Morador {morador['nome']} reativado." if alterou else "Morador já estava ativo.", "sucesso" if alterou else "aviso")
     return redirect(url_for("moradores.listar"))
