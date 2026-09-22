@@ -101,6 +101,10 @@ def atualizar_status_lote(lote_id, status, usuario_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("""
                 UPDATE lotes_encomendas SET status = %s
                 WHERE id = %s AND condominio_id = %s AND status IN ('aberto', 'em_triagem')
@@ -299,6 +303,10 @@ def atualizar_status_encomenda(encomenda_id, status, retirado_por=None, usuario_
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("SELECT status FROM encomendas WHERE id=%s AND condominio_id=%s FOR UPDATE", (encomenda_id, tenant_id))
             atual = cur.fetchone()
             if not atual:
