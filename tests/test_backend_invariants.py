@@ -115,3 +115,17 @@ def test_audit_ip_pseudonymization_uses_keyed_hmac():
     assert "hmac.new(" in source
     assert 'salt.encode("utf-8")' in source
     assert 'ip.encode("utf-8")' in source
+
+
+def test_package_dashboard_uses_index_friendly_time_ranges():
+    source = Path("database/encomendas.py").read_text(encoding="utf-8")
+    assert "data_retirada::date = CURRENT_DATE" not in source
+    assert "atualizado_em::date = CURRENT_DATE" not in source
+    assert "data_retirada >= CURRENT_DATE" in source
+    assert "atualizado_em >= CURRENT_DATE" in source
+
+
+def test_package_dashboard_has_tenant_time_indexes():
+    migration = Path("migrations/0018_package_dashboard_indexes.sql").read_text(encoding="utf-8")
+    assert "idx_encomendas_tenant_retirada" in migration
+    assert "idx_encomendas_tenant_atualizado_final" in migration
