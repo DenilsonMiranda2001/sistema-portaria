@@ -28,3 +28,9 @@ def test_operational_routes_are_not_left_implicit():
         route_count = source.count("_bp.route(")
         role_count = source.count("@roles_required(")
         assert route_count == role_count, (path, route_count, role_count)
+
+
+def test_visitor_ajax_mutation_does_not_report_success_for_cross_tenant_miss():
+    source = Path("routes/visitantes.py").read_text(encoding="utf-8")
+    assert "alterou = atualizar_observacao_visitante" in source
+    assert '"Visitante não encontrado."}), 404' in source
