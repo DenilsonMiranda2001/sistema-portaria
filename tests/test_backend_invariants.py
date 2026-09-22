@@ -139,5 +139,5 @@ def test_package_status_mutations_validate_actor_inside_tenant_transaction():
 
 def test_user_mutations_validate_admin_actor_inside_tenant_transaction():
     source = Path("database/models.py").read_text(encoding="utf-8")
-    assert source.count("AND ativo=TRUE AND nivel='admin'") >= 4
-    assert source.count('raise ValueError("Administrador inválido para este condomínio.")') >= 4
+    assert source.count("AND ativo=TRUE AND nivel='admin'") >= 5
+    assert source.count('raise ValueError("Administrador inválido para este condomínio.")') >= 5
