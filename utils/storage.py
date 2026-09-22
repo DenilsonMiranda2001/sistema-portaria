@@ -36,7 +36,7 @@ def _validated_upload(file_storage):
         _validate_dimensions(image)
         image.verify()
         fmt = (image.format or "").upper()
-    except (UnidentifiedImageError, OSError, ValueError) as exc:
+    except (UnidentifiedImageError, Image.DecompressionBombError, OSError, ValueError) as exc:
         raise ValueError("Arquivo enviado não é uma imagem válida.") from exc
     finally:
         stream.seek(0)
@@ -94,7 +94,7 @@ def save_webcam_image(data_url, tenant_id):
         image.verify()
         if image.format != "JPEG":
             raise ValueError("Captura de webcam inválida.")
-    except (UnidentifiedImageError, OSError) as exc:
+    except (UnidentifiedImageError, Image.DecompressionBombError, OSError, ValueError) as exc:
         raise ValueError("Captura de webcam inválida.") from exc
     key = f"condominios/{tenant_id}/visitantes/{uuid.uuid4().hex}.jpg"
     endpoint = os.getenv("S3_ENDPOINT_URL")
