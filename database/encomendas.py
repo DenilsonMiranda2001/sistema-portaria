@@ -192,6 +192,7 @@ def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            # nosec B608 - where/order are assembled only from internal allow-listed SQL fragments.
             cur.execute(f"""
                 SELECT e.*, l.transportadora, l.nome_entregador, l.status AS lote_status,
                        m.telefone
@@ -222,7 +223,7 @@ def listar_encomendas(filtro=None, termo=None, lote_id=None, transportadora=None
     clausulas = []
     params = []
     if filtro == "hoje":
-        clausulas.append("e.data_chegada::date = CURRENT_DATE")
+        clausulas.append("e.data_chegada >= CURRENT_DATE AND e.data_chegada < CURRENT_DATE + INTERVAL '1 day'")
     elif filtro == "pendentes":
         clausulas.append("e.status = 'retida_portaria'")
     elif filtro == "retidas":
@@ -257,7 +258,7 @@ def resumo_painel():
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT
-                    COUNT(*) FILTER (WHERE data_chegada::date = CURRENT_DATE)::int AS recebidas_hoje,
+                    COUNT(*) FILTER (WHERE data_chegada >= CURRENT_DATE AND data_chegada < CURRENT_DATE + INTERVAL '1 day')::int AS recebidas_hoje,
                     COUNT(*) FILTER (WHERE status = 'retida_portaria')::int AS aguardando,
                     COUNT(*) FILTER (WHERE status = 'retida_portaria')::int AS retidas,
                     COUNT(*) FILTER (WHERE status = 'retirada'
