@@ -36,7 +36,7 @@
           <div><h3>{{ c.nome }}</h3><p>Código <strong>{{ c.slug }}</strong></p></div>
           <span class="platform-status {{ 'is-active' if c.ativo else 'is-inactive' }}">{{ 'Ativo' if c.ativo else 'Inativo' }}</span>
         </header>
-        <div class="platform-metrics"><span><strong>{{ c.usuarios_ativos }}</strong> usuários ativos</span><span><strong>{{ c.admins_ativos }}</strong> administradores</span></div>
+        <div class="platform-metrics"><span><strong>{{ c.usuarios_ativos }}</strong> usuários</span><span><strong>{{ c.admins_ativos }}</strong> admins</span><span><strong>{{ c.acessos_abertos }}</strong> acessos agora</span><span><strong>{{ c.encomendas_pendentes }}</strong> encomendas</span></div><div class="platform-activity"><span>Última atividade</span><strong>{{ c.ultima_atividade.strftime('%d/%m/%Y %H:%M') if c.ultima_atividade else 'Sem atividade' }}</strong></div>
         <a class="platform-manage" href="{{ url_for('platform_admin.detalhe_condominio', condominio_id=c.id) }}">Gerenciar operação →</a>
         </article>
       {% else %}
