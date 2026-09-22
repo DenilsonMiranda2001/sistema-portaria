@@ -17,4 +17,4 @@ def test_shells_are_structurally_separate():
     assert "modalFoto" not in tenant
     assert "modalFoto" not in platform
     assert "{% block global_overlays %}" in tenant
-    assert "Administração da plataforma" in platform
+    assert "ADMINISTRAÇÃO DA PLATAFORMA" in platform
