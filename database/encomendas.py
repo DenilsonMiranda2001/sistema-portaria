@@ -1,4 +1,5 @@
 import secrets
+from psycopg2 import sql
 import string
 from datetime import datetime
 
@@ -192,22 +193,20 @@ def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            query = (  # nosec B608 - fragments are internal allow-listed SQL only
-                f"""
+            # Callers pass only internal allow-listed fragments; values remain bound parameters.
+            query = sql.SQL("""
                 SELECT e.*, l.transportadora, l.nome_entregador, l.status AS lote_status,
                        m.telefone
                 FROM encomendas e
                 JOIN lotes_encomendas l ON l.id = e.lote_id AND l.condominio_id = e.condominio_id
                 LEFT JOIN moradores m ON m.id = e.morador_id AND m.condominio_id = e.condominio_id
-                WHERE e.condominio_id = %s {where}
-                ORDER BY {order}
-                """
-            )
+                WHERE e.condominio_id = %s {}
+                ORDER BY {}
+            """).format(sql.SQL(where), sql.SQL(order))
             cur.execute(query, (tenant_id, *params))
             return cur.fetchall()
     finally:
         liberar(conn)
-
 
 def listar_encomendas_lote(lote_id):
     tenant_id = _tenant_id()
