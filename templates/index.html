@@ -8,11 +8,10 @@
     <div class="pc-page-actions"><a class="pc-btn pc-btn-secondary" href="{{ url_for('visitantes.ativos') }}"><span class="pc-live-dot"></span>{{ total_ativos }} ativos</a><a class="pc-btn pc-btn-primary" href="{{ url_for('visitantes.cadastro') }}">＋ Cadastrar visitante</a></div>
   </header>
 
-  <section class="pc-metrics" aria-label="Resumo operacional">
-    <article><span>NO CONDOMÍNIO</span><strong id="ativos" class="contador" data-valor="{{ total_ativos }}">0</strong><small>Pessoas no momento</small></article>
-    <article><span>ENTRADAS HOJE</span><strong id="entradas" class="contador" data-valor="{{ entradas_hoje }}">0</strong><small>Desde 00:00</small></article>
-    <article><span>SAÍDAS HOJE</span><strong id="saidas" class="contador" data-valor="{{ saidas_hoje }}">0</strong><small>Desde 00:00</small></article>
-    <article><span>BASE</span><strong id="cadastrados" class="contador" data-valor="{{ total_cadastrados }}">0</strong><small>Visitantes cadastrados</small></article>
+  <section class="pc-home-summary" aria-label="Resumo operacional">
+    <a href="{{ url_for('visitantes.ativos') }}"><strong id="ativos" class="contador" data-valor="{{ total_ativos }}">0</strong><span>No condomínio</span></a>
+    <div><strong id="entradas" class="contador" data-valor="{{ entradas_hoje }}">0</strong><span>Entradas hoje</span></div>
+    <div><strong id="saidas" class="contador" data-valor="{{ saidas_hoje }}">0</strong><span>Saídas hoje</span></div>
   </section>
 
   <div class="pc-reference-grid">
@@ -25,15 +24,11 @@
         <div class="pc-hero-actions"><a href="{{ url_for('visitantes.cadastro') }}"><b>＋</b><span>Novo visitante</span></a><a href="{{ url_for('visitantes.ativos') }}"><b>→</b><span>Registrar saída</span></a><a href="{{ url_for('encomendas.painel') }}"><b>□</b><span>Encomendas</span></a><a href="{{ url_for('moradores.listar') }}"><b>⌂</b><span>Moradores</span></a></div>
       </main>
 
-      <section class="pc-panel pc-recent">
-        <div class="pc-panel-head"><div><span class="pc-kicker">MOVIMENTO RECENTE</span><h3>Últimas entradas</h3></div><a href="{{ url_for('visitantes.ativos') }}">Ver todos →</a></div>
-        {% if ultimas_entradas %}<div class="pc-recent-list">{% for e in ultimas_entradas[:5] %}<div class="pc-recent-row"><span class="pc-avatar">{{ e.nome[:1]|upper }}</span><span class="pc-person-copy"><strong>{{ e.nome }}</strong><small>{% if e.morador_nome %}{{ e.morador_nome }}{% elif e.endereco %}{{ e.endereco }}{% else %}Destino não informado{% endif %}</small></span><span class="pc-destination">{% if e.unidade_codigo %}{{ e.unidade_codigo }}{% else %}{{ e.endereco or '—' }}{% endif %}</span><time>{{ e.data_entrada.strftime('%H:%M') if e.data_entrada else '—' }}</time></div>{% endfor %}</div>{% else %}<div class="pc-no-data">Nenhuma entrada registrada hoje.</div>{% endif %}
-      </section>
-    </div>
+      </div>
 
     <aside class="pc-reference-rail">
       <section class="pc-panel pc-active-card"><div class="pc-panel-head pc-panel-head-tight"><div><span class="pc-kicker">EM TEMPO REAL</span><h3>Pessoas no condomínio</h3></div><span class="pc-count">{{ total_ativos }}</span></div><div class="pc-active-list">{% for a in visitantes_ativos_resumo[:5] %}<a href="{{ url_for('visitantes.ativos') }}" class="pc-person"><span class="pc-avatar">{{ a.nome[:1]|upper }}</span><span class="pc-person-copy"><strong>{{ a.nome }}</strong><small>{% if a.unidade_codigo %}Unidade {{ a.unidade_codigo }}{% elif a.endereco %}{{ a.endereco }}{% else %}Destino não informado{% endif %}</small></span><time>{{ a.data_entrada.strftime('%H:%M') if a.data_entrada else '—' }}</time></a>{% else %}<div class="pc-clear"><span>✓</span><div><strong>Portaria livre</strong><small>Nenhum acesso ativo agora</small></div></div>{% endfor %}</div><a class="pc-panel-link" href="{{ url_for('visitantes.ativos') }}">Ver todos os ativos <b>→</b></a></section>
-      <section class="pc-security-card"><span class="pc-security-icon">✓</span><div><strong>Portaria mais segura</strong><p>Controle de acesso, histórico e operação em um só lugar.</p></div></section>
+      
     </aside>
   </div>
 </section>
