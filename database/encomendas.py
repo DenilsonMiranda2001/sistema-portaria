@@ -191,7 +191,8 @@ def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=
     tenant_id = _tenant_id()
     conn = conectar()
     try:
-        with conn.cursor() as cur:            query = f"""  # nosec B608 - fragments are internal allow-listed SQL only
+        with conn.cursor() as cur:            query = (  # nosec B608 - fragments are internal allow-listed SQL only
+                f"""
                 SELECT e.*, l.transportadora, l.nome_entregador, l.status AS lote_status,
                        m.telefone
                 FROM encomendas e
@@ -199,7 +200,8 @@ def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=
                 LEFT JOIN moradores m ON m.id = e.morador_id AND m.condominio_id = e.condominio_id
                 WHERE e.condominio_id = %s {where}
                 ORDER BY {order}
-            """
+                """
+            )
             cur.execute(query, (tenant_id, *params))
             return cur.fetchall()
     finally:
