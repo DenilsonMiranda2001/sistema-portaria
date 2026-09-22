@@ -153,3 +153,11 @@ def test_dynamic_visitor_search_does_not_interpolate_backend_data_into_html():
     assert "${v.observacao" not in source
     assert "name.textContent" in source
     assert "valueEl.textContent" in source
+
+
+def test_visit_autocomplete_does_not_render_suggestions_with_inner_html():
+    for template in ("templates/cadastro.html", "templates/editar.html"):
+        source = Path(template).read_text(encoding="utf-8")
+        assert "div.innerHTML = destacar" not in source
+        assert "strong.textContent" in source
+        assert "document.createTextNode" in source
