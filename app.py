@@ -14,6 +14,7 @@ from routes.visitantes import visitantes_bp
 from routes.auth import auth_bp
 from routes.moradores import moradores_bp
 from routes.encomendas import encomendas_bp
+from routes.entregadores import entregadores_bp
 from database.connection import verificar_conexao
 from utils.authz import load_identity
 
@@ -41,6 +42,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(platform_admin_bp)
 app.register_blueprint(moradores_bp)
 app.register_blueprint(encomendas_bp)
+app.register_blueprint(entregadores_bp)
 
 ROTAS_PUBLICAS = {"auth.login", "auth.logout", "static", "healthz", "readyz"}
 

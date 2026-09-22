@@ -24,7 +24,7 @@ def _codigo_retirada(cur):
     raise RuntimeError("Não foi possível gerar um código de retirada único.")
 
 
-def criar_lote(nome_entregador, transportadora, observacao, usuario_id):
+def criar_lote(nome_entregador, transportadora, observacao, usuario_id, entregador_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
     try:
@@ -32,13 +32,27 @@ def criar_lote(nome_entregador, transportadora, observacao, usuario_id):
             cur.execute("SELECT 1 FROM usuarios WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (usuario_id, tenant_id))
             if not cur.fetchone():
                 raise ValueError("Usuário inválido para este condomínio.")
+            entregador = None
+            if entregador_id:
+                cur.execute("""
+                    SELECT id, nome, transportadora
+                    FROM entregadores
+                    WHERE id=%s AND condominio_id=%s AND ativo=TRUE
+                """, (entregador_id, tenant_id))
+                entregador = cur.fetchone()
+                if not entregador:
+                    raise ValueError("Entregador inválido para este condomínio.")
+                nome_entregador = entregador["nome"]
+                if not transportadora:
+                    transportadora = entregador["transportadora"]
+
             cur.execute("""
                 INSERT INTO lotes_encomendas
-                    (condominio_id, nome_entregador, transportadora, observacao, usuario_criacao_id)
-                VALUES (%s, %s, %s, %s, %s)
+                    (condominio_id, entregador_id, nome_entregador, transportadora, observacao, usuario_criacao_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
-                tenant_id,
+                tenant_id, entregador_id,
                 (nome_entregador or "").strip().upper() or None,
                 (transportadora or "").strip(),
                 (observacao or "").strip() or None,
@@ -199,7 +213,7 @@ def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=
         with conn.cursor() as cur:
             # Callers pass only internal allow-listed fragments; values remain bound parameters.
             query = sql.SQL("""
-                SELECT e.*, l.transportadora, l.nome_entregador, l.status AS lote_status,
+                SELECT e.*, l.transportadora, l.nome_entregador, l.entregador_id, l.status AS lote_status,
                        m.telefone
                 FROM encomendas e
                 JOIN lotes_encomendas l ON l.id = e.lote_id AND l.condominio_id = e.condominio_id
