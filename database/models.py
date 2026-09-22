@@ -1265,7 +1265,12 @@ def total_entradas_hoje():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) AS total FROM visitas WHERE condominio_id = %s AND DATE(data_entrada) = CURRENT_DATE", (tenant_id,))
+            cur.execute("""
+                SELECT COUNT(*) AS total FROM visitas
+                WHERE condominio_id = %s
+                  AND data_entrada >= CURRENT_DATE
+                  AND data_entrada < CURRENT_DATE + INTERVAL '1 day'
+            """, (tenant_id,))
             r = cur.fetchone()
             return r["total"] if r else 0
     finally:
@@ -1277,7 +1282,12 @@ def total_saidas_hoje():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) AS total FROM visitas WHERE condominio_id = %s AND DATE(data_saida) = CURRENT_DATE", (tenant_id,))
+            cur.execute("""
+                SELECT COUNT(*) AS total FROM visitas
+                WHERE condominio_id = %s
+                  AND data_saida >= CURRENT_DATE
+                  AND data_saida < CURRENT_DATE + INTERVAL '1 day'
+            """, (tenant_id,))
             r = cur.fetchone()
             return r["total"] if r else 0
     finally:
