@@ -366,3 +366,17 @@ body{font-size:14px}
  .pc-module:has(.pc-form-shell) .pc-photo-panel{padding-top:12px;padding-bottom:12px}
 }
 @media(max-width:760px){.pc-taskbar{align-items:stretch;flex-direction:column}.pc-taskbar>div{display:block}.pc-taskbar span{display:block;margin-top:3px}}
+
+/* Residents module — same task-first density as visitor operations */
+.pc-profile-taskbar{padding:0;background:transparent;border:0;box-shadow:none}
+.pc-profile-taskbar .pc-profile-person{gap:10px}
+.pc-profile-taskbar .pc-profile-avatar{width:38px;height:38px;font-size:13px}
+.pc-profile-taskbar .pc-profile-person>div>strong{font-size:18px}
+.pc-profile-taskbar .pc-profile-person>div>span{display:block;margin-top:2px;color:var(--muted);font-size:10px}
+.pc-profile-grid{gap:10px}
+.pc-profile-card{padding:14px}
+.pc-data-grid{gap:10px}
+.pc-data-grid>div{padding:10px 12px}
+.pc-data-grid small{font-size:9px}.pc-data-grid strong{font-size:12px}
+.pc-context-visual{padding:14px}
+.pc-note,.pc-danger-zone{padding:12px 14px}
