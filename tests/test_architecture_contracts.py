@@ -54,3 +54,5 @@ def test_web_startup_never_mutates_database_schema():
     source = Path("app.py").read_text(encoding="utf-8")
     assert "criar_tabelas" not in source
     assert "migrations.migrate" not in source
+    models = Path("database/models.py").read_text(encoding="utf-8")
+    assert "def criar_tabelas(" not in models
