@@ -50,6 +50,10 @@ def atualizar_condominio(condominio_id,nome,slug,actor_id=None):
     conn=conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM platform_admins WHERE id=%s AND ativo=TRUE", (actor_id,))
+                if not cur.fetchone():
+                    raise ValueError("Administrador da plataforma inválido.")
             cur.execute("UPDATE condominios SET nome=%s,slug=%s WHERE id=%s RETURNING id",(nome,slug,condominio_id))
             row=cur.fetchone()
             if row and actor_id:
@@ -66,6 +70,10 @@ def definir_status_condominio(condominio_id,ativo,actor_id=None):
     conn=conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM platform_admins WHERE id=%s AND ativo=TRUE", (actor_id,))
+                if not cur.fetchone():
+                    raise ValueError("Administrador da plataforma inválido.")
             if not ativo:
                 cur.execute("SELECT id FROM condominios WHERE id=%s FOR UPDATE", (condominio_id,))
                 if not cur.fetchone():
@@ -93,6 +101,10 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo,actor_id=None):
     conn=conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM platform_admins WHERE id=%s AND ativo=TRUE", (actor_id,))
+                if not cur.fetchone():
+                    raise ValueError("Administrador da plataforma inválido.")
             cur.execute("SELECT id,nivel,ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE",(usuario_id,condominio_id))
             alvo=cur.fetchone()
             if not alvo or alvo["ativo"] == ativo:
@@ -117,6 +129,10 @@ def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=No
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM platform_admins WHERE id=%s AND ativo=TRUE", (actor_id,))
+                if not cur.fetchone():
+                    raise ValueError("Administrador da plataforma inválido.")
             cur.execute("INSERT INTO condominios(nome,slug,ativo) VALUES(%s,%s,TRUE) RETURNING id", (nome, slug))
             condominio_id = cur.fetchone()["id"]
             usuario_id = None
@@ -148,6 +164,10 @@ def criar_usuario_tenant(condominio_id, nome, usuario, senha_hash, nivel, actor_
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM platform_admins WHERE id=%s AND ativo=TRUE", (actor_id,))
+                if not cur.fetchone():
+                    raise ValueError("Administrador da plataforma inválido.")
             cur.execute("SELECT id FROM condominios WHERE id=%s AND ativo=TRUE FOR SHARE", (condominio_id,))
             if not cur.fetchone():
                 raise ValueError("Condomínio não encontrado ou inativo.")
