@@ -13,14 +13,18 @@
 
 <body>
 <div class="app-shell">
+    <div class="pc-product-strip">
+        <div class="pc-product-strip-left"><span class="pc-product-mark">P</span><strong>PORTARIA CONTROL</strong><span class="pc-product-edition">OPERATIONS</span></div>
+        <div class="pc-product-strip-right"><span class="pc-system-state"><i></i>Sistema operacional</span><span class="pc-condo-context">{{ session.get("condominio_nome", "Condomínio") }}</span></div>
+    </div>
 
     <!-- ── NAVBAR ─────────────────────────────────────── -->
     <header class="navbar-sistema">
         <div class="navbar-brand">
-            <div class="navbar-brand-icon" aria-hidden="true">PC</div>
+            <div class="navbar-brand-icon" aria-hidden="true"><span>PC</span></div>
             <div class="navbar-brand-textos">
                 <h1>Portaria Control</h1>
-                <span>Central de operação</span>
+                <span>Gestão de acesso & portaria</span>
             </div>
         </div>
 
