@@ -13,7 +13,7 @@ def listar_entregadores(apenas_ativos=False):
     try:
         with conn.cursor() as cur:
             where = "AND e.ativo=TRUE" if apenas_ativos else ""
-            cur.execute(f"""
+            query = """
                 SELECT e.*,
                        COUNT(l.id)::int AS total_lotes,
                        MAX(l.data_chegada) AS ultima_entrega
@@ -23,7 +23,8 @@ def listar_entregadores(apenas_ativos=False):
                 WHERE e.condominio_id=%s {where}
                 GROUP BY e.id
                 ORDER BY e.ativo DESC, e.nome, e.id
-            """, (tenant_id,))
+            """.replace("{where}", where)
+            cur.execute(query, (tenant_id,))
             return cur.fetchall()
     finally:
         liberar(conn)
