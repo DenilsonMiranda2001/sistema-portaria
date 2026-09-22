@@ -129,3 +129,9 @@ def test_package_dashboard_has_tenant_time_indexes():
     migration = Path("migrations/0018_package_dashboard_indexes.sql").read_text(encoding="utf-8")
     assert "idx_encomendas_tenant_retirada" in migration
     assert "idx_encomendas_tenant_atualizado_final" in migration
+
+
+def test_package_status_mutations_validate_actor_inside_tenant_transaction():
+    source = Path("database/encomendas.py").read_text(encoding="utf-8")
+    assert source.count('SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE') >= 2
+    assert source.count('raise ValueError("Usuário inválido para este condomínio.")') >= 3
