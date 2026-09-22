@@ -4,7 +4,7 @@
 {% block content %}
 <section class="pc-dashboard pc-reference-dashboard">
   <header class="pc-pagehead pc-dashboard-head">
-    <div><span class="pc-eyebrow"><i></i> PORTARIA ONLINE</span><h2>Central da portaria</h2><p>{{ session.get("condominio_nome", "Condomínio") }} · operação em tempo real</p></div>
+    <div><span class="pc-eyebrow"><i></i> PORTARIA ONLINE · {{ session.get("condominio_nome", "Condomínio") }}</span><h2>Central da portaria</h2></div>
     <div class="pc-page-actions"><a class="pc-btn pc-btn-secondary" href="{{ url_for('visitantes.ativos') }}"><span class="pc-live-dot"></span>{{ total_ativos }} ativos</a><a class="pc-btn pc-btn-primary" href="{{ url_for('visitantes.cadastro') }}">＋ Cadastrar visitante</a></div>
   </header>
 
