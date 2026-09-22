@@ -437,7 +437,8 @@ def listar_moradores(apenas_ativos=True):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            filtro = "AND m.ativo = TRUE" if apenas_ativos else ""            query = (  # nosec B608 - filtro is a local boolean-controlled constant
+            filtro = "AND m.ativo = TRUE" if apenas_ativos else ""
+            query = (  # nosec B608 - filtro is a local boolean-controlled constant
                 f"""
                 SELECT
                     m.id, m.nome, m.cpf, m.telefone, m.email,
