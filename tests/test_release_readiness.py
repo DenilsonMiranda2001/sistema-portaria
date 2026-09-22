@@ -220,3 +220,13 @@ def test_server_rendered_active_exit_form_includes_csrf_token():
     form = ativos[start:form_end]
     assert 'name="csrf_token"' in form
     assert "global_csrf_token()" in form
+
+
+def test_product_ui_avoids_browser_native_confirmation_and_datalist():
+    templates = Path("templates")
+    sources = "\n".join(path.read_text(encoding="utf-8") for path in templates.rglob("*.html"))
+    assert "return confirm(" not in sources
+    assert "<datalist" not in sources
+    assert "data-pc-confirm" in sources
+    assert "pcGlobalConfirm" in Path("templates/base.html").read_text(encoding="utf-8")
+    assert "pc-autocomplete-panel" in Path("static/design-system.css").read_text(encoding="utf-8")
