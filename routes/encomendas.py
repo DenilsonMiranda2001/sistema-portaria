@@ -17,6 +17,7 @@ from database.encomendas import (
     resumo_painel,
 )
 from database.models import listar_moradores
+from database.entregadores import listar_entregadores
 from utils.audit import registrar_auditoria
 from utils.authz import roles_required
 
@@ -97,6 +98,7 @@ def novo_lote():
                 transportadora,
                 request.form.get("observacao"),
                 session["usuario_id"],
+                request.form.get("entregador_id", type=int),
             )
             flash("Lote criado. Cadastre as encomendas em sequência.", "sucesso")
             return redirect(url_for("encomendas.lote_detalhe", lote_id=lote_id))
@@ -104,7 +106,7 @@ def novo_lote():
             logger.exception("Erro ao criar lote de encomendas")
             flash("Não foi possível criar o lote.", "erro")
             return redirect(url_for("encomendas.novo_lote"))
-    return render_template("encomendas/novo_lote.html", transportadoras=TRANSPORTADORAS)
+    return render_template("encomendas/novo_lote.html", transportadoras=TRANSPORTADORAS, entregadores=listar_entregadores(apenas_ativos=True))
 
 
 @encomendas_bp.route("/lotes/<int:lote_id>", methods=["GET", "POST"])
