@@ -12,23 +12,33 @@ def listar_entregadores(apenas_ativos=False):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            where = "AND e.ativo=TRUE" if apenas_ativos else ""
-            query = """
-                SELECT e.*,
-                       COUNT(l.id)::int AS total_lotes,
-                       MAX(l.data_chegada) AS ultima_entrega
-                FROM entregadores e
-                LEFT JOIN lotes_encomendas l
-                  ON l.entregador_id=e.id AND l.condominio_id=e.condominio_id
-                WHERE e.condominio_id=%s {where}
-                GROUP BY e.id
-                ORDER BY e.ativo DESC, e.nome, e.id
-            """.replace("{where}", where)
-            cur.execute(query, (tenant_id,))
+            if apenas_ativos:
+                cur.execute("""
+                    SELECT e.*,
+                           COUNT(l.id)::int AS total_lotes,
+                           MAX(l.data_chegada) AS ultima_entrega
+                    FROM entregadores e
+                    LEFT JOIN lotes_encomendas l
+                      ON l.entregador_id=e.id AND l.condominio_id=e.condominio_id
+                    WHERE e.condominio_id=%s AND e.ativo=TRUE
+                    GROUP BY e.id
+                    ORDER BY e.nome, e.id
+                """, (tenant_id,))
+            else:
+                cur.execute("""
+                    SELECT e.*,
+                           COUNT(l.id)::int AS total_lotes,
+                           MAX(l.data_chegada) AS ultima_entrega
+                    FROM entregadores e
+                    LEFT JOIN lotes_encomendas l
+                      ON l.entregador_id=e.id AND l.condominio_id=e.condominio_id
+                    WHERE e.condominio_id=%s
+                    GROUP BY e.id
+                    ORDER BY e.ativo DESC, e.nome, e.id
+                """, (tenant_id,))
             return cur.fetchall()
     finally:
         liberar(conn)
-
 
 def buscar_entregador(entregador_id):
     tenant_id = _tenant_id()
