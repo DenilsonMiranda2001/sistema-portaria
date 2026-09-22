@@ -1,23 +1,9 @@
-<!DOCTYPE html>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<html>
-<head>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-
-<div class="container">
-    <div class="card">
-        <h2>🔎 Buscar por CPF</h2>
-
-        <a class="link" href="/">⬅ Voltar</a>
-
-        <form method="POST">
-            <input class="input" type="text" name="cpf" placeholder="Digite o CPF">
-            <button class="btn" type="submit">Buscar</button>
-        </form>
-    </div>
-</div>
-
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Buscar visitante · Portaria Control{% endblock %}
+{% block content %}
+<section class="pc-module">
+<header class="pc-pagehead"><div><span class="pc-eyebrow">LOCALIZAÇÃO DE CADASTRO</span><h2>Buscar visitante</h2><p>Consulte rapidamente um cadastro pelo CPF.</p></div><div class="pc-page-actions"><a class="pc-btn pc-btn-secondary" href="{{ url_for('main.index') }}">← Central</a></div></header>
+<section class="pc-panel pc-lookup-panel">
+<form method="POST" class="pc-lookup-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label class="pc-field"><span>CPF do visitante</span><input type="text" name="cpf" inputmode="numeric" placeholder="000.000.000-00" autofocus required></label><button class="pc-btn pc-btn-primary" type="submit">Buscar cadastro</button></form>
+</section></section>
+{% endblock %}
