@@ -169,3 +169,10 @@ def test_private_storage_client_requires_complete_credentials():
     assert "secret_key = os.getenv(\"S3_SECRET_ACCESS_KEY\")" in source
     assert "if not endpoint or not bucket or not access_key or not secret_key" in source
     assert source.count("client, bucket = _client()") >= 4
+
+
+def test_visitor_delete_route_logs_unexpected_failures():
+    source = Path("routes/visitantes.py").read_text(encoding="utf-8")
+    section = source[source.index("def remover(id)"):source.index("def historico(id)")]
+    assert 'logger.exception("Erro ao remover visitante")' in section
+    assert 'flash("Não foi possível remover o visitante.", "erro")' in section
