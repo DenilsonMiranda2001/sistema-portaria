@@ -119,8 +119,8 @@ def ativar_usuario_rota(id):
         flash("Usuário não encontrado.", "erro")
         return redirect(url_for("admin.usuarios"))
 
-    ativar_usuario(id, session["usuario_id"])
-    flash("Usuário ativado com sucesso!", "sucesso")
+    alterou = ativar_usuario(id, session["usuario_id"])
+    flash("Usuário ativado com sucesso!" if alterou else "Usuário já estava ativo.", "sucesso" if alterou else "aviso")
     return redirect(url_for("admin.usuarios"))
 
 @admin_bp.route("/usuarios/senha/<int:id>", methods=["GET", "POST"])
@@ -148,7 +148,10 @@ def alterar_senha_usuario(id):
             flash("A senha deve ter pelo menos 12 caracteres.", "erro")
             return redirect(url_for("admin.alterar_senha_usuario", id=id))
 
-        atualizar_senha_usuario(id, nova_senha, session["usuario_id"])
+        alterou = atualizar_senha_usuario(id, nova_senha, session["usuario_id"])
+        if not alterou:
+            flash("Não foi possível atualizar a senha deste usuário.", "erro")
+            return redirect(url_for("admin.alterar_senha_usuario", id=id))
         flash("Senha atualizada com sucesso!", "sucesso")
         return redirect(url_for("admin.usuarios"))
 
