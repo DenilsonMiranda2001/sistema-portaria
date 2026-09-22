@@ -12,6 +12,14 @@ from werkzeug.utils import secure_filename
 ALLOWED = {".jpg", ".jpeg", ".png", ".webp"}
 FORMAT_EXTENSIONS = {"JPEG": {".jpg", ".jpeg"}, "PNG": {".png"}, "WEBP": {".webp"}}
 FORMAT_MIMES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
+MAX_IMAGE_PIXELS = 20_000_000
+MAX_IMAGE_SIDE = 8_000
+
+
+def _validate_dimensions(image):
+    width, height = image.size
+    if width <= 0 or height <= 0 or width > MAX_IMAGE_SIDE or height > MAX_IMAGE_SIDE or width * height > MAX_IMAGE_PIXELS:
+        raise ValueError("Dimensões da imagem excedem o limite permitido.")
 
 
 def _require_tenant(tenant_id):
@@ -25,6 +33,7 @@ def _validated_upload(file_storage):
     try:
         stream.seek(0)
         image = Image.open(stream)
+        _validate_dimensions(image)
         image.verify()
         fmt = (image.format or "").upper()
     except (UnidentifiedImageError, OSError, ValueError) as exc:
@@ -81,6 +90,7 @@ def save_webcam_image(data_url, tenant_id):
         raise ValueError("Imagem de webcam inválida ou muito grande.")
     try:
         image = Image.open(io.BytesIO(raw))
+        _validate_dimensions(image)
         image.verify()
         if image.format != "JPEG":
             raise ValueError("Captura de webcam inválida.")
