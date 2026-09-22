@@ -15,7 +15,7 @@
 <!-- ── NAVBAR ─────────────────────────────────────── -->
     <header class="navbar-sistema">
         <div class="navbar-brand">
-            <div class="navbar-brand-icon" aria-hidden="true"><span>PC</span></div>
+            <div class="navbar-brand-icon" aria-hidden="true"><span>PC</span><i></i></div>
             <div class="navbar-brand-textos">
                 <h1>Portaria Control</h1>
                 <span>Gestão de acesso & portaria</span>
@@ -53,7 +53,7 @@
 
             <div class="navbar-user-area">
                 <div class="usuario-logado-box">
-                    <div class="usuario-avatar" aria-hidden="true"></div>
+                    <div class="usuario-avatar" aria-hidden="true">{{ session.get("usuario_nome", "U")[:1]|upper }}</div>
                     <div class="usuario-info">
                         <strong>{{ session.get("usuario_nome", "Usuário") }}</strong>
                         <span>{{ session.get("usuario_tipo", "").capitalize() }}</span>
