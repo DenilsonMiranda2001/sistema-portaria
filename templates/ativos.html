@@ -37,6 +37,7 @@
           <div class="pc-access-meta"><span>VEÍCULO</span><strong>{% if v.marca or v.modelo or v.placa %}{{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} · {{ v.placa }}{% endif %}{% else %}Sem veículo{% endif %}</strong></div>
           <div class="pc-access-meta"><span>ENTRADA</span><strong>{{ v.data_entrada }}</strong></div>
           <form method="POST" action="{{ url_for('visitantes.saida', id=v.id) }}" onclick="event.stopPropagation()" onsubmit="return confirm('Registrar saída de {{ v.nome }}?')">
+            <input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}">
             <button class="pc-btn pc-btn-primary pc-exit-btn" type="submit">Registrar saída →</button>
           </form>
         </article>
