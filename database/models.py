@@ -903,6 +903,10 @@ def remover_visitante(visitante_id, usuario_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("SELECT 1 FROM visitas WHERE visitante_id=%s AND condominio_id=%s LIMIT 1", (visitante_id, tenant_id))
             if cur.fetchone():
                 raise ValueError("Visitante com histórico de visitas não pode ser excluído. Mantenha o cadastro para preservar o histórico.")
@@ -924,6 +928,10 @@ def atualizar_foto_visitante(visitante_id, nome_arquivo, usuario_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("UPDATE visitantes SET foto = %s WHERE id = %s AND condominio_id = %s", (nome_arquivo, visitante_id, tenant_id))
             alterou = cur.rowcount > 0
             if alterou and usuario_id:
@@ -942,6 +950,10 @@ def atualizar_observacao_visitante(visitante_id, observacao, usuario_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute(
                 "UPDATE visitantes SET observacao = %s WHERE id = %s AND condominio_id = %s",
                 ((observacao or "").strip().upper(), visitante_id, tenant_id)
@@ -974,6 +986,10 @@ def importar_visitantes_em_lotes(lista_visitantes, tamanho_lote=100, usuario_id=
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             query = """
                 INSERT INTO visitantes (condominio_id, nome, cpf, endereco, tipo, placa, modelo, marca, foto, observacao)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -1181,6 +1197,10 @@ def atualizar_visita_ativa(visitante_id, endereco, usuario_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("""
                 UPDATE visitas SET endereco = %s
                 WHERE id = (
