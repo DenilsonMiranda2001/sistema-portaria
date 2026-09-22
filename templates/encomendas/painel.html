@@ -8,7 +8,7 @@
 <section class="pc-module pc-packages">
 
 <div class="pc-subnav">{{ subnav('painel') }}</div>
-<header class="pc-pagehead"><div><span class="pc-eyebrow">OPERAÇÃO DE RECEBIMENTO</span><h2>Encomendas</h2><p>Recebimento, retenção e retirada com rastreabilidade.</p></div><div class="pc-page-actions"><a class="pc-btn pc-btn-primary" href="{{ url_for('encomendas.novo_lote') }}">＋ Novo lote</a></div></header>
+<header class="pc-pagehead pc-pagehead-compact"><div><span class="pc-eyebrow">OPERAÇÃO DE RECEBIMENTO</span><h2>Encomendas</h2><p>Recebimento, retenção e retirada com rastreabilidade.</p></div><div class="pc-page-actions"><a class="pc-btn pc-btn-primary" href="{{ url_for('encomendas.novo_lote') }}">＋ Novo lote</a></div></header>
 
 <section class="pc-package-metrics">
     <a href="{{ url_for('encomendas.painel', filtro='hoje') }}"><span>Recebidas hoje</span><strong>{{ resumo.recebidas_hoje }}</strong></a>
