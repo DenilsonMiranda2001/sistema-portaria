@@ -31,6 +31,11 @@ jobs:
         env:
           APP_ENV: production
           DATABASE_URL: postgresql://example:example@localhost/example
+          S3_ENDPOINT_URL: https://example.invalid
+          S3_BUCKET: example
+          S3_ACCESS_KEY_ID: example
+          S3_SECRET_ACCESS_KEY: example
+          AUDIT_IP_SALT: example-audit-salt-for-ci
         run: |
           python - <<'PY'
           from config import Config
