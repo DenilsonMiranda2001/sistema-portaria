@@ -115,3 +115,10 @@ def presigned_image_url(key, expires=300):
         config=BotoConfig(signature_version="s3v4"),
     )
     return client.generate_presigned_url("get_object", Params={"Bucket": bucket, "Key": key}, ExpiresIn=expires)
+
+
+def delete_image(object_key):
+    if not object_key:
+        return
+    client, bucket = _client()
+    client.delete_object(Bucket=bucket, Key=object_key)
