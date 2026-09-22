@@ -380,3 +380,13 @@ body{font-size:14px}
 .pc-data-grid small{font-size:9px}.pc-data-grid strong{font-size:12px}
 .pc-context-visual{padding:14px}
 .pc-note,.pc-danger-zone{padding:12px 14px}
+
+/* System-wide compact operational header contract */
+.pc-pagehead-compact{min-height:42px;margin-bottom:10px;align-items:center}
+.pc-pagehead-compact>div:first-child{display:flex;align-items:baseline;gap:10px;min-width:0;flex-wrap:wrap}
+.pc-pagehead-compact .pc-eyebrow{order:2;margin:0;font-size:8px}
+.pc-pagehead-compact h2{order:1;margin:0;font-size:20px;line-height:1.1}
+.pc-pagehead-compact p{order:3;flex-basis:100%;margin:1px 0 0;font-size:10px;line-height:1.3}
+.pc-pagehead-compact .pc-page-actions{margin-left:auto}
+@media(min-width:1000px){.pc-pagehead-compact p{display:none}}
+@media(max-width:760px){.pc-pagehead-compact{align-items:stretch}.pc-pagehead-compact>div:first-child{display:block}.pc-pagehead-compact .pc-eyebrow{display:block;margin-bottom:4px}.pc-pagehead-compact p{display:block;margin-top:4px}}
