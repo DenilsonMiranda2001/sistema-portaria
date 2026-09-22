@@ -137,3 +137,10 @@ def test_login_rate_limit_covers_username_and_ip_spraying():
     assert "def _login_ip_key():" in source
     assert "WHERE chave IN (%s, %s)" in source
     assert "cur.execute(statement, (_login_ip_key(), LOGIN_IP_LIMIT))" in source
+
+
+def test_unknown_login_still_runs_password_hash_verification():
+    source = Path("routes/auth.py").read_text(encoding="utf-8")
+    assert "DUMMY_PASSWORD_HASH" in source
+    assert "check_password_hash(DUMMY_PASSWORD_HASH, senha)" in source
+    assert "secrets.token_urlsafe(32)" in source
