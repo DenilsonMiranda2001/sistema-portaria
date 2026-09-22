@@ -191,9 +191,7 @@ def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=
     tenant_id = _tenant_id()
     conn = conectar()
     try:
-        with conn.cursor() as cur:
-            # nosec B608 - where/order are assembled only from internal allow-listed SQL fragments.
-            cur.execute(f"""
+        with conn.cursor() as cur:            cur.execute(f"""  # nosec B608
                 SELECT e.*, l.transportadora, l.nome_entregador, l.status AS lote_status,
                        m.telefone
                 FROM encomendas e
