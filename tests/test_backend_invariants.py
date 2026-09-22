@@ -238,3 +238,12 @@ def test_migrations_use_dedicated_nonpooled_connection():
     assert 'conectar_dedicado("sistema-portaria-migrations")' in migrate
     assert "liberar(conn)" not in migrate
     assert "conn.close()" in migrate
+
+
+def test_authenticated_tenant_identity_includes_condominium_name_for_header():
+    models = Path("database/models.py").read_text(encoding="utf-8")
+    base = Path("templates/base.html").read_text(encoding="utf-8")
+    identity = models[models.index("def buscar_usuario_por_id"):models.index("def buscar_usuario(")]
+    assert identity.count("c.nome AS condominio_nome") >= 2
+    assert 'g.current_user.get("condominio_nome", "Condomínio")' in base
+    assert '"Porteiro" if session.get("usuario_tipo") == "funcionario"' in base
