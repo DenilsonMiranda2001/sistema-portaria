@@ -100,3 +100,11 @@ def test_package_state_machine_cannot_reenter_obsolete_door_delivery_flow():
     assert '"recebida": {"retida_portaria", "cancelada"}' in block
     assert '"aguardando_resposta": {"retida_portaria", "cancelada"}' in block
     assert '"morador_em_casa": {"retida_portaria", "cancelada"}' in block
+
+
+def test_daily_dashboard_counters_use_index_friendly_time_ranges():
+    source = Path("database/models.py").read_text(encoding="utf-8")
+    assert "DATE(data_entrada) = CURRENT_DATE" not in source
+    assert "DATE(data_saida) = CURRENT_DATE" not in source
+    assert "data_entrada >= CURRENT_DATE" in source
+    assert "data_saida >= CURRENT_DATE" in source
