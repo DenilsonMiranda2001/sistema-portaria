@@ -164,3 +164,9 @@ def test_database_connections_bound_query_and_idle_transaction_time():
     source = Path("database/connection.py").read_text(encoding="utf-8")
     assert "statement_timeout = '15s'" in source
     assert "idle_in_transaction_session_timeout = '30s'" in source
+
+
+def test_visitor_profile_mutations_validate_actor_inside_tenant_transaction():
+    source = Path("database/models.py").read_text(encoding="utf-8")
+    visitor_section = source[source.index("def cpf_ja_cadastrado"):]
+    assert visitor_section.count('raise ValueError("Usuário inválido para este condomínio.")') >= 5
