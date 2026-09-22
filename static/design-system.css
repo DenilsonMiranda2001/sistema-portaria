@@ -327,3 +327,6 @@ body{font-size:14px}
 .pc-pagehead{margin-bottom:14px}
 .pc-panel+.pc-panel,.pc-panel+.pc-section,.pc-section+.pc-panel{margin-top:12px}
 .pc-form-grid,.pc-data-grid,.pc-lot-grid{gap:12px}
+
+/* Home layout fix: grid must not stretch rows to viewport height */
+.pc-reference-dashboard{min-height:0!important;height:auto!important;align-content:start!important}
