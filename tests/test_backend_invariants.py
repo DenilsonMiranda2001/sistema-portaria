@@ -229,3 +229,12 @@ def test_platform_control_plane_has_real_operational_overview():
     assert "resumo_operacional_plataforma()" in route
     assert "platform-audit-feed" in template
     assert "encomendas_pendentes" in template
+
+
+def test_migrations_use_dedicated_nonpooled_connection():
+    connection = Path("database/connection.py").read_text(encoding="utf-8")
+    migrate = Path("migrations/migrate.py").read_text(encoding="utf-8")
+    assert "def conectar_dedicado(" in connection
+    assert 'conectar_dedicado("sistema-portaria-migrations")' in migrate
+    assert "liberar(conn)" not in migrate
+    assert "conn.close()" in migrate
