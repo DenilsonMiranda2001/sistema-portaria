@@ -128,3 +128,12 @@ def test_image_validation_has_dimension_and_decompression_bomb_limits():
     assert "MAX_IMAGE_SIDE = 8_000" in source
     assert "_validate_dimensions(image)" in source
     assert "Image.DecompressionBombError" in source
+
+
+def test_login_rate_limit_covers_username_and_ip_spraying():
+    source = Path("routes/auth.py").read_text(encoding="utf-8")
+    assert "LOGIN_LIMIT = 10" in source
+    assert "LOGIN_IP_LIMIT = 30" in source
+    assert "def _login_ip_key():" in source
+    assert "WHERE chave IN (%s, %s)" in source
+    assert "cur.execute(statement, (_login_ip_key(), LOGIN_IP_LIMIT))" in source
