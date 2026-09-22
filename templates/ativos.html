@@ -28,7 +28,7 @@
         {% for v in visitantes %}
         <article class="pc-access-row {% if loop.index0 == 0 %}is-selected{% endif %}" data-index="{{ loop.index0 }}" onclick="selecionarAtivo({{ loop.index0 }})">
           {% if v.foto %}
-            <img src="{{ url_for('static', filename='fotos/' + v.foto) }}" alt="Foto de {{ v.nome }}" class="pc-access-photo">
+            <img src="{{ url_for('visitantes.foto', id=v.id) }}" alt="Foto de {{ v.nome }}" class="pc-access-photo">
           {% else %}
             <span class="pc-access-photo pc-access-photo-empty">{{ v.nome[:1]|upper }}</span>
           {% endif %}
@@ -48,163 +48,17 @@
   </section>
 </section>
 <script>
-const inputAtivo = document.getElementById("buscaAtivo");
-const listaAtivos = document.getElementById("listaAtivos");
-const mensagemAtivo = document.getElementById("mensagemAtivo");
-
-let ativosAtuais = [];
-let indiceSelecionadoAtivo = 0;
-
-// ==============================
-// MENSAGEM
-// ==============================
-function mostrarMensagemAtivo(texto, cor = "red") {
-    mensagemAtivo.innerHTML = `<p style="color:${cor}; font-weight:bold;">${texto}</p>`;
-}
-
-function limparMensagemAtivo() {
-    mensagemAtivo.innerHTML = "";
-}
-
-// ==============================
-// MONTA TEXTO DO VEÍCULO
-// ==============================
-function montarTextoVeiculo(v) {
-    if (!(v.marca || v.modelo || v.placa)) {
-        return "Sem veículo";
-    }
-
-    let partes = [];
-    if (v.marca) partes.push(v.marca);
-    if (v.modelo) partes.push(v.modelo);
-
-    let texto = partes.join(" ").trim();
-
-    if (v.placa) {
-        texto += (texto ? " - " : "") + v.placa;
-    }
-
-    return texto || "Sem veículo";
-}
-
-// ==============================
-// FORMATA DATA/HORA
-// ==============================
-function formatarEntrada(dataEntrada) {
-    if (!dataEntrada) return "-";
-    return dataEntrada;
-}
-
-// ==============================
-// RENDERIZAR LISTA DE ATIVOS
-// ==============================
-function renderizarAtivos(data) {
-    ativosAtuais = data;
-    listaAtivos.innerHTML = "";
-
-    if (!data || data.length === 0) {
-        listaAtivos.innerHTML = '<div class="pc-empty pc-empty-list"><span class="pc-empty-icon">✓</span><div><strong>Nenhum acesso ativo</strong><small>Nenhuma pessoa encontrada com entrada em aberto.</small></div></div>';
-        return;
-    }
-
-    if (indiceSelecionadoAtivo < 0) indiceSelecionadoAtivo = 0;
-    if (indiceSelecionadoAtivo > data.length - 1) indiceSelecionadoAtivo = data.length - 1;
-
-    data.forEach((v, index) => {
-        const fotoHtml = v.foto
-            ? `<img src="/static/fotos/${v.foto}" alt="Foto de ${v.nome || ''}" class="pc-access-photo">`
-            : `<span class="pc-access-photo pc-access-photo-empty">${((v.nome || '?').slice(0,1)).toUpperCase()}</span>`;
-
-        listaAtivos.innerHTML += `
-        <article class="pc-access-row ${index === indiceSelecionadoAtivo ? 'is-selected' : ''}" data-index="${index}" onclick="selecionarAtivo(${index})">
-            ${fotoHtml}
-            <div class="pc-access-identity">
-                <strong>${(v.nome || '').toUpperCase()}</strong>
-                <small>${v.cpf || 'CPF não informado'}</small>
-            </div>
-            <div class="pc-access-meta"><span>DESTINO</span><strong>${v.endereco || '—'}</strong></div>
-            <div class="pc-access-meta"><span>VEÍCULO</span><strong>${montarTextoVeiculo(v)}</strong></div>
-            <div class="pc-access-meta"><span>ENTRADA</span><strong>${formatarEntrada(v.data_entrada)}</strong></div>
-            <form method="POST" action="/saida/${v.id}" onclick="event.stopPropagation()" onsubmit="return confirm('Registrar saída de ${(v.nome||'').replace(/'/g,'')}?')">
-                <button class="pc-btn pc-btn-primary pc-exit-btn" type="submit">Registrar saída →</button>
-            </form>
-        </article>`;
-    });
-}
-
-// ==============================
-// SELECIONAR ITEM
-// ==============================
-function selecionarAtivo(index) {
-    indiceSelecionadoAtivo = index;
-    renderizarAtivos(ativosAtuais);
-}
-
-// ==============================
-// BUSCA INTELIGENTE
-// ==============================
-inputAtivo.addEventListener("input", function () {
-    const termo = inputAtivo.value.trim();
-    limparMensagemAtivo();
-
-    if (termo.length === 0) {
-        window.location.href = "/ativos";
-        return;
-    }
-
-    fetch(`/buscar_ativos_ajax?q=${encodeURIComponent(termo)}`)
-        .then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error("Erro ao buscar visitantes ativos.");
-            }
-            return data;
-        })
-        .then((data) => {
-            indiceSelecionadoAtivo = 0;
-            renderizarAtivos(data);
-        })
-        .catch((erro) => {
-            listaAtivos.innerHTML = `<p style="color:red;">${erro.message}</p>`;
-            console.error("Erro na busca:", erro);
-        });
-});
-
-// ==============================
-// TECLADO NA BUSCA
-// ==============================
-inputAtivo.addEventListener("keydown", function(event) {
-    if (ativosAtuais.length === 0) return;
-
-    if (event.key === "ArrowDown") {
-        event.preventDefault();
-        indiceSelecionadoAtivo = Math.min(indiceSelecionadoAtivo + 1, ativosAtuais.length - 1);
-        renderizarAtivos(ativosAtuais);
-        return;
-    }
-
-    if (event.key === "ArrowUp") {
-        event.preventDefault();
-        indiceSelecionadoAtivo = Math.max(indiceSelecionadoAtivo - 1, 0);
-        renderizarAtivos(ativosAtuais);
-        return;
-    }
-
-    if (event.key === "Enter") {
-        event.preventDefault();
-
-        const ativoSelecionado = ativosAtuais[indiceSelecionadoAtivo];
-        if (!ativoSelecionado) return;
-
-        const confirmar = confirm(`Registrar saída de ${ativoSelecionado.nome}?`);
-        if (confirmar) {
-            const form = document.createElement("form");
-            form.method = "POST";
-            form.action = `/saida/${ativoSelecionado.id}`;
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-});
+const inputAtivo=document.getElementById("buscaAtivo"),listaAtivos=document.getElementById("listaAtivos"),mensagemAtivo=document.getElementById("mensagemAtivo");
+let ativosAtuais=[],indiceSelecionadoAtivo=0;
+function limpar(el){el.replaceChildren();}
+function mostrarMensagemAtivo(texto){limpar(mensagemAtivo);const p=document.createElement("p");p.textContent=texto;mensagemAtivo.appendChild(p);}
+function limparMensagemAtivo(){limpar(mensagemAtivo);}
+function montarTextoVeiculo(v){const partes=[v.marca,v.modelo].filter(Boolean);let texto=partes.join(" ").trim();if(v.placa)texto+=(texto?" - ":"")+v.placa;return texto||"Sem veículo";}
+function criar(tag,classe,texto){const el=document.createElement(tag);if(classe)el.className=classe;if(texto!==undefined)el.textContent=texto;return el;}
+function meta(rotulo,valor){const d=criar("div","pc-access-meta");d.append(criar("span","",rotulo),criar("strong","",valor||"—"));return d;}
+function renderizarAtivos(data){ativosAtuais=data||[];limpar(listaAtivos);if(!ativosAtuais.length){const e=criar("div","pc-empty pc-empty-list"),i=criar("span","pc-empty-icon","✓"),d=criar("div");d.append(criar("strong","","Nenhum acesso ativo"),criar("small","","Nenhuma pessoa encontrada com entrada em aberto."));e.append(i,d);listaAtivos.appendChild(e);return;}indiceSelecionadoAtivo=Math.max(0,Math.min(indiceSelecionadoAtivo,ativosAtuais.length-1));ativosAtuais.forEach((v,index)=>{const row=criar("article","pc-access-row"+(index===indiceSelecionadoAtivo?" is-selected":""));row.dataset.index=index;row.addEventListener("click",()=>selecionarAtivo(index));let foto;if(v.foto_url){foto=criar("img","pc-access-photo");foto.src=v.foto_url;foto.alt="Foto de "+(v.nome||"");}else foto=criar("span","pc-access-photo pc-access-photo-empty",((v.nome||"?").slice(0,1)).toUpperCase());const ident=criar("div","pc-access-identity");ident.append(criar("strong","",(v.nome||"").toUpperCase()),criar("small","",v.cpf||"CPF não informado"));const form=criar("form");form.method="POST";form.action="/saida/"+v.id;form.addEventListener("click",e=>e.stopPropagation());form.addEventListener("submit",e=>{if(!confirm("Registrar saída de "+(v.nome||"")+"?"))e.preventDefault();});const token=criar("input");token.type="hidden";token.name="csrf_token";token.value="{{ global_csrf_token() }}";form.append(token,criar("button","pc-btn pc-btn-primary pc-exit-btn","Registrar saída →"));form.lastChild.type="submit";row.append(foto,ident,meta("DESTINO",v.unidade_codigo||v.endereco),meta("VEÍCULO",montarTextoVeiculo(v)),meta("ENTRADA",v.data_entrada),form);listaAtivos.appendChild(row);});}
+function selecionarAtivo(index){indiceSelecionadoAtivo=index;renderizarAtivos(ativosAtuais);}
+inputAtivo.addEventListener("input",()=>{const termo=inputAtivo.value.trim();limparMensagemAtivo();if(!termo){location.href="/ativos";return;}fetch("/buscar_ativos_ajax?q="+encodeURIComponent(termo)).then(r=>{if(!r.ok)throw new Error("Erro ao buscar visitantes ativos.");return r.json();}).then(data=>{indiceSelecionadoAtivo=0;renderizarAtivos(data);}).catch(e=>{limpar(listaAtivos);listaAtivos.appendChild(criar("p","",e.message));});});
+inputAtivo.addEventListener("keydown",event=>{if(!ativosAtuais.length)return;if(event.key==="ArrowDown"||event.key==="ArrowUp"){event.preventDefault();indiceSelecionadoAtivo=Math.max(0,Math.min(indiceSelecionadoAtivo+(event.key==="ArrowDown"?1:-1),ativosAtuais.length-1));renderizarAtivos(ativosAtuais);}if(event.key==="Enter"){event.preventDefault();const v=ativosAtuais[indiceSelecionadoAtivo];if(v&&confirm("Registrar saída de "+v.nome+"?")){const form=criar("form");form.method="POST";form.action="/saida/"+v.id;const token=criar("input");token.type="hidden";token.name="csrf_token";token.value="{{ global_csrf_token() }}";form.appendChild(token);document.body.appendChild(form);form.submit();}}});
 </script>
 {% endblock %}
