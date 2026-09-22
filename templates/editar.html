@@ -3,40 +3,40 @@
 
 {% block content %}
 {% if visitante %}
-<section class="module-form-premium pc-compact-legacy-form"><div class="module-commandbar"><strong>Editar visitante</strong><span>{{ visitante.nome }}</span><a class="btn-secundario" href="{{ url_for('visitantes.visitantes') }}">Cancelar</a></div><form method="POST" enctype="multipart/form-data" autocomplete="off" class="quick-access-form quick-edit-form">
+<section class="pc-module"><div class="pc-pagehead"><strong>Editar visitante</strong><span>{{ visitante.nome }}</span><a class="pc-btn pc-btn-secondary" href="{{ url_for('visitantes.visitantes') }}">Cancelar</a></div><form method="POST" enctype="multipart/form-data" autocomplete="off" class="pc-form-shell">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<div class="quick-access-grid">
-<section class="quick-panel quick-main">
-<div class="quick-section-title"><span>01</span><strong>Visitante</strong></div>
-<div class="quick-fields identity-fields">
-<label class="span-2"><span>Nome completo *</span><input class="input-padrao" type="text" name="nome" id="nome" value="{{ visitante.nome or '' }}" required autofocus></label>
-<label><span>CPF *</span><input class="input-padrao" type="text" name="cpf" id="cpf" value="{{ visitante.cpf or cpf_pre or '' }}" required></label>
-<label><span>Tipo</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="tipo" id="tipo" value="{{ visitante.tipo or '' }}" placeholder="Visitante, entregador..."><div id="sugestoes_tipo" class="caixa-sugestoes"></div></div></label>
-<label class="span-2"><span>Endereço</span><input class="input-padrao" type="text" name="endereco" id="endereco" value="{{ visitante.endereco or '' }}" placeholder="Endereço do visitante" autocomplete="off"><small id="sugestao-endereco"></small></label>
+<div class="pc-form-grid pc-form-grid-3">
+<section class="pc-panel pc-form-section">
+<div class="pc-form-heading"><span>01</span><strong>Visitante</strong></div>
+<div class="pc-form-grid">
+<label class="pc-span-2"><span>Nome completo *</span><input class="" type="text" name="nome" id="nome" value="{{ visitante.nome or '' }}" required autofocus></label>
+<label><span>CPF *</span><input class="" type="text" name="cpf" id="cpf" value="{{ visitante.cpf or cpf_pre or '' }}" required></label>
+<label><span>Tipo</span><div class="campo-autocomplete"><input class="" type="text" name="tipo" id="tipo" value="{{ visitante.tipo or '' }}" placeholder="Visitante, entregador..."><div id="sugestoes_tipo" class="caixa-sugestoes"></div></div></label>
+<label class="pc-span-2"><span>Endereço</span><input class="" type="text" name="endereco" id="endereco" value="{{ visitante.endereco or '' }}" placeholder="Endereço do visitante" autocomplete="off"><small id="sugestao-endereco"></small></label>
 </div>
-<div class="quick-divider"></div>
-<div class="quick-section-title"><span>02</span><strong>Observação</strong></div>
-<div class="quick-fields"><label class="span-2"><span>Observação</span><input class="input-padrao" name="observacao" id="observacao" value="{{ visitante.observacao or '' }}" placeholder="Opcional"></label></div>
-<div class="quick-divider"></div>
-<div class="quick-section-title"><span>03</span><strong>Veículo</strong><small>opcional</small></div>
-<div class="quick-fields vehicle-fields">
-<label><span>Placa</span><input class="input-padrao" type="text" name="placa" id="placa" value="{{ visitante.placa or '' }}"></label>
-<label><span>Marca</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="marca" id="marca" value="{{ visitante.marca or '' }}"><div id="sugestoes_marca" class="caixa-sugestoes"></div></div></label>
-<label><span>Modelo</span><div class="campo-autocomplete"><input class="input-padrao" type="text" name="modelo" id="modelo" value="{{ visitante.modelo or '' }}"><div id="sugestoes_modelo" class="caixa-sugestoes"></div></div></label>
+<div class="pc-form-divider"></div>
+<div class="pc-form-heading"><span>02</span><strong>Observação</strong></div>
+<div class="pc-form-grid"><label class="pc-span-2"><span>Observação</span><input class="" name="observacao" id="observacao" value="{{ visitante.observacao or '' }}" placeholder="Opcional"></label></div>
+<div class="pc-form-divider"></div>
+<div class="pc-form-heading"><span>03</span><strong>Veículo</strong><small>opcional</small></div>
+<div class="pc-form-grid">
+<label><span>Placa</span><input class="" type="text" name="placa" id="placa" value="{{ visitante.placa or '' }}"></label>
+<label><span>Marca</span><div class="campo-autocomplete"><input class="" type="text" name="marca" id="marca" value="{{ visitante.marca or '' }}"><div id="sugestoes_marca" class="caixa-sugestoes"></div></div></label>
+<label><span>Modelo</span><div class="campo-autocomplete"><input class="" type="text" name="modelo" id="modelo" value="{{ visitante.modelo or '' }}"><div id="sugestoes_modelo" class="caixa-sugestoes"></div></div></label>
 </div>
 </section>
-<aside class="quick-panel quick-photo">
-<div class="quick-section-title"><span>04</span><strong>Foto</strong></div>
-<div class="photo-stage edit-photo-stage">
-{% if visitante.foto %}<img class="edit-current-photo" src="{{ url_for('visitantes.foto', id=visitante.id) }}" alt="Foto atual" data-foto-visitante="{{ visitante.id }}">{% else %}<div class="photo-placeholder"><span>Sem foto</span><small>Adicione uma foto do visitante</small></div>{% endif %}
-<div id="camera-container" class="camera-box"><video id="video" autoplay playsinline></video></div><div id="preview-container" class="preview-box"><img id="preview-foto" src="" alt="Prévia da nova foto"></div>
+<aside class="pc-panel pc-photo-panel">
+<div class="pc-form-heading"><span>04</span><strong>Foto</strong></div>
+<div class="pc-photo-stage">
+{% if visitante.foto %}<img class="edit-current-photo" src="{{ url_for('visitantes.foto', id=visitante.id) }}" alt="Foto atual" data-foto-visitante="{{ visitante.id }}">{% else %}<div class="pc-photo-placeholder"><span>Sem foto</span><small>Adicione uma foto do visitante</small></div>{% endif %}
+<div id="camera-container" class="pc-camera-box"><video id="video" autoplay playsinline></video></div><div id="preview-container" class="pc-preview-box"><img id="preview-foto" src="" alt="Prévia da nova foto"></div>
 </div>
 <canvas id="canvas" style="display:none"></canvas><input type="hidden" name="foto_webcam" id="foto_webcam">
-<div class="photo-actions"><button type="button" class="btn-principal" id="btnAbrirCamera">Atualizar foto</button><button type="button" class="btn-secundario" id="btnCapturar" style="display:none">Capturar</button><button type="button" class="btn-remover" id="btnFecharCamera" style="display:none">Fechar</button><button type="button" class="btn-secundario" id="btnNovaFoto" style="display:none">Refazer</button></div>
-<label class="file-compact"><span>ou enviar foto</span><input type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*"></label>
+<div class="pc-photo-actions"><button type="button" class="pc-btn pc-btn-primary" id="btnAbrirCamera">Atualizar foto</button><button type="button" class="pc-btn pc-btn-secondary" id="btnCapturar" style="display:none">Capturar</button><button type="button" class="pc-btn pc-btn-secondary" id="btnFecharCamera" style="display:none">Fechar</button><button type="button" class="pc-btn pc-btn-secondary" id="btnNovaFoto" style="display:none">Refazer</button></div>
+<label class="pc-file-field"><span>ou enviar foto</span><input type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*"></label>
 </aside>
 </div>
-<footer class="quick-submit"><span><b>Editando cadastro.</b> Revise os dados antes de salvar.</span><div class="quick-submit-actions"><a href="{{ url_for('visitantes.visitantes') }}">Cancelar</a><button class="btn-principal" type="submit">Salvar alterações</button></div></footer>
+<footer class="pc-form-footer"><span><b>Editando cadastro.</b> Revise os dados antes de salvar.</span><div class="pc-form-footer-actions"><a href="{{ url_for('visitantes.visitantes') }}">Cancelar</a><button class="pc-btn pc-btn-primary" type="submit">Salvar alterações</button></div></footer>
 </form></section>
 {% else %}<div class="estado-erro">Visitante não encontrado.</div>{% endif %}
 
