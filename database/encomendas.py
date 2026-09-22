@@ -191,7 +191,8 @@ def _select_encomendas(where="", order="e.data_chegada DESC, e.id DESC", params=
     tenant_id = _tenant_id()
     conn = conectar()
     try:
-        with conn.cursor() as cur:            query = (  # nosec B608 - fragments are internal allow-listed SQL only
+        with conn.cursor() as cur:
+            query = (  # nosec B608 - fragments are internal allow-listed SQL only
                 f"""
                 SELECT e.*, l.transportadora, l.nome_entregador, l.status AS lote_status,
                        m.telefone
