@@ -348,6 +348,9 @@ def remover(id):
         flash("Visitante removido com sucesso!", "sucesso")
     except ValueError as exc:
         flash(str(exc), "erro")
+    except Exception:
+        logger.exception("Erro ao remover visitante")
+        flash("Não foi possível remover o visitante.", "erro")
     return redirect(url_for("visitantes.visitantes"))
 
 
