@@ -23,7 +23,7 @@
         <div class="pc-access-meta pc-observation"><span>OBSERVAÇÃO</span><strong>{{ v.observacao or '—' }}</strong></div>
         <div class="pc-row-actions" onclick="event.stopPropagation()">
           <a class="pc-icon-action" href="/historico/{{ v.id }}">Histórico</a><a class="pc-icon-action" href="/editar/{{ v.id }}">Editar</a>
-          <form method="POST" action="/remover/{{ v.id }}" data-pc-confirm="Remover {{ v.nome }}? Esta ação não pode ser desfeita." data-pc-confirm-title="Remover visitante?" data-pc-confirm-action="Remover" data-pc-confirm-tone="danger"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button class="pc-icon-action pc-danger-action" type="submit">Remover</button></form>
+          <form method="POST" action="/remover/{{ v.id }}" data-pc-confirm="Remover {{ v.nome }}? Esta ação não pode ser desfeita." data-pc-confirm-title="Remover visitante?" data-pc-confirm-action="Remover" data-pc-confirm-tone="danger"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button class="pc-icon-action pc-danger-action" type="submit">Remover</button></form>
         </div>
       </article>
       {% endfor %}
