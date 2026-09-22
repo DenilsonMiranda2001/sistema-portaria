@@ -2,7 +2,7 @@ import argparse
 import hashlib
 import logging
 from pathlib import Path
-from database.connection import conectar, liberar
+from database.connection import conectar_dedicado
 
 MIGRATIONS_DIR = Path(__file__).resolve().parent
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ BASE_SCHEMA = MIGRATIONS_DIR.parent / "database" / "schema.sql"
 
 
 def migrate():
-    conn = conectar()
+    conn = conectar_dedicado("sistema-portaria-migrations")
     try:
         with conn.cursor() as cur:
             cur.execute("SELECT pg_advisory_lock(%s)", (MIGRATION_LOCK_ID,))
@@ -54,7 +54,7 @@ def migrate():
                 cur.execute("SELECT pg_advisory_unlock(%s)", (MIGRATION_LOCK_ID,))
         except Exception:
             logger.exception("Failed to release migration advisory lock")
-        liberar(conn)
+        conn.close()
 
 
 if __name__ == "__main__":
