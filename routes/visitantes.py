@@ -371,6 +371,8 @@ def historico(id):
 @roles_required("admin", "funcionario")
 def buscar_ajax():
     termo = request.args.get("q", "").strip()
+    if len(termo) < 2:
+        return jsonify([])
     resultados = buscar_visitantes(termo)
 
     return jsonify([{
@@ -391,6 +393,8 @@ def buscar_ajax():
 @roles_required("admin", "funcionario")
 def buscar_cpf_ajax():
     cpf = limpar_cpf(request.form.get("cpf", ""))
+    if len(cpf) != 11 or not validar_cpf(cpf):
+        return jsonify({"erro": "cpf_invalido"}), 400
     visitante = buscar_um_por_cpf(cpf)
     if visitante:
         return jsonify({
@@ -407,7 +411,7 @@ def buscar_cpf_ajax():
 @roles_required("admin", "funcionario")
 def buscar_ativos_ajax():
     termo = request.args.get("q", "").strip()
-    if not termo:
+    if len(termo) < 2:
         return jsonify([])
 
     dados = buscar_ativos(termo)
