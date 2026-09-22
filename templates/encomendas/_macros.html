@@ -15,6 +15,7 @@
     <a class="{{ 'ativo' if ativo == 'novo' }}" href="{{ url_for('encomendas.novo_lote') }}">Receber</a>
     <a class="{{ 'ativo' if ativo == 'lotes' }}" href="{{ url_for('encomendas.lotes') }}">Lotes</a>
     <a class="{{ 'ativo' if ativo == 'retidas' }}" href="{{ url_for('encomendas.retidas') }}">Aguardando retirada</a>
+    <a class="{{ 'ativo' if ativo == 'entregadores' }}" href="{{ url_for('entregadores.listar') }}">Entregadores</a>
     <a class="{{ 'ativo' if ativo == 'historico' }}" href="{{ url_for('encomendas.historico') }}">Histórico</a>
 </nav>
 {%- endmacro %}
