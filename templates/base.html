@@ -87,8 +87,20 @@
     </main>
 
     {% block global_overlays %}{% endblock %}
-
-
+    <div class="pc-confirm-backdrop" id="pcGlobalConfirm" hidden>
+      <section class="pc-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="pcGlobalConfirmTitle">
+        <div class="pc-confirm-icon" aria-hidden="true">!</div>
+        <div class="pc-confirm-copy"><span id="pcGlobalConfirmEyebrow">CONFIRMAÇÃO</span><h3 id="pcGlobalConfirmTitle">Confirmar ação</h3><p id="pcGlobalConfirmText"></p></div>
+        <div class="pc-confirm-actions"><button type="button" class="pc-btn pc-btn-secondary" id="pcGlobalConfirmCancel">Cancelar</button><button type="button" class="pc-btn pc-btn-primary" id="pcGlobalConfirmAccept">Confirmar</button></div>
+      </section>
+    </div>
+    <script>
+    (()=>{const modal=document.getElementById("pcGlobalConfirm"),texto=document.getElementById("pcGlobalConfirmText"),titulo=document.getElementById("pcGlobalConfirmTitle"),aceitar=document.getElementById("pcGlobalConfirmAccept"),cancelar=document.getElementById("pcGlobalConfirmCancel");let form=null;
+    function fechar(){modal.hidden=true;document.body.classList.remove("pc-modal-open");form=null}
+    document.querySelectorAll("form[data-pc-confirm]").forEach(item=>item.addEventListener("submit",e=>{e.preventDefault();form=item;titulo.textContent=item.dataset.pcConfirmTitle||"Confirmar ação";texto.textContent=item.dataset.pcConfirm||"Deseja continuar?";aceitar.textContent=item.dataset.pcConfirmAction||"Confirmar";aceitar.classList.toggle("pc-btn-danger",item.dataset.pcConfirmTone==="danger");modal.hidden=false;document.body.classList.add("pc-modal-open");aceitar.focus()}));
+    aceitar.addEventListener("click",()=>{if(!form)return;const alvo=form;form=null;alvo.submit()});cancelar.addEventListener("click",fechar);modal.addEventListener("click",e=>{if(e.target===modal)fechar()});document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!modal.hidden)fechar()});
+    })();
+    </script>
 
 </body>
 </html>
