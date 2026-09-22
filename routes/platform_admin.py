@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash
 from database.platform import (
     listar_condominios_com_metricas, buscar_condominio_detalhe,
     atualizar_condominio, definir_status_condominio, definir_status_usuario_tenant,
-    criar_condominio_com_usuario, criar_usuario_tenant,
+    criar_condominio_com_usuario, criar_usuario_tenant, resumo_operacional_plataforma,
 )
 
 platform_admin_bp = Blueprint("platform_admin", __name__, url_prefix="/plataforma")
@@ -25,7 +25,8 @@ def platform_admin_required(view):
 @platform_admin_required
 def condominios():
     dados, resumo = listar_condominios_com_metricas()
-    return render_template("platform_condominios.html", condominios=dados, resumo=resumo)
+    operacao, eventos = resumo_operacional_plataforma()
+    return render_template("platform_condominios.html", condominios=dados, resumo=resumo, operacao=operacao, eventos=eventos)
 
 @platform_admin_bp.post("/condominios")
 @platform_admin_required
@@ -66,7 +67,7 @@ def criar_usuario_condominio(condominio_id):
     except Exception:
         logger.exception("Falha em operação administrativa da plataforma")
         flash("Não foi possível criar o usuário. Verifique se o login já está em uso.","erro")
-    return redirect(url_for("platform_admin.condominios"))
+    return redirect(url_for("platform_admin.detalhe_condominio", condominio_id=condominio_id))
 @platform_admin_bp.get("/condominios/<int:condominio_id>")
 @platform_admin_required
 def detalhe_condominio(condominio_id):
