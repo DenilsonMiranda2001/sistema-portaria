@@ -10,7 +10,14 @@ def listar_condominios_com_metricas():
                 SELECT c.id,c.nome,c.slug,c.ativo,c.criado_em,
                        COUNT(u.id) AS total_usuarios,
                        COUNT(u.id) FILTER (WHERE u.ativo = TRUE) AS usuarios_ativos,
-                       COUNT(u.id) FILTER (WHERE u.nivel = 'admin' AND u.ativo = TRUE) AS admins_ativos
+                       COUNT(u.id) FILTER (WHERE u.nivel = 'admin' AND u.ativo = TRUE) AS admins_ativos,
+                       (SELECT COUNT(*) FROM visitas v WHERE v.condominio_id=c.id AND v.data_saida IS NULL) AS acessos_abertos,
+                       (SELECT COUNT(*) FROM encomendas e WHERE e.condominio_id=c.id AND e.status NOT IN ('retirada','entregue_na_porta','cancelada')) AS encomendas_pendentes,
+                       GREATEST(
+                         COALESCE(MAX(u.criado_em), c.criado_em),
+                         COALESCE((SELECT MAX(v.data_entrada) FROM visitas v WHERE v.condominio_id=c.id), c.criado_em),
+                         COALESCE((SELECT MAX(e.atualizado_em) FROM encomendas e WHERE e.condominio_id=c.id), c.criado_em)
+                       ) AS ultima_atividade
                 FROM condominios c
                 LEFT JOIN usuarios u ON u.condominio_id = c.id
                 GROUP BY c.id,c.nome,c.slug,c.ativo,c.criado_em
@@ -31,7 +38,17 @@ def buscar_condominio_detalhe(condominio_id):
             cur.execute("""
                 SELECT c.id,c.nome,c.slug,c.ativo,c.criado_em,
                        COUNT(u.id) AS total_usuarios,
-                       COUNT(u.id) FILTER (WHERE u.ativo=TRUE) AS usuarios_ativos
+                       COUNT(u.id) FILTER (WHERE u.ativo=TRUE) AS usuarios_ativos,
+                       COUNT(u.id) FILTER (WHERE u.nivel='admin' AND u.ativo=TRUE) AS admins_ativos,
+                       (SELECT COUNT(*) FROM visitas v WHERE v.condominio_id=c.id AND v.data_saida IS NULL) AS acessos_abertos,
+                       (SELECT COUNT(*) FROM encomendas e WHERE e.condominio_id=c.id AND e.status NOT IN ('retirada','entregue_na_porta','cancelada')) AS encomendas_pendentes,
+                       (SELECT COUNT(*) FROM moradores m WHERE m.condominio_id=c.id AND m.ativo=TRUE) AS moradores_ativos,
+                       (SELECT COUNT(*) FROM visitantes v WHERE v.condominio_id=c.id) AS visitantes_cadastrados,
+                       GREATEST(
+                         COALESCE(MAX(u.criado_em), c.criado_em),
+                         COALESCE((SELECT MAX(v.data_entrada) FROM visitas v WHERE v.condominio_id=c.id), c.criado_em),
+                         COALESCE((SELECT MAX(e.atualizado_em) FROM encomendas e WHERE e.condominio_id=c.id), c.criado_em)
+                       ) AS ultima_atividade
                 FROM condominios c LEFT JOIN usuarios u ON u.condominio_id=c.id
                 WHERE c.id=%s GROUP BY c.id,c.nome,c.slug,c.ativo,c.criado_em
             """,(condominio_id,))
