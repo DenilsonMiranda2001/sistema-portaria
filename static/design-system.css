@@ -262,3 +262,14 @@ input:focus,select:focus,textarea:focus,.input:focus,.input-padrao:focus,.select
 .pc-confirm-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:18px;border-top:1px solid var(--border,#e2e8f0)}
 .pc-modal-open{overflow:hidden}
 @media(max-width:560px){.pc-confirm-backdrop{align-items:end;padding:12px}.pc-confirm-dialog{width:100%;border-radius:18px;padding:22px}.pc-confirm-actions{display:grid;grid-template-columns:1fr 1fr}.pc-confirm-actions .pc-btn{justify-content:center}}
+
+/* Unified product autocomplete */
+.pc-autocomplete-field{position:relative}
+.pc-autocomplete-panel{position:absolute;z-index:80;top:calc(100% + 7px);left:0;right:0;overflow:hidden;padding:6px;background:var(--surface,#fff);border:1px solid var(--border,#dbe2ea);border-radius:12px;box-shadow:0 16px 40px rgba(15,23,42,.14)}
+.pc-autocomplete-panel[hidden]{display:none}
+.pc-autocomplete-option{width:100%;display:grid;grid-template-columns:minmax(82px,auto) 1fr;gap:12px;align-items:center;padding:10px 12px;border:0;border-radius:8px;background:transparent;color:var(--text,#17212f);font:inherit;text-align:left;cursor:pointer}
+.pc-autocomplete-option strong{font-size:12px;letter-spacing:.02em}
+.pc-autocomplete-option span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted,#68768a)}
+.pc-autocomplete-option:hover,.pc-autocomplete-option.is-active{background:var(--brand-soft,#e8f3f4);color:var(--brand,#176b73)}
+.pc-autocomplete-option.is-active span{color:inherit}
+.pc-autocomplete-empty{padding:12px;color:var(--muted,#68768a);font-size:12px}
