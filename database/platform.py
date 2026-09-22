@@ -204,3 +204,32 @@ def criar_usuario_tenant(condominio_id, nome, usuario, senha_hash, nivel, actor_
         raise
     finally:
         liberar(conn)
+
+
+def resumo_operacional_plataforma():
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                  (SELECT COUNT(*) FROM condominios) AS tenants,
+                  (SELECT COUNT(*) FROM condominios WHERE ativo=TRUE) AS tenants_ativos,
+                  (SELECT COUNT(*) FROM usuarios WHERE ativo=TRUE) AS usuarios_ativos,
+                  (SELECT COUNT(*) FROM visitas WHERE data_saida IS NULL) AS acessos_abertos,
+                  (SELECT COUNT(*) FROM encomendas WHERE status NOT IN ('retirada','entregue_na_porta','cancelada')) AS encomendas_pendentes,
+                  (SELECT COUNT(*) FROM audit_logs WHERE criado_em >= CURRENT_TIMESTAMP - INTERVAL '24 hours') AS eventos_24h
+            """)
+            resumo = cur.fetchone()
+            cur.execute("""
+                SELECT a.id,a.acao,a.entidade,a.entidade_id,a.criado_em,a.condominio_id,
+                       c.nome AS condominio_nome
+                FROM audit_logs a
+                LEFT JOIN condominios c ON c.id=a.condominio_id
+                WHERE a.actor_tipo='platform_admin'
+                ORDER BY a.criado_em DESC
+                LIMIT 12
+            """)
+            eventos = cur.fetchall()
+        return resumo, eventos
+    finally:
+        liberar(conn)
