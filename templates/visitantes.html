@@ -83,11 +83,23 @@ function renderizarSelecionado() {
 
 function renderizarListaBusca(data) {
     visitantesAtuais = data;
-    lista.innerHTML = "";
+    lista.replaceChildren();
     if (paginacao) paginacao.style.display = "none";
 
     if (!data || data.length === 0) {
-        lista.innerHTML = '<div class="pc-empty pc-empty-list"><span class="pc-empty-icon">⌕</span><div><strong>Nenhum visitante encontrado</strong><small>Tente outro nome, CPF ou placa.</small></div></div>';
+        const empty = document.createElement("div");
+        empty.className = "pc-empty pc-empty-list";
+        const icon = document.createElement("span");
+        icon.className = "pc-empty-icon";
+        icon.textContent = "⌕";
+        const copy = document.createElement("div");
+        const strong = document.createElement("strong");
+        strong.textContent = "Nenhum visitante encontrado";
+        const small = document.createElement("small");
+        small.textContent = "Tente outro nome, CPF ou placa.";
+        copy.append(strong, small);
+        empty.append(icon, copy);
+        lista.appendChild(empty);
         return;
     }
 
@@ -95,26 +107,64 @@ function renderizarListaBusca(data) {
     if (indiceSelecionado > data.length - 1) indiceSelecionado = data.length - 1;
 
     data.forEach((v, index) => {
-        const fotoHtml = v.foto_url
-            ? `<img src="${v.foto_url}" alt="Foto de ${v.nome || ''}" class="pc-access-photo">`
-            : `<span class="pc-access-photo pc-access-photo-empty">${((v.nome || '?').slice(0,1)).toUpperCase()}</span>`;
-        lista.innerHTML += `
-        <article class="pc-directory-row ${index === indiceSelecionado ? 'is-selected' : ''}" data-index="${index}" onclick="selecionarVisitante(${index})">
-            ${fotoHtml}
-            <div class="pc-access-identity"><strong>${(v.nome || '').toUpperCase()}</strong><small>${v.cpf || 'CPF não informado'}</small></div>
-            <div class="pc-access-meta"><span>TIPO</span><strong>${(v.tipo || 'Não informado').toUpperCase()}</strong></div>
-            <div class="pc-access-meta"><span>VEÍCULO</span><strong>${montarTextoVeiculo(v)}</strong></div>
-            <div class="pc-access-meta pc-observation"><span>OBSERVAÇÃO</span><strong>${v.observacao || '—'}</strong></div>
-            <div class="pc-row-actions" onclick="event.stopPropagation()">
-              <a class="pc-icon-action" href="/historico/${v.id}">Histórico</a>
-              <a class="pc-icon-action" href="/editar/${v.id}">Editar</a>
-              <form method="POST" action="/remover/${v.id}" onsubmit="return confirm('Remover ${v.nome}? Esta ação não pode ser desfeita.')"><button class="pc-icon-action pc-danger-action" type="submit">Remover</button></form>
-            </div>
-        </article>`;
+        const row = document.createElement("article");
+        row.className = "pc-directory-row" + (index === indiceSelecionado ? " is-selected" : "");
+        row.dataset.index = index;
+        row.addEventListener("click", () => selecionarVisitante(index));
+
+        let photo;
+        if (v.foto_url) {
+            photo = document.createElement("img");
+            photo.src = v.foto_url;
+            photo.alt = "Foto de " + (v.nome || "");
+            photo.className = "pc-access-photo";
+        } else {
+            photo = document.createElement("span");
+            photo.className = "pc-access-photo pc-access-photo-empty";
+            photo.textContent = ((v.nome || "?").slice(0, 1)).toUpperCase();
+        }
+
+        const identity = document.createElement("div");
+        identity.className = "pc-access-identity";
+        const name = document.createElement("strong");
+        name.textContent = (v.nome || "").toUpperCase();
+        const cpf = document.createElement("small");
+        cpf.textContent = v.cpf || "CPF não informado";
+        identity.append(name, cpf);
+
+        const meta = (label, value, extraClass="") => {
+            const el = document.createElement("div");
+            el.className = "pc-access-meta" + (extraClass ? " " + extraClass : "");
+            const caption = document.createElement("span");
+            caption.textContent = label;
+            const valueEl = document.createElement("strong");
+            valueEl.textContent = value;
+            el.append(caption, valueEl);
+            return el;
+        };
+
+        const actions = document.createElement("div");
+        actions.className = "pc-row-actions";
+        actions.addEventListener("click", event => event.stopPropagation());
+        const history = document.createElement("a");
+        history.className = "pc-icon-action";
+        history.href = "/historico/" + encodeURIComponent(v.id);
+        history.textContent = "Histórico";
+        const edit = document.createElement("a");
+        edit.className = "pc-icon-action";
+        edit.href = "/editar/" + encodeURIComponent(v.id);
+        edit.textContent = "Editar";
+        actions.append(history, edit);
+
+        row.append(photo, identity,
+            meta("TIPO", (v.tipo || "Não informado").toUpperCase()),
+            meta("VEÍCULO", montarTextoVeiculo(v)),
+            meta("OBSERVAÇÃO", v.observacao || "—", "pc-observation"),
+            actions);
+        lista.appendChild(row);
     });
     renderizarSelecionado();
 }
-
 function restaurarListagemNormal() {
     window.location.href = "/visitantes";
 }
@@ -133,7 +183,7 @@ if (inputBusca) {
         }
 
         if (termo.length < 2) {
-            lista.innerHTML = `<div class="estado-vazio">Digite pelo menos 2 caracteres para buscar.</div>`;
+            lista.replaceChildren(); const aviso = document.createElement("div"); aviso.className = "estado-vazio"; aviso.textContent = "Digite pelo menos 2 caracteres para buscar."; lista.appendChild(aviso);
             if (paginacao) {
                 paginacao.style.display = "none";
             }
@@ -154,7 +204,7 @@ if (inputBusca) {
                     renderizarListaBusca(data);
                 })
                 .catch((erro) => {
-                    lista.innerHTML = `<div class="estado-erro">${erro.message}</div>`;
+                    lista.replaceChildren(); const aviso = document.createElement("div"); aviso.className = "estado-erro"; aviso.textContent = erro.message; lista.appendChild(aviso);
                     console.error("Erro na busca:", erro);
                 });
         }, 300);
