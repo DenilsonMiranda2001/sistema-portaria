@@ -4,13 +4,15 @@
 <section class="platform-admin">
   <header class="platform-workspace-head"><div><span class="platform-eyebrow">CONTROL PLANE</span><h1>Operações</h1><p>Tenants, acessos e disponibilidade da plataforma.</p></div><span class="platform-count">{{ resumo.ativos or 0 }} ativas</span></header>
 
-  <section class="platform-summary">
-    <div><strong>{{ resumo.total or 0 }}</strong><span>Condomínios</span></div>
-    <div><strong>{{ resumo.ativos or 0 }}</strong><span>Operações ativas</span></div>
-    <div><strong>{{ condominios|sum(attribute='usuarios_ativos') }}</strong><span>Usuários ativos</span></div>
+  <section class="platform-summary platform-summary-wide">
+    <div><strong>{{ operacao.tenants_ativos or 0 }}</strong><span>Tenants ativos</span></div>
+    <div><strong>{{ operacao.usuarios_ativos or 0 }}</strong><span>Usuários ativos</span></div>
+    <div><strong>{{ operacao.acessos_abertos or 0 }}</strong><span>Acessos agora</span></div>
+    <div><strong>{{ operacao.encomendas_pendentes or 0 }}</strong><span>Encomendas pendentes</span></div>
+    <div><strong>{{ operacao.eventos_24h or 0 }}</strong><span>Eventos em 24h</span></div>
   </section>
 
-  <details class="platform-card platform-create"><summary><span><b>＋ Nova operação</b><small>Cadastrar condomínio e preparar o tenant</small></span><i>Expandir</i></summary><div class="platform-create-body">
+  <section class="platform-commandbar"><div><strong>Visão operacional</strong><span>{{ resumo.total or 0 }} tenant(s) provisionados · {{ (resumo.total or 0) - (resumo.ativos or 0) }} inativo(s)</span></div><details class="platform-card platform-create"><summary><span><b>＋ Nova operação</b><small>Cadastrar condomínio e preparar o tenant</small></span><i>Expandir</i></summary><div class="platform-create-body">
     <div class="platform-card-head">
       <div><span class="platform-step">01</span><h2>Novo condomínio</h2></div>
       <p>Cadastre uma nova operação com um identificador único.</p>
@@ -21,7 +23,7 @@
       <label><span>Código único</span><input name="slug" placeholder="ex.: residencial-brasilia" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" maxlength="80" required autocomplete="off"></label>
       <button class="platform-primary" type="submit">Criar condomínio</button>
     </form>
-  </div></details>
+  </div></details></section>
 
   <section class="platform-list">
     <div class="platform-section-title">
@@ -44,6 +46,7 @@
       {% endfor %}
     </div>
   </section>
+  <section class="platform-card platform-audit-feed"><div class="platform-card-head"><div><span class="platform-step">03</span><h2>Atividade administrativa</h2></div><span class="platform-count">Últimos {{ eventos|length }}</span></div><div class="platform-events">{% for e in eventos %}<article><span class="platform-event-dot"></span><div><strong>{{ e.acao|replace('plataforma.','')|replace('_',' ')|title }}</strong><small>{{ e.condominio_nome or 'Plataforma' }}{% if e.entidade %} · {{ e.entidade }}{% endif %}</small></div><time>{{ e.criado_em.strftime('%d/%m %H:%M') }}</time></article>{% else %}<div class="platform-empty"><strong>Sem atividade administrativa recente.</strong><span>As operações do control plane aparecerão aqui.</span></div>{% endfor %}</div></section>
 </div>
 
 {% endblock %}
