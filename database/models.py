@@ -23,59 +23,6 @@ logger = logging.getLogger(__name__)
 # INICIALIZAÇÃO
 # ──────────────────────────────────────────────────────────────
 
-def criar_tabelas():
-    conn = None
-    try:
-        conn = conectar()
-        with conn.cursor() as cur:
-            sql = (Path(__file__).resolve().parent / "schema.sql").read_text(encoding="utf-8")
-            cur.execute(sql)
-
-            # Migrações — adicionam colunas que podem não existir em bancos antigos
-            migracoes = [
-                "ALTER TABLE usuarios  ADD COLUMN IF NOT EXISTS ativo      BOOLEAN NOT NULL DEFAULT TRUE",
-                "ALTER TABLE visitas   ADD COLUMN IF NOT EXISTS unidade_id INTEGER REFERENCES unidades(id) ON DELETE SET NULL",
-                "ALTER TABLE visitas   ADD COLUMN IF NOT EXISTS morador_id INTEGER REFERENCES moradores(id) ON DELETE SET NULL",
-                "ALTER TABLE visitas   ADD COLUMN IF NOT EXISTS placa      VARCHAR(20)",
-                "ALTER TABLE visitas   ADD COLUMN IF NOT EXISTS marca      VARCHAR(100)",
-                "ALTER TABLE visitas   ADD COLUMN IF NOT EXISTS modelo     VARCHAR(100)",
-                "ALTER TABLE visitas   ADD COLUMN IF NOT EXISTS observacao TEXT",
-            ]
-            for m in migracoes:
-                try:
-                    cur.execute(m)
-                except Exception as e:
-                    logger.warning("Migração ignorada: %s — %s", m[:60], e)
-                    conn.rollback()
-                    # Reabre cursor após rollback parcial
-                    cur = conn.cursor()
-
-            # Índices para as novas colunas (idempotentes)
-            indices_extra = [
-                "CREATE INDEX IF NOT EXISTS idx_visitas_unidade  ON visitas(unidade_id)",
-                "CREATE INDEX IF NOT EXISTS idx_visitas_morador  ON visitas(morador_id)",
-            ]
-            for idx in indices_extra:
-                try:
-                    cur.execute(idx)
-                except Exception as e:
-                    logger.warning("Índice ignorado: %s — %s", idx[:60], e)
-
-        conn.commit()
-        logger.info("Tabelas criadas/atualizadas com sucesso.")
-    except Exception:
-        if conn:
-            conn.rollback()
-        logger.exception("Erro ao criar tabelas")
-    finally:
-        if conn:
-            liberar(conn)
-
-
-# ──────────────────────────────────────────────────────────────
-# USUÁRIOS
-# ──────────────────────────────────────────────────────────────
-
 def criar_usuario(nome, usuario, senha, nivel, actor_id=None):
     tenant_id = _tenant_id()
     conn = conectar()
