@@ -89,7 +89,7 @@ def test_production_webcam_update_uses_private_object_storage():
     assert "temporariamente indisponível" not in block
 
 
-def test_production_config_requires_private_storage_and_audit_salt():
+def test_production_config_validates_private_storage_and_audit_salt():
     config = Path("config.py").read_text(encoding="utf-8")
     for name in ("S3_ENDPOINT_URL", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "AUDIT_IP_SALT"):
         assert name in config
