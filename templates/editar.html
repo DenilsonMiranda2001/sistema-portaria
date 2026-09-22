@@ -142,7 +142,7 @@ function criarAutocomplete(inputId, sugestoesId, listaDados) {
 
         resultados.forEach((item, index) => {
             const div = document.createElement("div");
-            div.className = "item-sugestao" + (index === indiceSelecionado ? " selecionado" : "");
+            div.className = "pc-autocomplete-option" + (index === indiceSelecionado ? " is-active" : "");
             const termo = input.value.trim();
             const itemNormal = normalizar(item);
             const termoNormal = normalizar(termo);
