@@ -120,3 +120,11 @@ def test_platform_admin_bootstrap_requires_explicit_production_rotation():
     assert "--reset-existing" in source
     assert "ON CONFLICT (usuario) DO NOTHING" in source
     assert "Production bootstrap requires --confirm-production." in source
+
+
+def test_image_validation_has_dimension_and_decompression_bomb_limits():
+    source = Path("utils/storage.py").read_text(encoding="utf-8")
+    assert "MAX_IMAGE_PIXELS = 20_000_000" in source
+    assert "MAX_IMAGE_SIDE = 8_000" in source
+    assert "_validate_dimensions(image)" in source
+    assert "Image.DecompressionBombError" in source
