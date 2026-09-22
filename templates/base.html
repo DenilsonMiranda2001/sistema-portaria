@@ -56,7 +56,7 @@
                     <div class="usuario-avatar" aria-hidden="true">{{ session.get("usuario_nome", "U")[:1]|upper }}</div>
                     <div class="usuario-info">
                         <strong>{{ session.get("usuario_nome", "Usuário") }}</strong>
-                        <span>{{ session.get("usuario_tipo", "").capitalize() }}</span>
+                        <span>{{ g.current_user.get("condominio_nome", "Condomínio") }} · {{ "Porteiro" if session.get("usuario_tipo") == "funcionario" else session.get("usuario_tipo", "").capitalize() }}</span>
                     </div>
                 </div>
                 <form method="post" action="{{ url_for('auth.logout') }}" class="navbar-logout-form"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button class="btn btn-sair" type="submit">Sair</button></form>
