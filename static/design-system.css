@@ -273,3 +273,7 @@ input:focus,select:focus,textarea:focus,.input:focus,.input-padrao:focus,.select
 .pc-autocomplete-option:hover,.pc-autocomplete-option.is-active{background:var(--brand-soft,#e8f3f4);color:var(--brand,#176b73)}
 .pc-autocomplete-option.is-active span{color:inherit}
 .pc-autocomplete-empty{padding:12px;color:var(--muted,#68768a);font-size:12px}
+
+/* Unified native controls */
+.pc-field select,.pc-user-create-form select,.pc-account-form select,.pc-package-filter select,.pc-package-intake select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:38px}
+.pc-field select:focus,.pc-user-create-form select:focus,.pc-account-form select:focus,.pc-package-filter select:focus,.pc-package-intake select:focus{outline:none;border-color:var(--brand,#176b73);box-shadow:0 0 0 3px rgba(23,107,115,.10)}
