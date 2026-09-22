@@ -24,7 +24,7 @@
         <div class="navbar-direita">
             <nav class="navbar-acoes">
                 <a class="btn btn-nav {% if request.endpoint == 'main.index' %}btn-nav-ativo{% endif %}"
-                   href="{{ url_for('main.index') }}">Central</a>
+                   href="{{ url_for('main.index') }}">Início</a>
 
                 <a class="btn btn-nav {% if request.endpoint == 'visitantes.cadastro' %}btn-nav-ativo{% endif %}"
                    href="{{ url_for('visitantes.cadastro') }}">Cadastro</a>
@@ -58,7 +58,7 @@
                         <span>{{ session.get("usuario_tipo", "").capitalize() }}</span>
                     </div>
                 </div>
-                <a class="btn btn-sair" href="{{ url_for('auth.logout') }}">Sair</a>
+                <form method="post" action="{{ url_for('auth.logout') }}" class="navbar-logout-form"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button class="btn btn-sair" type="submit">Sair</button></form>
             </div>
         </div>
     </header>
@@ -85,127 +85,9 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- ── MODAL FOTO ──────────────────────────────────── -->
-    <div id="modalFoto" class="modal-foto-overlay" style="display:none;" onclick="if(event.target===this)fecharModalFoto()">
-        <div class="modal-foto-box">
-            <button type="button" class="modal-fechar" onclick="fecharModalFoto()">✕</button>
-            <div class="modal-foto-topo">
-                <h3>📷 Atualizar foto</h3>
-                <p>Capture e recorte a nova foto do visitante.</p>
-            </div>
-            <div id="etapa_camera" class="modal-foto-corpo">
-                <video id="video_webcam" autoplay playsinline></video>
-                <canvas id="canvas_foto" style="display:none;"></canvas>
-            </div>
-            <div id="etapa_preview" class="modal-foto-corpo" style="display:none;">
-                <img id="preview_foto" alt="Prévia da foto">
-            </div>
-            <div class="acoes-foto">
-                <button type="button" class="btn btn-nav" onclick="fecharModalFoto()">Cancelar</button>
-                <button type="button" class="btn btn-nav" id="btnCapturarFoto" onclick="capturarFoto()">Capturar</button>
-                <button type="button" class="btn btn-nav" id="btnVoltarCamera" onclick="voltarCamera()" style="display:none;">Voltar</button>
-                <button type="button" class="btn btn-sair" id="btnSalvarFoto" onclick="salvarFotoVisitante()" style="display:none;">Salvar</button>
-            </div>
-        </div>
-    </div>
+    {% block global_overlays %}{% endblock %}
 
-</div><!-- /.app-shell -->
 
-<script>
-let cropper = null, streamWebcam = null, visitanteFotoAtual = null, fotoCapturadaBase64 = null;
-
-function destruirCropper() { if (cropper) { cropper.destroy(); cropper = null; } }
-
-async function abrirModalFoto(visitanteId) {
-    visitanteFotoAtual = visitanteId;
-    fotoCapturadaBase64 = null;
-    destruirCropper();
-    const modal = document.getElementById("modalFoto");
-    const etapaCamera = document.getElementById("etapa_camera");
-    const etapaPreview = document.getElementById("etapa_preview");
-    document.getElementById("preview_foto").src = "";
-    modal.style.display = "flex";
-    etapaCamera.style.display = "flex";
-    etapaPreview.style.display = "none";
-    document.getElementById("btnCapturarFoto").style.display = "inline-flex";
-    document.getElementById("btnSalvarFoto").style.display = "none";
-    document.getElementById("btnVoltarCamera").style.display = "none";
-    try {
-        streamWebcam = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 720 }, height: { ideal: 540 }, facingMode: "user" }, audio: false
-        });
-        document.getElementById("video_webcam").srcObject = streamWebcam;
-    } catch (e) {
-        alert("Não foi possível acessar a webcam.");
-        fecharModalFoto();
-    }
-}
-
-function fecharModalFoto() {
-    document.getElementById("modalFoto").style.display = "none";
-    if (streamWebcam) { streamWebcam.getTracks().forEach(t => t.stop()); streamWebcam = null; }
-    destruirCropper();
-}
-
-function capturarFoto() {
-    const video = document.getElementById("video_webcam");
-    const canvas = document.getElementById("canvas_foto");
-    const preview = document.getElementById("preview_foto");
-    if (!video || !video.srcObject) return;
-    canvas.width = video.videoWidth || 720;
-    canvas.height = video.videoHeight || 540;
-    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-    fotoCapturadaBase64 = canvas.toDataURL("image/jpeg", 0.9);
-    document.getElementById("etapa_camera").style.display = "none";
-    document.getElementById("etapa_preview").style.display = "flex";
-    document.getElementById("btnCapturarFoto").style.display = "none";
-    document.getElementById("btnSalvarFoto").style.display = "inline-flex";
-    document.getElementById("btnVoltarCamera").style.display = "inline-flex";
-    preview.onload = function() { iniciarCropperComImagem(preview); preview.onload = null; };
-    preview.src = fotoCapturadaBase64;
-}
-
-function voltarCamera() {
-    destruirCropper();
-    document.getElementById("etapa_camera").style.display = "flex";
-    document.getElementById("etapa_preview").style.display = "none";
-    document.getElementById("btnCapturarFoto").style.display = "inline-flex";
-    document.getElementById("btnSalvarFoto").style.display = "none";
-    document.getElementById("btnVoltarCamera").style.display = "none";
-}
-
-function iniciarCropperComImagem(preview) {
-    destruirCropper();
-    if (typeof Cropper === "undefined") return;
-    cropper = new Cropper(preview, {
-        aspectRatio: 1, viewMode: 1, autoCropArea: 0.75,
-        dragMode: "move", background: false, movable: true, zoomable: true,
-        scalable: false, rotatable: false, responsive: true
-    });
-}
-
-function salvarFotoVisitante() {
-    let imagemFinal = fotoCapturadaBase64;
-    if (cropper) {
-        const canvas = cropper.getCroppedCanvas({ width: 500, height: 500, imageSmoothingQuality: "high" });
-        if (canvas) imagemFinal = canvas.toDataURL("image/jpeg", 0.9);
-    }
-    if (!visitanteFotoAtual || !imagemFinal) return;
-    const body = new URLSearchParams();
-    body.append("id", visitanteFotoAtual);
-    body.append("foto", imagemFinal);
-    fetch("/atualizar_foto_ajax", { method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: body.toString() })
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === "ok") {
-                fecharModalFoto();
-                document.querySelectorAll(`[data-foto-visitante="${visitanteFotoAtual}"]`)
-                    .forEach(img => img.src = `/static/fotos/${data.foto}?t=${Date.now()}`);
-            } else { alert(data.mensagem || "Erro ao salvar foto."); }
-        })
-        .catch(() => alert("Erro ao salvar foto."));
-}
-</script>
 
 </body>
 </html>
