@@ -39,7 +39,7 @@
             <button class="btn enc-btn enc-btn-success" type="submit">Confirmar retirada</button>
         </form>
         <form method="post" action="{{ url_for('encomendas.status_encomenda', encomenda_id=encomenda.id) }}"
-              onsubmit="return confirm('Cancelar esta encomenda?')">
+              data-pc-confirm="A encomenda será marcada como cancelada e permanecerá no histórico." data-pc-confirm-title="Cancelar encomenda?" data-pc-confirm-action="Cancelar encomenda" data-pc-confirm-tone="danger">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="status" value="cancelada">
             <input type="hidden" name="proximo" value="{{ proximo }}">
