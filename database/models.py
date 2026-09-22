@@ -437,7 +437,7 @@ def listar_moradores(apenas_ativos=True):
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            filtro = "AND m.ativo = TRUE" if apenas_ativos else ""            cur.execute(f"""  # nosec B608
+            filtro = "AND m.ativo = TRUE" if apenas_ativos else ""            query = f"""  # nosec B608 - filtro is a local boolean-controlled constant
                 SELECT
                     m.id, m.nome, m.cpf, m.telefone, m.email,
                     m.unidade_id, u.codigo AS unidade_codigo, u.descricao AS unidade_descricao,
@@ -446,7 +446,8 @@ def listar_moradores(apenas_ativos=True):
                 LEFT JOIN unidades u ON u.id = m.unidade_id AND u.condominio_id = m.condominio_id
                 WHERE m.condominio_id = %s {filtro}
                 ORDER BY m.nome
-            """, (tenant_id,))
+            """
+            cur.execute(query, (tenant_id,))
             return cur.fetchall()
     finally:
         liberar(conn)
