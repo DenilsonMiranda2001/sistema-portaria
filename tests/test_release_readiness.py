@@ -102,3 +102,13 @@ def test_private_storage_validates_decoded_image_content():
     assert "FORMAT_EXTENSIONS" in source
     assert "_require_tenant(tenant_id)" in source
     assert 'file_storage.mimetype or "application/octet-stream"' not in source
+
+
+def test_private_photo_lifecycle_cleans_replaced_and_orphaned_objects():
+    route = Path("routes/visitantes.py").read_text(encoding="utf-8")
+    storage = Path("utils/storage.py").read_text(encoding="utf-8")
+    assert "def delete_image(object_key):" in storage
+    assert "visitante = buscar_visitante_por_id(visitante_id)" in route
+    assert "delete_image(nome_arquivo)" in route
+    assert "delete_image(foto_anterior)" in route
+    assert '"foto_url": url_for("visitantes.foto", id=visitante_id)' in route
