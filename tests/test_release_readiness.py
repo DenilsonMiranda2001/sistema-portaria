@@ -112,3 +112,11 @@ def test_private_photo_lifecycle_cleans_replaced_and_orphaned_objects():
     assert "delete_image(nome_arquivo)" in route
     assert "delete_image(foto_anterior)" in route
     assert '"foto_url": url_for("visitantes.foto", id=visitante_id)' in route
+
+
+def test_platform_admin_bootstrap_requires_explicit_production_rotation():
+    source = Path("scripts/bootstrap_admin.py").read_text(encoding="utf-8")
+    assert "--confirm-production" in source
+    assert "--reset-existing" in source
+    assert "ON CONFLICT (usuario) DO NOTHING" in source
+    assert "Production bootstrap requires --confirm-production." in source
