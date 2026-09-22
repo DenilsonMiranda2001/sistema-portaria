@@ -10,7 +10,7 @@ from database.entregadores import (
     definir_status_entregador,
     listar_entregadores,
 )
-from routes.encomendas import TRANSPORTADORAS
+TRANSPORTADORAS = ("Shopee", "Mercado Livre", "Correios", "Amazon", "Outra")
 from utils.authz import roles_required
 
 
