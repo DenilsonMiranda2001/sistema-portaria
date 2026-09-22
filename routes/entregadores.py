@@ -35,6 +35,9 @@ def novo():
                 session["usuario_id"],
             )
             flash("Entregador cadastrado com sucesso.", "sucesso")
+            destino = request.form.get("next", "").strip()
+            if destino == "novo_lote":
+                return redirect(url_for("encomendas.novo_lote", entregador_id=entregador_id))
             return redirect(url_for("entregadores.editar", entregador_id=entregador_id))
         except errors.UniqueViolation:
             flash("Já existe um entregador com esse documento neste condomínio.", "erro")
@@ -43,7 +46,7 @@ def novo():
         except Exception:
             logger.exception("Erro ao cadastrar entregador")
             flash("Não foi possível cadastrar o entregador.", "erro")
-    return render_template("entregadores/form.html", entregador=None, transportadoras=TRANSPORTADORAS)
+    return render_template("entregadores/form.html", entregador=None, transportadoras=TRANSPORTADORAS, retorno=request.args.get("next", ""))
 
 
 @entregadores_bp.route("/<int:entregador_id>/editar", methods=["GET", "POST"])
