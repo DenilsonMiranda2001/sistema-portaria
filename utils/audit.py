@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import json
 import os
 from flask import has_request_context, request
@@ -10,7 +11,7 @@ def _ip_hash():
         return None
     ip = (request.remote_addr or "").strip()
     salt = os.getenv("AUDIT_IP_SALT", "")
-    return hashlib.sha256((salt + ip).encode("utf-8")).hexdigest() if ip else None
+    return hmac.new(salt.encode("utf-8"), ip.encode("utf-8"), hashlib.sha256).hexdigest() if ip else None
 
 
 def registrar_auditoria_cursor(cur, acao, usuario_id=None, condominio_id=None, entidade=None, entidade_id=None, detalhes=None, actor_tipo=None, actor_id=None):
