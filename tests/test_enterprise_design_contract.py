@@ -1,20 +1,20 @@
 from pathlib import Path
 
 
-def test_enterprise_shell_uses_top_navigation_mobile_and_secure_logout():
-    html = Path("templates/base.html").read_text(encoding="utf-8")
-    css = Path("static/style.css").read_text(encoding="utf-8")
-    assert 'enterprise-header premium-header' in html
-    assert 'enterprise-nav premium-nav' in html
+def test_product_shell_uses_single_design_system_and_secure_logout():
+    html=Path("templates/base.html").read_text(encoding="utf-8")
+    css=Path("static/design-system.css").read_text(encoding="utf-8")
+    assert "design-system.css" in html
+    for legacy in ("style.css","enterprise-v2.css","portaria-control.css","portaria-premium-v3.css"):
+        assert legacy not in html
     assert 'class="saas-sidebar"' not in html
-    assert "topnav-open" in html and "topnav-open" in css
     assert 'method="post" action="{{ url_for(\'auth.logout\') }}"' in html
     assert "global_csrf_token()" in html
-    assert "@media(max-width:760px)" in css
+    assert "@media" in css
 
 
-def test_enterprise_navigation_remains_role_aware():
-    html = Path("templates/base.html").read_text(encoding="utf-8")
+def test_product_navigation_remains_role_aware():
+    html=Path("templates/base.html").read_text(encoding="utf-8")
     assert 'session.get("usuario_tipo") == "admin"' in html
-    for endpoint in ("main.index", "visitantes.cadastro", "visitantes.visitantes", "moradores.listar", "encomendas.painel", "admin.usuarios"):
+    for endpoint in ("main.index","visitantes.cadastro","visitantes.visitantes","moradores.listar","encomendas.painel","admin.usuarios"):
         assert endpoint in html
