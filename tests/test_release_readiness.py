@@ -194,3 +194,19 @@ def test_delivery_people_ui_is_csrf_protected_and_package_intake_supports_linkin
     assert 'name="csrf_token"' in form
     assert 'name="entregador_id"' in intake
     assert "entregadores_bp" in app
+
+
+def test_delivery_people_live_inside_packages_navigation_and_intake_flow():
+    base = Path("templates/base.html").read_text(encoding="utf-8")
+    macros = Path("templates/encomendas/_macros.html").read_text(encoding="utf-8")
+    intake = Path("templates/encomendas/novo_lote.html").read_text(encoding="utf-8")
+    routes = Path("routes/entregadores.py").read_text(encoding="utf-8")
+    assert '>Entregadores</a>' not in base
+    assert "request.endpoint.startswith('entregadores')" in base
+    assert "subnav('entregadores')" not in macros
+    assert "url_for('entregadores.listar')" in macros
+    assert "Cadastrar novo entregador" in intake
+    assert "Nome avulso / legado" not in intake
+    assert 'next="novo_lote"' not in intake
+    assert "next='novo_lote'" in intake
+    assert 'destino == "novo_lote"' in routes
