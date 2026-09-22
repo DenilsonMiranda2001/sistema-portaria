@@ -61,11 +61,13 @@ def verificar_login():
 
 @app.after_request
 def security_headers(response):
-    duration_ms = (time.perf_counter() - getattr(g, "request_started_at", time.perf_counter())) * 1000
+    started_at = getattr(g, "request_started_at", None)
+    duration_ms = (time.perf_counter() - started_at) * 1000 if started_at is not None else None
     if request.endpoint != "static":
         app.logger.info(
             "request_complete request_id=%s method=%s path=%s status=%s duration_ms=%.1f",
-            getattr(g, "request_id", None), request.method, request.path, response.status_code, duration_ms,
+            getattr(g, "request_id", None), request.method, request.path, response.status_code,
+            duration_ms if duration_ms is not None else 0.0,
         )
     response.headers.setdefault("X-Request-ID", getattr(g, "request_id", uuid.uuid4().hex))
     if request.endpoint != "static":
