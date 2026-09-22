@@ -144,3 +144,12 @@ def test_unknown_login_still_runs_password_hash_verification():
     assert "DUMMY_PASSWORD_HASH" in source
     assert "check_password_hash(DUMMY_PASSWORD_HASH, senha)" in source
     assert "secrets.token_urlsafe(32)" in source
+
+
+def test_dynamic_visitor_search_does_not_interpolate_backend_data_into_html():
+    source = Path("templates/visitantes.html").read_text(encoding="utf-8")
+    assert "lista.innerHTML +=" not in source
+    assert "${v.nome" not in source
+    assert "${v.observacao" not in source
+    assert "name.textContent" in source
+    assert "valueEl.textContent" in source
