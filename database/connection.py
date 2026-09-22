@@ -41,6 +41,10 @@ def _get_pool():
 def conectar():
     conn = _get_pool().getconn()
     conn.cursor_factory = RealDictCursor
+    with conn.cursor() as cur:
+        cur.execute("SET statement_timeout = '15s'")
+        cur.execute("SET idle_in_transaction_session_timeout = '30s'")
+    conn.commit()
     return conn
 
 
