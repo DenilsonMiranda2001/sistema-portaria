@@ -42,9 +42,10 @@ class Config:
             if not cls.DATABASE_URL and (not cls.DB_HOST or not cls.DB_NAME or not cls.DB_USER):
                 raise RuntimeError("Database configuration is incomplete.")
             storage_vars = ("S3_ENDPOINT_URL", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY")
-            missing_storage = [name for name in storage_vars if not os.getenv(name)]
-            if missing_storage:
-                raise RuntimeError("Private object storage configuration is incomplete: " + ", ".join(missing_storage))
+            configured_storage = [name for name in storage_vars if os.getenv(name)]
+            if configured_storage and len(configured_storage) != len(storage_vars):
+                missing_storage = [name for name in storage_vars if not os.getenv(name)]
+                raise RuntimeError("Private object storage configuration is partial: " + ", ".join(missing_storage))
             audit_salt = os.getenv("AUDIT_IP_SALT", "")
             if len(audit_salt) < 16:
                 raise RuntimeError("AUDIT_IP_SALT must be configured with at least 16 characters in production.")
