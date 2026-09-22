@@ -30,3 +30,9 @@ def test_audit_schema_supports_non_tenant_platform_actor():
 
 def test_legacy_sqlite_database_module_is_removed():
     assert not Path("database/database.py").exists()
+
+
+def test_package_constraints_are_eventually_validated():
+    migration = Path("migrations/0016_validate_package_constraints.sql").read_text(encoding="utf-8")
+    assert "VALIDATE CONSTRAINT ck_encomendas_status_known" in migration
+    assert "VALIDATE CONSTRAINT ck_encomendas_retirada_evidence" in migration
