@@ -38,7 +38,7 @@ from utils.validators import (
     EXTENSOES_FOTO_PERMITIDAS,
 )
 from utils.imagem import salvar_foto_webcam
-from utils.storage import save_image, save_webcam_image, presigned_image_url
+from utils.storage import save_image, save_webcam_image, presigned_image_url, delete_image
 from utils.endereco import formatar_endereco_condominio
 from utils.audit import registrar_auditoria
 from utils.authz import roles_required
@@ -139,6 +139,11 @@ def cadastro():
             flash(str(exc), "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
         except Exception:
+            if current_app.config.get("APP_ENV") == "production" and nome_foto:
+                try:
+                    delete_image(nome_foto)
+                except Exception:
+                    logger.exception("Falha ao limpar foto órfã após erro no cadastro")
             logger.exception("Erro ao cadastrar visitante e registrar entrada")
             flash("Não foi possível concluir o cadastro do visitante.", "erro")
             return redirect(url_for("visitantes.cadastro", cpf=cpf))
@@ -301,7 +306,24 @@ def editar(id):
         if not nome_foto:
             nome_foto = visitante["foto"]
 
-        atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao, endereco=endereco, usuario_id=session["usuario_id"])
+        foto_anterior = visitante.get("foto")
+        try:
+            alterou = atualizar_visitante(id, nome, cpf, tipo, placa, modelo, marca, nome_foto, observacao, endereco=endereco, usuario_id=session["usuario_id"])
+        except Exception:
+            if current_app.config.get("APP_ENV") == "production" and nome_foto and nome_foto != foto_anterior:
+                try:
+                    delete_image(nome_foto)
+                except Exception:
+                    logger.exception("Falha ao limpar nova foto após erro na atualização")
+            raise
+        if not alterou:
+            flash("Visitante não encontrado.", "erro")
+            return redirect(url_for("visitantes.visitantes"))
+        if current_app.config.get("APP_ENV") == "production" and foto_anterior and nome_foto != foto_anterior and "/" in foto_anterior:
+            try:
+                delete_image(foto_anterior)
+            except Exception:
+                logger.exception("Falha ao remover foto substituída do armazenamento")
         flash("Cadastro atualizado com sucesso!", "sucesso")
         return redirect(url_for("visitantes.visitantes"))
 
@@ -317,7 +339,12 @@ def remover(id):
         return redirect(url_for("visitantes.visitantes"))
 
     try:
-        remover_visitante(id, session["usuario_id"])
+        alterou = remover_visitante(id, session["usuario_id"])
+        if alterou and current_app.config.get("APP_ENV") == "production" and visitante.get("foto") and "/" in visitante["foto"]:
+            try:
+                delete_image(visitante["foto"])
+            except Exception:
+                logger.exception("Falha ao remover foto de visitante excluído")
         flash("Visitante removido com sucesso!", "sucesso")
     except ValueError as exc:
         flash(str(exc), "erro")
