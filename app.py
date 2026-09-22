@@ -1,6 +1,7 @@
 import logging
 import os
 import uuid
+import time
 from flask import Flask, jsonify, session, redirect, url_for, request, g
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -53,6 +54,7 @@ ROTAS_PUBLICAS = {"auth.login", "auth.logout", "static", "healthz", "readyz"}
 @app.before_request
 def verificar_login():
     g.request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
+    g.request_started_at = time.perf_counter()
     load_identity()
     endpoint = request.endpoint or ""
     if endpoint in ROTAS_PUBLICAS or endpoint.startswith("static"):
@@ -65,6 +67,12 @@ def verificar_login():
 
 @app.after_request
 def security_headers(response):
+    duration_ms = (time.perf_counter() - getattr(g, "request_started_at", time.perf_counter())) * 1000
+    if request.endpoint != "static":
+        app.logger.info(
+            "request_complete request_id=%s method=%s path=%s status=%s duration_ms=%.1f",
+            getattr(g, "request_id", None), request.method, request.path, response.status_code, duration_ms,
+        )
     response.headers.setdefault("X-Request-ID", getattr(g, "request_id", uuid.uuid4().hex))
     if request.endpoint != "static":
         response.headers.setdefault("Cache-Control", "no-store")
