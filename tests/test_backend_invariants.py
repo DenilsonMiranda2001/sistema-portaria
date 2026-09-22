@@ -170,3 +170,13 @@ def test_visitor_profile_mutations_validate_actor_inside_tenant_transaction():
     source = Path("database/models.py").read_text(encoding="utf-8")
     visitor_section = source[source.index("def cpf_ja_cadastrado"):]
     assert visitor_section.count('raise ValueError("Usuário inválido para este condomínio.")') >= 6
+
+
+def test_visitor_lookup_endpoints_reject_unbounded_or_invalid_searches():
+    source = Path("routes/visitantes.py").read_text(encoding="utf-8")
+    buscar_ajax = source[source.index("def buscar_ajax"):source.index("def buscar_cpf_ajax")]
+    buscar_cpf = source[source.index("def buscar_cpf_ajax"):source.index("def buscar_ativos_ajax")]
+    buscar_ativos = source[source.index("def buscar_ativos_ajax"):source.index("def buscar_moradores_ajax_rota")]
+    assert "if len(termo) < 2" in buscar_ajax
+    assert "if len(cpf) != 11 or not validar_cpf(cpf)" in buscar_cpf
+    assert "if len(termo) < 2" in buscar_ativos
