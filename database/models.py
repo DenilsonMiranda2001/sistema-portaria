@@ -155,6 +155,10 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Administrador inválido para este condomínio.")
             login = (usuario or "").strip()
             cur.execute("SELECT 1 FROM platform_admins WHERE usuario = %s", (login,))
             if cur.fetchone():
@@ -190,6 +194,10 @@ def atualizar_senha_usuario(usuario_id, nova_senha, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Administrador inválido para este condomínio.")
             cur.execute(
                 "UPDATE usuarios SET senha = %s WHERE id = %s AND condominio_id = %s",
                 (generate_password_hash(nova_senha), usuario_id, tenant_id)
@@ -211,6 +219,10 @@ def inativar_usuario(usuario_id, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Administrador inválido para este condomínio.")
             cur.execute("SELECT nivel,ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE", (usuario_id, tenant_id))
             alvo = cur.fetchone()
             if not alvo or not alvo["ativo"]:
@@ -237,6 +249,10 @@ def ativar_usuario(usuario_id, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if actor_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Administrador inválido para este condomínio.")
             cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s AND condominio_id = %s AND ativo=FALSE", (usuario_id, tenant_id))
             alterou = cur.rowcount > 0
             if alterou and actor_id:
