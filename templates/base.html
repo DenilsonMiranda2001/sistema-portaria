@@ -39,11 +39,8 @@
                 <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('moradores') %}btn-nav-ativo{% endif %}"
                    href="{{ url_for('moradores.listar') }}">Moradores</a>
 
-                <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('encomendas') %}btn-nav-ativo{% endif %}"
+                <a class="btn btn-nav {% if request.endpoint and (request.endpoint.startswith('encomendas') or request.endpoint.startswith('entregadores')) %}btn-nav-ativo{% endif %}"
                    href="{{ url_for('encomendas.painel') }}">Encomendas</a>
-
-                <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('entregadores') %}btn-nav-ativo{% endif %}"
-                   href="{{ url_for('entregadores.listar') }}">Entregadores</a>
 
                 {% if session.get("usuario_tipo") == "admin" %}
                     <a class="btn btn-nav {% if request.endpoint == 'visitantes.importar_visitantes' %}btn-nav-ativo{% endif %}"
