@@ -230,3 +230,13 @@ def test_product_ui_avoids_browser_native_confirmation_and_datalist():
     assert "data-pc-confirm" in sources
     assert "pcGlobalConfirm" in Path("templates/base.html").read_text(encoding="utf-8")
     assert "pc-autocomplete-panel" in Path("static/design-system.css").read_text(encoding="utf-8")
+
+
+def test_home_is_single_screen_and_readability_scale_is_shared():
+    home = Path("templates/index.html").read_text(encoding="utf-8")
+    css = Path("static/design-system.css").read_text(encoding="utf-8")
+    assert "pc-home-summary" in home
+    assert "MOVIMENTO RECENTE" not in home
+    assert "Portaria mais segura" not in home
+    assert "font-size:14px" in css
+    assert "height:calc(100vh - 72px)" in css
