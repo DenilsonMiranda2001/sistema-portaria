@@ -2,10 +2,7 @@
 {% block title %}Moradores · Portaria Control{% endblock %}
 {% block content %}
 <section class="pc-module">
-  <header class="pc-pagehead">
-    <div><span class="pc-eyebrow">RESIDENTES E UNIDADES</span><h2>Moradores</h2><p>Base de moradores, unidades e contatos de referência da portaria.</p></div>
-    <div class="pc-page-actions"><a class="pc-btn pc-btn-primary" href="{{ url_for('moradores.novo') }}">＋ Novo morador</a></div>
-  </header>
+  <header class="pc-taskbar"><div><strong>Moradores</strong><span>Residentes e unidades</span></div><a class="pc-btn pc-btn-primary" href="{{ url_for('moradores.novo') }}">＋ Novo morador</a></header>
   <section class="pc-panel pc-list-panel">
     <form method="GET" class="pc-list-toolbar">
       <div class="pc-list-title"><strong>{{ moradores|length }} resultado(s)</strong></div>
