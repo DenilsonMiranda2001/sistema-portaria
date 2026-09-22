@@ -16,6 +16,22 @@ MAX_IMAGE_PIXELS = 20_000_000
 MAX_IMAGE_SIDE = 8_000
 
 
+def _client():
+    endpoint = os.getenv("S3_ENDPOINT_URL")
+    bucket = os.getenv("S3_BUCKET")
+    access_key = os.getenv("S3_ACCESS_KEY_ID")
+    secret_key = os.getenv("S3_SECRET_ACCESS_KEY")
+    if not endpoint or not bucket or not access_key or not secret_key:
+        raise RuntimeError("Object storage is not configured")
+    client = boto3.client(
+        "s3", endpoint_url=endpoint,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=os.getenv("S3_REGION", "auto"),
+        config=BotoConfig(signature_version="s3v4"),
+    )
+    return client, bucket
+
 def _validate_dimensions(image):
     width, height = image.size
     if width <= 0 or height <= 0 or width > MAX_IMAGE_SIDE or height > MAX_IMAGE_SIDE or width * height > MAX_IMAGE_PIXELS:
@@ -56,18 +72,7 @@ def save_image(file_storage, tenant_id):
     _require_tenant(tenant_id)
     ext, content_type = _validated_upload(file_storage)
     key = f"condominios/{tenant_id}/visitantes/{uuid.uuid4().hex}{ext}"
-    endpoint = os.getenv("S3_ENDPOINT_URL")
-    bucket = os.getenv("S3_BUCKET")
-    if not endpoint or not bucket:
-        raise RuntimeError("Object storage is not configured")
-    client = boto3.client(
-        "s3",
-        endpoint_url=endpoint,
-        aws_access_key_id=os.getenv("S3_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("S3_SECRET_ACCESS_KEY"),
-        region_name=os.getenv("S3_REGION", "auto"),
-        config=BotoConfig(signature_version="s3v4"),
-    )
+    client, bucket = _client()
     client.upload_fileobj(
         file_storage.stream,
         bucket,
@@ -97,33 +102,15 @@ def save_webcam_image(data_url, tenant_id):
     except (UnidentifiedImageError, Image.DecompressionBombError, OSError, ValueError) as exc:
         raise ValueError("Captura de webcam inválida.") from exc
     key = f"condominios/{tenant_id}/visitantes/{uuid.uuid4().hex}.jpg"
-    endpoint = os.getenv("S3_ENDPOINT_URL")
-    bucket = os.getenv("S3_BUCKET")
-    if not endpoint or not bucket:
-        raise RuntimeError("Object storage is not configured")
-    client = boto3.client(
-        "s3", endpoint_url=endpoint,
-        aws_access_key_id=os.getenv("S3_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("S3_SECRET_ACCESS_KEY"),
-        region_name=os.getenv("S3_REGION", "auto"),
-        config=BotoConfig(signature_version="s3v4"),
-    )
+    client, bucket = _client()
     client.upload_fileobj(io.BytesIO(raw), bucket, key, ExtraArgs={"ContentType": "image/jpeg"})
     return key
 
 
 def presigned_image_url(key, expires=300):
-    endpoint = os.getenv("S3_ENDPOINT_URL")
-    bucket = os.getenv("S3_BUCKET")
-    if not endpoint or not bucket or not key:
+    if not key:
         raise RuntimeError("Object storage is not configured")
-    client = boto3.client(
-        "s3", endpoint_url=endpoint,
-        aws_access_key_id=os.getenv("S3_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("S3_SECRET_ACCESS_KEY"),
-        region_name=os.getenv("S3_REGION", "auto"),
-        config=BotoConfig(signature_version="s3v4"),
-    )
+    client, bucket = _client()
     return client.generate_presigned_url("get_object", Params={"Bucket": bucket, "Key": key}, ExpiresIn=expires)
 
 
