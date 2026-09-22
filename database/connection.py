@@ -1,9 +1,13 @@
 import psycopg2
 import psycopg2.pool
+import threading
+import logging
 from psycopg2.extras import RealDictCursor
 from config import Config
 
 _pool = None
+_pool_lock = threading.Lock()
+logger = logging.getLogger(__name__)
 
 
 def _connection_kwargs():
@@ -21,13 +25,16 @@ def _connection_kwargs():
 def _get_pool():
     global _pool
     if _pool is None:
-        _pool = psycopg2.pool.ThreadedConnectionPool(
-            minconn=Config.DB_POOL_MIN,
-            maxconn=Config.DB_POOL_MAX,
-            connect_timeout=10,
-            application_name="sistema-portaria",
-            **_connection_kwargs(),
-        )
+        with _pool_lock:
+            if _pool is None:
+                _pool = psycopg2.pool.ThreadedConnectionPool(
+                    minconn=Config.DB_POOL_MIN,
+                    maxconn=Config.DB_POOL_MAX,
+                    connect_timeout=10,
+                    application_name="sistema-portaria",
+                    **_connection_kwargs(),
+                )
+                logger.info("PostgreSQL pool initialized min=%s max=%s", Config.DB_POOL_MIN, Config.DB_POOL_MAX)
     return _pool
 
 
