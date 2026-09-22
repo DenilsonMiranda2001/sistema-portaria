@@ -38,6 +38,16 @@ def _get_pool():
     return _pool
 
 
+def conectar_dedicado(application_name="sistema-portaria-maintenance"):
+    conn = psycopg2.connect(
+        connect_timeout=10,
+        application_name=application_name,
+        cursor_factory=RealDictCursor,
+        **_connection_kwargs(),
+    )
+    return conn
+
+
 def conectar():
     conn = _get_pool().getconn()
     conn.cursor_factory = RealDictCursor
