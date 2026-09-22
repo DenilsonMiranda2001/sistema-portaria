@@ -483,7 +483,9 @@ def atualizar_observacao_ajax():
     if not visitante_id:
         return jsonify({"status": "erro", "mensagem": "ID não informado."}), 400
 
-    atualizar_observacao_visitante(visitante_id, observacao, session["usuario_id"])
+    alterou = atualizar_observacao_visitante(visitante_id, observacao, session["usuario_id"])
+    if not alterou:
+        return jsonify({"status": "erro", "mensagem": "Visitante não encontrado."}), 404
     return jsonify({"status": "ok", "mensagem": "Observação atualizada."})
 
 
