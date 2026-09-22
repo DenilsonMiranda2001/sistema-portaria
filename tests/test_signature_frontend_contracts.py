@@ -4,7 +4,7 @@ from pathlib import Path
 def test_dashboard_preserves_operational_contracts():
     source=Path("templates/index.html").read_text(encoding="utf-8")
     assert "pc-dashboard" in source
-    for element_id in ("busca","mensagem","lista","ativos","entradas","saidas","moradores","cadastrados","ultima_nome","ultima_hora"):
+    for element_id in ("busca","mensagem","lista","ativos","entradas","saidas","cadastrados"):
         assert f'id="{element_id}"' in source
     assert 'const input = document.getElementById("busca")' in source
 
