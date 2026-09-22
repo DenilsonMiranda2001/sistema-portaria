@@ -147,3 +147,20 @@ def test_resident_mutations_validate_actor_inside_tenant_transaction():
     source = Path("database/models.py").read_text(encoding="utf-8")
     resident_section = source[source.index("def cadastrar_morador_com_unidade"):source.index("# ──────────────────────────────────────────────────────────────\n# VISITANTES")]
     assert resident_section.count('raise ValueError("Usuário inválido para este condomínio.")') >= 4
+
+
+def test_dashboard_routes_require_authenticated_roles():
+    source = Path("routes/main.py").read_text(encoding="utf-8")
+    assert source.count('@roles_required("admin", "funcionario", "platform_admin")') >= 2
+
+
+def test_platform_mutations_validate_active_control_plane_actor():
+    source = Path("database/platform.py").read_text(encoding="utf-8")
+    assert source.count("SELECT 1 FROM platform_admins WHERE id=%s AND ativo=TRUE") >= 5
+    assert source.count('raise ValueError("Administrador da plataforma inválido.")') >= 5
+
+
+def test_database_connections_bound_query_and_idle_transaction_time():
+    source = Path("database/connection.py").read_text(encoding="utf-8")
+    assert "statement_timeout = '15s'" in source
+    assert "idle_in_transaction_session_timeout = '30s'" in source
