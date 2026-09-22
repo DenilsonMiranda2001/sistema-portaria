@@ -5,10 +5,35 @@ import uuid
 from pathlib import Path
 
 import boto3
+from PIL import Image, UnidentifiedImageError
 from botocore.config import Config as BotoConfig
 from werkzeug.utils import secure_filename
 
 ALLOWED = {".jpg", ".jpeg", ".png", ".webp"}
+FORMAT_EXTENSIONS = {"JPEG": {".jpg", ".jpeg"}, "PNG": {".png"}, "WEBP": {".webp"}}
+FORMAT_MIMES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
+
+
+def _require_tenant(tenant_id):
+    if not isinstance(tenant_id, int) or tenant_id <= 0:
+        raise ValueError("Contexto de condomínio inválido.")
+
+
+def _validated_upload(file_storage):
+    ext = _extension(file_storage.filename)
+    stream = file_storage.stream
+    try:
+        stream.seek(0)
+        image = Image.open(stream)
+        image.verify()
+        fmt = (image.format or "").upper()
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ValueError("Arquivo enviado não é uma imagem válida.") from exc
+    finally:
+        stream.seek(0)
+    if fmt not in FORMAT_EXTENSIONS or ext not in FORMAT_EXTENSIONS[fmt]:
+        raise ValueError("Extensão da imagem não corresponde ao conteúdo do arquivo.")
+    return ext, FORMAT_MIMES[fmt]
 
 
 def _extension(filename):
@@ -19,7 +44,8 @@ def _extension(filename):
 
 
 def save_image(file_storage, tenant_id):
-    ext = _extension(file_storage.filename)
+    _require_tenant(tenant_id)
+    ext, content_type = _validated_upload(file_storage)
     key = f"condominios/{tenant_id}/visitantes/{uuid.uuid4().hex}{ext}"
     endpoint = os.getenv("S3_ENDPOINT_URL")
     bucket = os.getenv("S3_BUCKET")
@@ -37,12 +63,13 @@ def save_image(file_storage, tenant_id):
         file_storage.stream,
         bucket,
         key,
-        ExtraArgs={"ContentType": file_storage.mimetype or "application/octet-stream"},
+        ExtraArgs={"ContentType": content_type},
     )
     return key
 
 
 def save_webcam_image(data_url, tenant_id):
+    _require_tenant(tenant_id)
     prefix = "data:image/jpeg;base64,"
     if not data_url or not data_url.startswith(prefix):
         raise ValueError("Captura de webcam inválida.")
@@ -52,6 +79,13 @@ def save_webcam_image(data_url, tenant_id):
         raise ValueError("Captura de webcam inválida.") from exc
     if not raw or len(raw) > 5 * 1024 * 1024 or not raw.startswith(b"\xff\xd8\xff"):
         raise ValueError("Imagem de webcam inválida ou muito grande.")
+    try:
+        image = Image.open(io.BytesIO(raw))
+        image.verify()
+        if image.format != "JPEG":
+            raise ValueError("Captura de webcam inválida.")
+    except (UnidentifiedImageError, OSError) as exc:
+        raise ValueError("Captura de webcam inválida.") from exc
     key = f"condominios/{tenant_id}/visitantes/{uuid.uuid4().hex}.jpg"
     endpoint = os.getenv("S3_ENDPOINT_URL")
     bucket = os.getenv("S3_BUCKET")
