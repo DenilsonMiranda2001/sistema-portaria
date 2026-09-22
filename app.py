@@ -14,7 +14,6 @@ from routes.visitantes import visitantes_bp
 from routes.auth import auth_bp
 from routes.moradores import moradores_bp
 from routes.encomendas import encomendas_bp
-from database.models import criar_tabelas
 from database.connection import verificar_conexao
 from utils.authz import load_identity
 
@@ -34,11 +33,6 @@ def inject_csrf_meta():
     from flask_wtf.csrf import generate_csrf
     return {"global_csrf_token": generate_csrf}
 
-# Temporary compatibility gate: schema bootstrap remains enabled outside
-# production while migrations are introduced. Production must run migrations
-# explicitly before starting the web process.
-if Config.APP_ENV != "production":
-    criar_tabelas()
 
 app.register_blueprint(main_bp)
 app.register_blueprint(visitantes_bp)
