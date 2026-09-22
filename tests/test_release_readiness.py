@@ -240,3 +240,12 @@ def test_home_is_single_screen_and_readability_scale_is_shared():
     assert "Portaria mais segura" not in home
     assert "font-size:14px" in css
     assert "height:calc(100vh - 72px)" in css
+
+
+def test_operational_list_scale_matches_readability_standard():
+    css = Path("static/design-system.css").read_text(encoding="utf-8")
+    assert ".pc-directory-row,.pc-access-row" in css
+    assert "min-height:68px" in css
+    assert ".pc-access-photo{width:42px;height:42px" in css
+    assert ".pc-access-identity strong{font-size:12px}" in css
+    assert ".pc-table td{padding:13px 14px;font-size:12px}" in css
