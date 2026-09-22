@@ -43,6 +43,8 @@ def test_ajax_mutations_carry_csrf_tokens():
     active = Path("templates/ativos.html").read_text(encoding="utf-8")
     assert 'body.append("csrf_token"' in home
     assert 'token.name="csrf_token"' in active
+    visitors = Path("templates/visitantes.html").read_text(encoding="utf-8")
+    assert 'name="csrf_token"' in visitors
 
 
 def test_visitor_photos_use_authorized_route_not_public_static_paths():
