@@ -360,6 +360,10 @@ def cadastrar_morador_com_unidade(nome, cpf, telefone, email, unidade_id, nova_u
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             resolved_unidade_id = unidade_id or None
             if resolved_unidade_id:
                 cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (resolved_unidade_id, tenant_id))
@@ -487,6 +491,10 @@ def atualizar_morador(morador_id, nome, cpf, telefone, email, unidade_id, observ
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             resolved_unidade_id = unidade_id or None
             if resolved_unidade_id:
                 cur.execute("SELECT 1 FROM unidades WHERE id = %s AND condominio_id = %s AND ativo = TRUE", (resolved_unidade_id, tenant_id))
@@ -539,6 +547,10 @@ def inativar_morador(morador_id, usuario_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("UPDATE moradores SET ativo = FALSE WHERE id = %s AND condominio_id = %s AND ativo=TRUE", (morador_id, tenant_id))
             alterou = cur.rowcount > 0
             if alterou and usuario_id:
@@ -557,6 +569,10 @@ def ativar_morador(morador_id, usuario_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            if usuario_id:
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE", (usuario_id, tenant_id))
+                if not cur.fetchone():
+                    raise ValueError("Usuário inválido para este condomínio.")
             cur.execute("UPDATE moradores SET ativo = TRUE WHERE id = %s AND condominio_id = %s AND ativo=FALSE", (morador_id, tenant_id))
             alterou = cur.rowcount > 0
             if alterou and usuario_id:
