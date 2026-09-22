@@ -249,3 +249,12 @@ def test_operational_list_scale_matches_readability_standard():
     assert ".pc-access-photo{width:42px;height:42px" in css
     assert ".pc-access-identity strong{font-size:12px}" in css
     assert ".pc-table td{padding:13px 14px;font-size:12px}" in css
+
+
+def test_packages_module_uses_current_operational_scale():
+    css = Path("static/design-system.css").read_text(encoding="utf-8")
+    assert ".pc-packages .pc-package-row" in css
+    assert "min-height:82px" in css
+    assert ".pc-packages .pc-package-filters input,.pc-packages .pc-package-filters select{min-height:44px" in css
+    assert ".pc-packages .pc-lot-head strong{font-size:14px}" in css
+    assert ".pc-packages .pc-history-row{min-height:68px" in css
