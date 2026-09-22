@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for
 import hashlib
 import logging
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 from database.models import buscar_usuario, buscar_platform_admin, verificar_senha
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 LOGIN_WINDOW_MINUTES = 15
 LOGIN_LIMIT = 10
 LOGIN_IP_LIMIT = 30
+DUMMY_PASSWORD_HASH = generate_password_hash("timing-only-noncredential-value")
 
 
 def _login_key():
@@ -105,7 +107,8 @@ def login():
         if not user:
             user = buscar_usuario(usuario)
 
-        if not user or not verificar_senha(user, senha):
+        senha_valida = verificar_senha(user, senha) if user else check_password_hash(DUMMY_PASSWORD_HASH, senha)
+        if not user or not senha_valida:
             _record_failed_login()
             flash("Usuário ou senha inválidos.", "erro")
             return redirect(url_for("auth.login"))
