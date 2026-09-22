@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, g, redirect, url_for
+from utils.authz import roles_required
 
 from database.models import (
     total_visitantes_ativos,
@@ -15,6 +16,7 @@ main_bp = Blueprint("main", __name__)
 
 
 @main_bp.route("/")
+@roles_required("admin", "funcionario", "platform_admin")
 def index():
     if getattr(g, "current_user", None) and g.current_user.get("nivel") == "platform_admin":
         return redirect(url_for("platform_admin.condominios"))
@@ -37,6 +39,7 @@ def index():
 
 
 @main_bp.route("/resumo_ajax")
+@roles_required("admin", "funcionario", "platform_admin")
 def resumo_ajax():
     if getattr(g, "current_user", None) and g.current_user.get("nivel") == "platform_admin":
         return jsonify({"erro": "Recurso disponível apenas no contexto de um condomínio."}), 403
