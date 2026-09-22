@@ -25,7 +25,7 @@
         <td>{% if m.ativo %}<span class="pc-status is-active">Ativo</span>{% else %}<span class="pc-status">Inativo</span>{% endif %}</td>
         <td>{{ m.criado_em.strftime('%d/%m/%Y') if m.criado_em else '—' }}</td>
         <td><div class="pc-row-actions pc-align-right"><a class="pc-icon-action" href="{{ url_for('moradores.detalhe', id=m.id) }}">Ver</a><a class="pc-icon-action" href="{{ url_for('moradores.editar', id=m.id) }}">Editar</a>
-        {% if m.ativo %}<form method="POST" action="{{ url_for('moradores.inativar', id=m.id) }}" onsubmit="return confirm('Inativar {{ m.nome }}?')"><button class="pc-icon-action pc-danger-action" type="submit">Inativar</button></form>{% else %}<form method="POST" action="{{ url_for('moradores.ativar', id=m.id) }}"><button class="pc-icon-action" type="submit">Ativar</button></form>{% endif %}</div></td>
+        {% if m.ativo %}<form method="POST" action="{{ url_for('moradores.inativar', id=m.id) }}" data-pc-confirm="Inativar {{ m.nome }}? O histórico será preservado." data-pc-confirm-title="Inativar morador?" data-pc-confirm-action="Inativar" data-pc-confirm-tone="danger"><button class="pc-icon-action pc-danger-action" type="submit">Inativar</button></form>{% else %}<form method="POST" action="{{ url_for('moradores.ativar', id=m.id) }}"><button class="pc-icon-action" type="submit">Ativar</button></form>{% endif %}</div></td>
       </tr>{% endfor %}</tbody>
     </table></div>
     {% else %}<div class="pc-empty pc-empty-list"><span class="pc-empty-icon">⌂</span><div><strong>Nenhum morador encontrado</strong><small>Altere a busca ou cadastre um novo morador.</small></div></div>{% endif %}
