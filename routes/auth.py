@@ -10,12 +10,18 @@ auth_bp = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)
 LOGIN_WINDOW_MINUTES = 15
 LOGIN_LIMIT = 10
+LOGIN_IP_LIMIT = 30
 
 
 def _login_key():
     ip = request.remote_addr or "unknown"
     usuario = request.form.get("usuario", "").strip().lower()
-    return hashlib.sha256(f"{ip}|{usuario}".encode()).hexdigest()
+    return hashlib.sha256(f"user|{ip}|{usuario}".encode()).hexdigest()
+
+
+def _login_ip_key():
+    ip = request.remote_addr or "unknown"
+    return hashlib.sha256(f"ip|{ip}".encode()).hexdigest()
 
 
 def _login_rate_limited():
@@ -24,7 +30,8 @@ def _login_rate_limited():
         with conn.cursor() as cur:
             cur.execute("DELETE FROM login_attempts WHERE janela_inicio < CURRENT_TIMESTAMP - INTERVAL '2 days'")
             cur.execute("""SELECT bloqueado_ate > CURRENT_TIMESTAMP AS bloqueado
-                           FROM login_attempts WHERE chave=%s""", (_login_key(),))
+                           FROM login_attempts WHERE chave IN (%s, %s)
+                           ORDER BY bloqueado_ate DESC NULLS LAST LIMIT 1""", (_login_key(), _login_ip_key()))
             row = cur.fetchone()
         conn.commit()
         return bool(row and row["bloqueado"])
@@ -40,7 +47,7 @@ def _record_failed_login():
     conn = conectar()
     try:
         with conn.cursor() as cur:
-            cur.execute("""
+            statement = """
                 INSERT INTO login_attempts(chave,tentativas,janela_inicio,bloqueado_ate)
                 VALUES(%s,1,CURRENT_TIMESTAMP,NULL)
                 ON CONFLICT(chave) DO UPDATE SET
@@ -54,7 +61,9 @@ def _record_failed_login():
                         WHEN (CASE WHEN login_attempts.janela_inicio < CURRENT_TIMESTAMP - INTERVAL '15 minutes' THEN 1 ELSE login_attempts.tentativas + 1 END) >= %s
                         THEN CURRENT_TIMESTAMP + INTERVAL '15 minutes'
                         ELSE login_attempts.bloqueado_ate END
-            """, (_login_key(), LOGIN_LIMIT))
+            """
+            cur.execute(statement, (_login_key(), LOGIN_LIMIT))
+            cur.execute(statement, (_login_ip_key(), LOGIN_IP_LIMIT))
         conn.commit()
     except Exception:
         conn.rollback()
