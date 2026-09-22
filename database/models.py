@@ -92,7 +92,7 @@ def buscar_usuario_por_id(usuario_id, exigir_tenant=False):
             else:
                 cur.execute(
                     """SELECT u.id, u.condominio_id, u.nome, u.usuario, u.nivel, u.ativo, u.criado_em,
-                              c.ativo AS condominio_ativo
+                              c.ativo AS condominio_ativo, c.nome AS condominio_nome
                        FROM usuarios u
                        JOIN condominios c ON c.id = u.condominio_id
                        WHERE u.id = %s""",
