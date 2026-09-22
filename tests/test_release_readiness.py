@@ -210,3 +210,13 @@ def test_delivery_people_live_inside_packages_navigation_and_intake_flow():
     assert 'next="novo_lote"' not in intake
     assert "next='novo_lote'" in intake
     assert 'destino == "novo_lote"' in routes
+
+
+def test_server_rendered_active_exit_form_includes_csrf_token():
+    ativos = Path("templates/ativos.html").read_text(encoding="utf-8")
+    marker = 'action="{{ url_for(\'visitantes.saida\', id=v.id) }}"'
+    start = ativos.index(marker)
+    form_end = ativos.index("</form>", start)
+    form = ativos[start:form_end]
+    assert 'name="csrf_token"' in form
+    assert "global_csrf_token()" in form
