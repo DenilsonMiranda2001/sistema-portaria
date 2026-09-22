@@ -16,14 +16,14 @@
       {% if visitantes %}
       {% for v in visitantes %}
       <article class="pc-directory-row {% if loop.index0 == 0 %}is-selected{% endif %}" data-index="{{ loop.index0 }}" onclick="selecionarVisitante({{ loop.index0 }})">
-        {% if v.foto %}<img src="{{ url_for('static', filename='fotos/' + v.foto) }}" alt="Foto de {{ v.nome }}" class="pc-access-photo">{% else %}<span class="pc-access-photo pc-access-photo-empty">{{ v.nome[:1]|upper }}</span>{% endif %}
+        {% if v.foto %}<img src="{{ url_for('visitantes.foto', id=v.id) }}" alt="Foto de {{ v.nome }}" class="pc-access-photo">{% else %}<span class="pc-access-photo pc-access-photo-empty">{{ v.nome[:1]|upper }}</span>{% endif %}
         <div class="pc-access-identity"><strong>{{ v.nome|upper }}</strong><small>{{ v.cpf or 'CPF não informado' }}</small></div>
         <div class="pc-access-meta"><span>TIPO</span><strong>{{ (v.tipo or 'Não informado')|upper }}</strong></div>
         <div class="pc-access-meta"><span>VEÍCULO</span><strong>{% if v.marca or v.modelo or v.placa %}{{ v.marca or '' }} {{ v.modelo or '' }}{% if v.placa %} · {{ v.placa }}{% endif %}{% else %}Sem veículo{% endif %}</strong></div>
         <div class="pc-access-meta pc-observation"><span>OBSERVAÇÃO</span><strong>{{ v.observacao or '—' }}</strong></div>
         <div class="pc-row-actions" onclick="event.stopPropagation()">
           <a class="pc-icon-action" href="/historico/{{ v.id }}">Histórico</a><a class="pc-icon-action" href="/editar/{{ v.id }}">Editar</a>
-          <form method="POST" action="/remover/{{ v.id }}" onsubmit="return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')"><button class="pc-icon-action pc-danger-action" type="submit">Remover</button></form>
+          <form method="POST" action="/remover/{{ v.id }}" onsubmit="return confirm('Remover {{ v.nome }}? Esta ação não pode ser desfeita.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button class="pc-icon-action pc-danger-action" type="submit">Remover</button></form>
         </div>
       </article>
       {% endfor %}
@@ -95,8 +95,8 @@ function renderizarListaBusca(data) {
     if (indiceSelecionado > data.length - 1) indiceSelecionado = data.length - 1;
 
     data.forEach((v, index) => {
-        const fotoHtml = v.foto
-            ? `<img src="/static/fotos/${v.foto}" alt="Foto de ${v.nome || ''}" class="pc-access-photo">`
+        const fotoHtml = v.foto_url
+            ? `<img src="${v.foto_url}" alt="Foto de ${v.nome || ''}" class="pc-access-photo">`
             : `<span class="pc-access-photo pc-access-photo-empty">${((v.nome || '?').slice(0,1)).toUpperCase()}</span>`;
         lista.innerHTML += `
         <article class="pc-directory-row ${index === indiceSelecionado ? 'is-selected' : ''}" data-index="${index}" onclick="selecionarVisitante(${index})">
