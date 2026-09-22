@@ -188,3 +188,24 @@ def test_resident_activation_routes_do_not_report_false_success():
     assert '"Morador já estava inativo."' in source
     assert 'alterou = ativar_morador(id, session["usuario_id"])' in source
     assert '"Morador já estava ativo."' in source
+
+
+def test_delivery_people_domain_is_tenant_scoped_and_package_link_is_tenant_safe():
+    migration = Path("migrations/0019_delivery_people.sql").read_text(encoding="utf-8")
+    repository = Path("database/entregadores.py").read_text(encoding="utf-8")
+    packages = Path("database/encomendas.py").read_text(encoding="utf-8")
+    assert "CREATE TABLE entregadores" in migration
+    assert "FOREIGN KEY (entregador_id, condominio_id)" in migration
+    assert "REFERENCES entregadores(id, condominio_id)" in migration
+    assert "uq_entregadores_tenant_documento" in migration
+    assert repository.count("condominio_id=%s") >= 5
+    assert "Usuário inválido para este condomínio." in repository
+    assert "Entregador inválido para este condomínio." in packages
+    assert "entregador_id, nome_entregador" in packages
+
+
+def test_delivery_people_routes_enforce_roles_and_admin_only_status():
+    source = Path("routes/entregadores.py").read_text(encoding="utf-8")
+    assert source.count('@roles_required("admin", "funcionario")') >= 3
+    status = source[source.index('def status(entregador_id)') - 120:]
+    assert '@roles_required("admin")' in status
