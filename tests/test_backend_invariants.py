@@ -141,3 +141,9 @@ def test_user_mutations_validate_admin_actor_inside_tenant_transaction():
     source = Path("database/models.py").read_text(encoding="utf-8")
     assert source.count("AND ativo=TRUE AND nivel='admin'") >= 5
     assert source.count('raise ValueError("Administrador inválido para este condomínio.")') >= 5
+
+
+def test_resident_mutations_validate_actor_inside_tenant_transaction():
+    source = Path("database/models.py").read_text(encoding="utf-8")
+    resident_section = source[source.index("def cadastrar_morador_com_unidade"):source.index("# ──────────────────────────────────────────────────────────────\n# VISITANTES")]
+    assert resident_section.count('raise ValueError("Usuário inválido para este condomínio.")') >= 4
