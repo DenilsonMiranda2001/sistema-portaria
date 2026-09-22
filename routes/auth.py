@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for
 import hashlib
+import secrets
 import logging
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 LOGIN_WINDOW_MINUTES = 15
 LOGIN_LIMIT = 10
 LOGIN_IP_LIMIT = 30
-DUMMY_PASSWORD_HASH = generate_password_hash("timing-only-noncredential-value")
+DUMMY_PASSWORD_HASH = generate_password_hash(secrets.token_urlsafe(32))
 
 
 def _login_key():
