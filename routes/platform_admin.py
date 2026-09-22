@@ -1,3 +1,4 @@
+import logging
 from functools import wraps
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 import re
@@ -9,6 +10,7 @@ from database.platform import (
 )
 
 platform_admin_bp = Blueprint("platform_admin", __name__, url_prefix="/plataforma")
+logger = logging.getLogger(__name__)
 
 def platform_admin_required(view):
     @wraps(view)
@@ -40,6 +42,7 @@ def criar_condominio():
         condominio_id, _ = criar_condominio_com_usuario(nome, slug, actor_id=session["usuario_id"])
         flash("Condomínio criado com sucesso.","sucesso")
     except Exception:
+        logger.exception("Falha em operação administrativa da plataforma")
         flash("Não foi possível criar o condomínio. Verifique se o código já existe.","erro")
     return redirect(url_for("platform_admin.condominios"))
 
@@ -61,6 +64,7 @@ def criar_usuario_condominio(condominio_id):
     except ValueError as exc:
         flash(str(exc),"erro")
     except Exception:
+        logger.exception("Falha em operação administrativa da plataforma")
         flash("Não foi possível criar o usuário. Verifique se o login já está em uso.","erro")
     return redirect(url_for("platform_admin.condominios"))
 @platform_admin_bp.get("/condominios/<int:condominio_id>")
@@ -87,6 +91,7 @@ def editar_condominio(condominio_id):
         else:
             flash("Condomínio atualizado.","sucesso")
     except Exception:
+        logger.exception("Falha em operação administrativa da plataforma")
         flash("Não foi possível atualizar o condomínio. Verifique o código informado.","erro")
     return redirect(url_for("platform_admin.detalhe_condominio",condominio_id=condominio_id))
 
