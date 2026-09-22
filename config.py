@@ -30,12 +30,14 @@ class Config:
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = _bool_env("SESSION_COOKIE_SECURE", APP_ENV == "production")
+    SESSION_COOKIE_SECURE = True if APP_ENV == "production" else _bool_env("SESSION_COOKIE_SECURE", False)
     SESSION_REFRESH_EACH_REQUEST = False
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
 
     @classmethod
     def validate(cls):
+        if cls.DB_POOL_MIN < 1 or cls.DB_POOL_MAX < cls.DB_POOL_MIN:
+            raise RuntimeError("Database pool bounds are invalid.")
         if cls.APP_ENV == "production":
             if not cls.SECRET_KEY or len(cls.SECRET_KEY) < 32:
                 raise RuntimeError("SECRET_KEY must be configured with at least 32 characters in production.")
