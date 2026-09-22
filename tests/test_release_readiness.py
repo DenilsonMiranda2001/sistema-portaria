@@ -161,3 +161,11 @@ def test_visit_autocomplete_does_not_render_suggestions_with_inner_html():
         assert "div.innerHTML = destacar" not in source
         assert "strong.textContent" in source
         assert "document.createTextNode" in source
+
+
+def test_private_storage_client_requires_complete_credentials():
+    source = Path("utils/storage.py").read_text(encoding="utf-8")
+    assert "access_key = os.getenv(\"S3_ACCESS_KEY_ID\")" in source
+    assert "secret_key = os.getenv(\"S3_SECRET_ACCESS_KEY\")" in source
+    assert "if not endpoint or not bucket or not access_key or not secret_key" in source
+    assert source.count("client, bucket = _client()") >= 4
