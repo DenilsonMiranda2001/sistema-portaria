@@ -108,3 +108,10 @@ def test_daily_dashboard_counters_use_index_friendly_time_ranges():
     assert "DATE(data_saida) = CURRENT_DATE" not in source
     assert "data_entrada >= CURRENT_DATE" in source
     assert "data_saida >= CURRENT_DATE" in source
+
+
+def test_audit_ip_pseudonymization_uses_keyed_hmac():
+    source = Path("utils/audit.py").read_text(encoding="utf-8")
+    assert "hmac.new(" in source
+    assert 'salt.encode("utf-8")' in source
+    assert 'ip.encode("utf-8")' in source
