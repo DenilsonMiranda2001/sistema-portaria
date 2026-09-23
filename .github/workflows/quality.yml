@@ -208,3 +208,6 @@ jobs:
           finally:
               conn.close()
           PY
+
+      - name: Authenticated tenant isolation and RBAC smoke on disposable PostgreSQL
+        run: python scripts/ci_authenticated_smoke.py
