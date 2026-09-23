@@ -10,7 +10,7 @@ def listar_condominios_com_metricas():
                 SELECT c.id,c.nome,c.slug,c.ativo,c.criado_em,
                        COUNT(u.id) AS total_usuarios,
                        COUNT(u.id) FILTER (WHERE u.ativo = TRUE) AS usuarios_ativos,
-                       COUNT(u.id) FILTER (WHERE u.nivel = 'admin' AND u.ativo = TRUE) AS admins_ativos,
+                       COUNT(u.id) FILTER (WHERE u.nivel = 'admin_condominio' AND u.ativo = TRUE) AS admins_ativos,
                        (SELECT COUNT(*) FROM visitas v WHERE v.condominio_id=c.id AND v.data_saida IS NULL) AS acessos_abertos,
                        (SELECT COUNT(*) FROM encomendas e WHERE e.condominio_id=c.id AND e.status NOT IN ('retirada','entregue_na_porta','cancelada')) AS encomendas_pendentes,
                        GREATEST(
@@ -39,7 +39,7 @@ def buscar_condominio_detalhe(condominio_id):
                 SELECT c.id,c.nome,c.slug,c.ativo,c.criado_em,
                        COUNT(u.id) AS total_usuarios,
                        COUNT(u.id) FILTER (WHERE u.ativo=TRUE) AS usuarios_ativos,
-                       COUNT(u.id) FILTER (WHERE u.nivel='admin' AND u.ativo=TRUE) AS admins_ativos,
+                       COUNT(u.id) FILTER (WHERE u.nivel='admin_condominio' AND u.ativo=TRUE) AS admins_ativos,
                        (SELECT COUNT(*) FROM visitas v WHERE v.condominio_id=c.id AND v.data_saida IS NULL) AS acessos_abertos,
                        (SELECT COUNT(*) FROM encomendas e WHERE e.condominio_id=c.id AND e.status NOT IN ('retirada','entregue_na_porta','cancelada')) AS encomendas_pendentes,
                        (SELECT COUNT(*) FROM moradores m WHERE m.condominio_id=c.id AND m.ativo=TRUE) AS moradores_ativos,
@@ -127,8 +127,8 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo,actor_id=None):
             if not alvo or alvo["ativo"] == ativo:
                 conn.rollback()
                 return False
-            if not ativo and alvo["nivel"] == "admin":
-                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin' AND ativo=TRUE",(condominio_id,))
+            if not ativo and alvo["nivel"] == "admin_condominio":
+                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin_condominio' AND ativo=TRUE",(condominio_id,))
                 if cur.fetchone()["total"] <= 1:
                     raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
             cur.execute("UPDATE usuarios SET ativo=%s WHERE id=%s AND condominio_id=%s RETURNING id",(ativo,usuario_id,condominio_id))
@@ -142,7 +142,7 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo,actor_id=None):
         liberar(conn)
 
 
-def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=None, usuario_senha_hash=None, nivel="admin", actor_id=None):
+def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=None, usuario_senha_hash=None, nivel="admin_condominio", actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
