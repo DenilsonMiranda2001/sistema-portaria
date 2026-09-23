@@ -112,3 +112,19 @@ def test_platform_mutations_fail_closed_on_invalid_status_and_role():
     assert "abort(403)" in platform_route
     assert tenant_route.count('flash("Perfil de usuário inválido.", "erro")') == 2
     assert 'tipo = "porteiro"' not in tenant_route
+
+
+def test_parcel_insertion_serializes_with_lot_closure():
+    source = Path("database/encomendas.py").read_text(encoding="utf-8")
+    section = source[source.index("def adicionar_encomenda("):source.index("def _select_encomendas(")]
+    assert "status IN ('aberto','em_triagem') FOR UPDATE" in section
+    assert section.index("FOR UPDATE") < section.index("INSERT INTO encomendas")
+
+
+def test_pickup_code_check_matches_global_unique_constraint():
+    source = Path("database/encomendas.py").read_text(encoding="utf-8")
+    schema = Path("database/schema.sql").read_text(encoding="utf-8")
+    section = source[source.index("def _codigo_retirada("):source.index("def criar_lote(")]
+    assert "codigo_retirada   VARCHAR(20)  UNIQUE NOT NULL" in schema
+    assert "WHERE codigo_retirada = %s" in section
+    assert "WHERE condominio_id = %s AND codigo_retirada" not in section
