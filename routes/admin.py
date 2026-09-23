@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, session
+from flask import Blueprint, render_template, request, redirect, flash, url_for, session, g
 from utils.authz import roles_required
 from utils.audit import registrar_auditoria
 
@@ -17,7 +17,7 @@ from database.models import (
 admin_bp = Blueprint("admin", __name__)
 
 def admin_obrigatorio():
-    return session.get("usuario_tipo") == "admin"
+    return bool(getattr(g, "current_user", None) and g.current_user.get("nivel") == "admin_condominio")
 
 
 @admin_bp.route("/usuarios", methods=["GET", "POST"])
@@ -76,7 +76,11 @@ def editar_usuario(id):
         if tipo not in ["admin_condominio", "administrativo", "porteiro"]:
             tipo = "porteiro"
 
-        resultado = atualizar_usuario(id, nome, usuario, tipo, session["usuario_id"])
+        try:
+            resultado = atualizar_usuario(id, nome, usuario, tipo, session["usuario_id"])
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("admin.editar_usuario", id=id))
 
         if resultado == "existe":
             flash("Já existe outro usuário com esse login.", "erro")
