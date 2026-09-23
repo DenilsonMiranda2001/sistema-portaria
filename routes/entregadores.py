@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 
 
 @entregadores_bp.route("/")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def listar():
     return render_template("entregadores/lista.html", entregadores=listar_entregadores())
 
 
 @entregadores_bp.route("/novo", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def novo():
     if request.method == "POST":
         try:
@@ -50,7 +50,7 @@ def novo():
 
 
 @entregadores_bp.route("/<int:entregador_id>/editar", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def editar(entregador_id):
     entregador = buscar_entregador(entregador_id)
     if not entregador:
@@ -77,7 +77,7 @@ def editar(entregador_id):
 
 
 @entregadores_bp.route("/<int:entregador_id>/status", methods=["POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def status(entregador_id):
     entregador = buscar_entregador(entregador_id)
     if not entregador:
