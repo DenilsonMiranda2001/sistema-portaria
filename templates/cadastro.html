@@ -20,7 +20,7 @@
 </div></section>
 </main>
 <aside class="pc-panel pc-photo-panel"><div class="pc-form-heading"><span>03</span><div><strong>Foto de identificação</strong><small>Câmera ou arquivo</small></div></div>
-<div class="pc-photo-stage"><div id="camera-container" class="camera-box"><video id="video" autoplay playsinline></video></div><div id="preview-container" class="preview-box"><img id="preview-foto" src="" alt="Prévia da foto"></div><div class="photo-placeholder"><span>◎</span><strong>Sem foto</strong><small>Adicione uma imagem para facilitar a identificação.</small></div></div>
+<div class="pc-photo-stage"><div id="camera-container" class="camera-box" hidden><video id="video" autoplay playsinline></video></div><div id="preview-container" class="preview-box" hidden><img id="preview-foto" alt="Prévia da foto"></div><div class="photo-placeholder"><span>◎</span><strong>Sem foto</strong><small>Adicione uma imagem para facilitar a identificação.</small></div></div>
 <canvas id="canvas" style="display:none"></canvas><input type="hidden" name="foto_webcam" id="foto_webcam">
 <div class="pc-photo-actions"><button type="button" class="pc-btn pc-btn-primary" id="btnAbrirCamera">Abrir câmera</button><button type="button" class="pc-btn pc-btn-secondary" id="btnCapturar" style="display:none">Capturar</button><button type="button" class="pc-btn pc-btn-secondary" id="btnFecharCamera" style="display:none">Fechar</button><button type="button" class="pc-btn pc-btn-secondary" id="btnNovaFoto" style="display:none">Refazer</button></div>
 <label class="pc-file-field"><span>Enviar arquivo</span><input type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*"></label>
@@ -239,6 +239,17 @@ document.getElementById("placa").addEventListener("input", function() {
 });
 
 const campoFoto = document.getElementById("foto");
+function atualizarEstadoFoto() {
+    const camera = document.getElementById("camera-container");
+    const preview = document.getElementById("preview-container");
+    const placeholder = document.querySelector(".pc-photo-stage .photo-placeholder");
+    const cameraAtiva = camera.style.display === "block";
+    const previewAtiva = preview.style.display === "block";
+    camera.hidden = !cameraAtiva;
+    preview.hidden = !previewAtiva;
+    placeholder.hidden = cameraAtiva || previewAtiva;
+}
+
 
 if (campoFoto) {
     campoFoto.addEventListener("change", function(event) {
@@ -248,7 +259,7 @@ if (campoFoto) {
         const fotoWebcam = document.getElementById("foto_webcam");
 
         if (!arquivo) {
-            previewContainer.style.display = "none";
+            previewContainer.style.display = "none"; atualizarEstadoFoto();
             previewFoto.src = "";
             return;
         }
@@ -258,7 +269,7 @@ if (campoFoto) {
         if (!tiposPermitidos.includes(arquivo.type)) {
             alert("Selecione uma imagem JPG, PNG ou WEBP.");
             event.target.value = "";
-            previewContainer.style.display = "none";
+            previewContainer.style.display = "none"; atualizarEstadoFoto();
             previewFoto.src = "";
             return;
         }
@@ -268,7 +279,7 @@ if (campoFoto) {
         const leitor = new FileReader();
         leitor.onload = function(e) {
             previewFoto.src = e.target.result;
-            previewContainer.style.display = "block";
+            previewContainer.style.display = "block"; atualizarEstadoFoto();
         };
         leitor.readAsDataURL(arquivo);
     });
@@ -277,10 +288,10 @@ if (campoFoto) {
 const btnAbrirCamera=document.getElementById("btnAbrirCamera"),btnCapturar=document.getElementById("btnCapturar"),btnFecharCamera=document.getElementById("btnFecharCamera"),btnNovaFoto=document.getElementById("btnNovaFoto");
 const video=document.getElementById("video"),canvas=document.getElementById("canvas"),cameraContainer=document.getElementById("camera-container"),previewContainer=document.getElementById("preview-container"),previewFoto=document.getElementById("preview-foto"),fotoWebcam=document.getElementById("foto_webcam"),inputFoto=document.getElementById("foto");
 let streamCamera=null;
-async function abrirCamera(){try{streamCamera=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},audio:false});video.srcObject=streamCamera;cameraContainer.style.display="block";btnCapturar.style.display="inline-flex";btnFecharCamera.style.display="inline-flex";btnAbrirCamera.style.display="none"}catch(e){alert("Não foi possível acessar a câmera. Verifique a permissão do navegador.")}}
-function fecharCamera(){if(streamCamera){streamCamera.getTracks().forEach(t=>t.stop());streamCamera=null}video.srcObject=null;cameraContainer.style.display="none";btnCapturar.style.display="none";btnFecharCamera.style.display="none";btnAbrirCamera.style.display="inline-flex"}
-function capturarFoto(){if(!video.srcObject)return;canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);fotoWebcam.value=canvas.toDataURL("image/jpeg",.9);previewFoto.src=fotoWebcam.value;previewContainer.style.display="block";inputFoto.value="";btnNovaFoto.style.display="inline-flex";fecharCamera()}
-btnAbrirCamera.addEventListener("click",abrirCamera);btnCapturar.addEventListener("click",capturarFoto);btnFecharCamera.addEventListener("click",fecharCamera);btnNovaFoto.addEventListener("click",()=>{fotoWebcam.value="";previewFoto.src="";previewContainer.style.display="none";abrirCamera()});
+async function abrirCamera(){try{streamCamera=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},audio:false});video.srcObject=streamCamera;cameraContainer.style.display="block";atualizarEstadoFoto();btnCapturar.style.display="inline-flex";btnFecharCamera.style.display="inline-flex";btnAbrirCamera.style.display="none"}catch(e){alert("Não foi possível acessar a câmera. Verifique a permissão do navegador.")}}
+function fecharCamera(){if(streamCamera){streamCamera.getTracks().forEach(t=>t.stop());streamCamera=null}video.srcObject=null;cameraContainer.style.display="none";atualizarEstadoFoto();btnCapturar.style.display="none";btnFecharCamera.style.display="none";btnAbrirCamera.style.display="inline-flex"}
+function capturarFoto(){if(!video.srcObject)return;canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);fotoWebcam.value=canvas.toDataURL("image/jpeg",.9);previewFoto.src=fotoWebcam.value;previewContainer.style.display="block";atualizarEstadoFoto();inputFoto.value="";btnNovaFoto.style.display="inline-flex";fecharCamera()}
+btnAbrirCamera.addEventListener("click",abrirCamera);btnCapturar.addEventListener("click",capturarFoto);btnFecharCamera.addEventListener("click",fecharCamera);btnNovaFoto.addEventListener("click",()=>{fotoWebcam.value="";previewFoto.src="";previewContainer.style.display="none";atualizarEstadoFoto();abrirCamera()});
 window.addEventListener("beforeunload",fecharCamera);
 
 document.getElementById("cpf").addEventListener("blur", function() {
