@@ -63,6 +63,27 @@ def buscar_condominio_detalhe(condominio_id):
         liberar(conn)
 
 
+
+def listar_auditoria_plataforma_tenant(condominio_id, limite=30):
+    """Only control-plane actions for one tenant; no resident or visitor payloads."""
+    limite = max(1, min(int(limite or 30), 50))
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT a.id, a.acao, a.entidade, a.entidade_id, a.criado_em,
+                       COALESCE(p.nome, 'Administração da plataforma') AS ator
+                FROM audit_logs a
+                LEFT JOIN platform_admins p ON p.id=a.actor_id
+                WHERE a.condominio_id=%s AND a.actor_tipo='platform_admin'
+                ORDER BY a.criado_em DESC, a.id DESC
+                LIMIT %s
+            """, (condominio_id, limite))
+            return cur.fetchall()
+    finally:
+        liberar(conn)
+
+
 def atualizar_condominio(condominio_id,nome,slug,actor_id=None):
     conn=conectar()
     try:
