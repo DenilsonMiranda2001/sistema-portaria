@@ -3,6 +3,8 @@
 Requires explicit acknowledgement and refuses production. Exit nonzero on anomalies.
 """
 import os
+import hashlib
+from pathlib import Path
 from database.connection import conectar_dedicado
 
 
@@ -38,18 +40,24 @@ def main():
         raise SystemExit("Preflight refused: set ALLOW_ISOLATED_PREFLIGHT=yes")
     if not os.getenv("DATABASE_URL"):
         raise SystemExit("Preflight refused: explicit isolated DATABASE_URL required")
+    expected_database = os.getenv("EXPECTED_ISOLATED_DATABASE", "").strip()
+    if not expected_database or expected_database in ("postgres", "portaria", "portaria_db"):
+        raise SystemExit("Preflight refused: explicit non-production EXPECTED_ISOLATED_DATABASE required")
     conn = conectar_dedicado("portaria-isolated-release-preflight")
     try:
         conn.set_session(readonly=True)
         with conn.cursor() as cur:
             cur.execute("SELECT current_database() AS db")
             database = cur.fetchone()["db"]
-            if database in ("postgres", "portaria", "portaria_db"):
-                raise SystemExit("Preflight refused: database name is not isolated")
-            cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
-            applied = cur.fetchone()["n"]
-            if applied != 21:
-                raise SystemExit(f"Expected 21 migrations on candidate staging database; found {applied}")
+            if database != expected_database:
+                raise SystemExit("Preflight refused: connected database differs from expected isolated database")
+            cur.execute("SELECT version, checksum FROM schema_migrations")
+            recorded = {row["version"]: row["checksum"] for row in cur.fetchall()}
+            migration_dir = Path(__file__).resolve().parents[1] / "migrations"
+            expected = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                        for path in migration_dir.glob("[0-9]*.sql")}
+            if len(expected) != 21 or recorded != expected:
+                raise SystemExit("Preflight refused: migration versions/checksums differ from candidate source")
             failures = {}
             for name, statement in CHECKS.items():
                 cur.execute(statement)
