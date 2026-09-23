@@ -28,7 +28,7 @@ def criar_usuario(nome, usuario, senha, nivel, actor_id=None):
     try:
         with conn.cursor() as cur:
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             login = (usuario or "").strip()
@@ -49,7 +49,7 @@ def criar_usuario(nome, usuario, senha, nivel, actor_id=None):
                 (nome or "").strip().upper(),
                 login,
                 generate_password_hash(senha),
-                (nivel or "funcionario").strip().lower(),
+                (nivel or "porteiro").strip().lower(),
             ))
             novo = cur.fetchone()
             if actor_id:
@@ -160,7 +160,7 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
     try:
         with conn.cursor() as cur:
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             login = (usuario or "").strip()
@@ -177,7 +177,7 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
             """, (
                 (nome or "").strip().upper(),
                 login,
-                (nivel or "funcionario").strip().lower(),
+                (nivel or "porteiro").strip().lower(),
                 usuario_id,
                 tenant_id,
             ))
@@ -199,7 +199,7 @@ def atualizar_senha_usuario(usuario_id, nova_senha, actor_id=None):
     try:
         with conn.cursor() as cur:
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             cur.execute(
@@ -224,7 +224,7 @@ def inativar_usuario(usuario_id, actor_id=None):
     try:
         with conn.cursor() as cur:
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             cur.execute("SELECT nivel,ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE", (usuario_id, tenant_id))
@@ -232,8 +232,8 @@ def inativar_usuario(usuario_id, actor_id=None):
             if not alvo or not alvo["ativo"]:
                 conn.rollback()
                 return False
-            if alvo["nivel"] == "admin":
-                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin' AND ativo=TRUE", (tenant_id,))
+            if alvo["nivel"] == "admin_condominio":
+                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin_condominio' AND ativo=TRUE", (tenant_id,))
                 if cur.fetchone()["total"] <= 1:
                     raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
             cur.execute("UPDATE usuarios SET ativo = FALSE WHERE id = %s AND condominio_id = %s", (usuario_id, tenant_id))
@@ -254,7 +254,7 @@ def ativar_usuario(usuario_id, actor_id=None):
     try:
         with conn.cursor() as cur:
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s AND condominio_id = %s AND ativo=FALSE", (usuario_id, tenant_id))
