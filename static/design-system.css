@@ -535,3 +535,45 @@ body{font-size:14px}
  .pc-reference-dashboard .home-entry-vehicle{grid-template-columns:1fr 1fr}
  .pc-reference-dashboard .home-entry-vehicle input:last-child{grid-column:1/-1}
 }
+
+
+/* Visitor registration: constrain grid intrinsic widths and prevent cross-panel overflow.
+   Scoped to the registration form; no global overflow clipping. */
+.pc-module:has(> .pc-form-shell){min-width:0;max-width:100%}
+.pc-module > .pc-form-shell{
+  width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+  grid-template-columns:minmax(0,1.55fr) minmax(0,.55fr);
+  align-items:start;
+}
+.pc-module > .pc-form-shell > .pc-form-main,
+.pc-module > .pc-form-shell > .pc-photo-panel,
+.pc-module > .pc-form-shell > .pc-form-footer,
+.pc-module > .pc-form-shell .pc-form-section,
+.pc-module > .pc-form-shell .pc-form-grid,
+.pc-module > .pc-form-shell .pc-field,
+.pc-module > .pc-form-shell .campo-autocomplete,
+.pc-module > .pc-form-shell .pc-file-field{min-width:0;max-width:100%;box-sizing:border-box}
+.pc-module > .pc-form-shell .pc-field input,
+.pc-module > .pc-form-shell .pc-file-field input,
+.pc-module > .pc-form-shell .campo-autocomplete input{
+  display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+}
+.pc-module > .pc-form-shell .pc-photo-stage,
+.pc-module > .pc-form-shell .pc-photo-stage video,
+.pc-module > .pc-form-shell .pc-photo-stage img{max-width:100%;min-width:0}
+.pc-module > .pc-form-shell .pc-form-main > .pc-panel + .pc-panel{margin-top:0}
+.pc-module > .pc-form-shell .pc-form-footer{min-width:0;flex-wrap:wrap}
+.pc-module > .pc-form-shell .pc-form-footer > div{flex-wrap:wrap}
+@media(max-width:980px){
+  .pc-module > .pc-form-shell{grid-template-columns:minmax(0,1fr)}
+  .pc-module > .pc-form-shell > .pc-photo-panel{grid-column:1;grid-row:auto}
+  .pc-module > .pc-form-shell > .pc-form-footer{grid-column:1}
+}
+@media(max-width:560px){
+  .pc-module > .pc-form-shell .pc-form-grid,
+  .pc-module > .pc-form-shell .pc-form-grid-3{grid-template-columns:minmax(0,1fr)}
+  .pc-module > .pc-form-shell .pc-span-2{grid-column:1}
+  .pc-module > .pc-form-shell .pc-form-footer{align-items:stretch}
+  .pc-module > .pc-form-shell .pc-form-footer > div{width:100%}
+  .pc-module > .pc-form-shell .pc-form-footer > div > *{flex:1;justify-content:center}
+}
