@@ -118,6 +118,11 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo,actor_id=None):
     conn=conectar()
     try:
         with conn.cursor() as cur:
+            # Use the same tenant lock as role changes and tenant-side deactivation.
+            cur.execute("SELECT id FROM condominios WHERE id=%s FOR UPDATE", (condominio_id,))
+            if not cur.fetchone():
+                conn.rollback()
+                return False
             if actor_id:
                 cur.execute("SELECT 1 FROM platform_admins WHERE id=%s AND ativo=TRUE", (actor_id,))
                 if not cur.fetchone():
