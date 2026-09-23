@@ -10,6 +10,9 @@ from werkzeug.security import generate_password_hash
 
 from database.connection import conectar_dedicado
 from app import app
+from flask import g
+from database.models import registrar_entrada, registrar_saida
+from database.encomendas import adicionar_encomenda, buscar_encomenda
 
 
 def assert_status(response, expected, context):
@@ -93,6 +96,29 @@ def main():
             assert cur.fetchone()["status"] == "aberto", "Cross-tenant lot was modified"
     finally:
         conn.close()
+
+    # Exercise real domain writes and prove foreign-tenant identifiers cannot be used.
+    with app.test_request_context("/"):
+        g.tenant_id = tenants[0]
+        visit_id = registrar_entrada(visitors[0], "UNIDADE CI", usuario_id=users[0])
+        assert visit_id > 0
+        try:
+            registrar_entrada(visitors[1], "UNIDADE CI", usuario_id=users[0])
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Foreign-tenant visitor entry was accepted")
+        assert registrar_saida(visitors[0], users[0]) is True
+        parcel = adicionar_encomenda(lots[0], None, "CI-101", "DESTINATÁRIO CI",
+                                     None, "PACOTE CI", None, users[0])
+        assert buscar_encomenda(parcel["id"])["condominio_id"] == tenants[0]
+        try:
+            adicionar_encomenda(lots[1], None, "CI-101", "DESTINATÁRIO CI",
+                                None, "PACOTE CI", None, users[0])
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Foreign-tenant parcel creation was accepted")
 
     # Switching accounts must not retain the previous tenant or administrator privileges.
     assert_status(client.post("/logout"), 302, "logout")
