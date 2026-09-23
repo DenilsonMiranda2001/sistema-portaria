@@ -52,3 +52,50 @@ jobs:
           else:
               raise SystemExit("production config unexpectedly accepted missing SECRET_KEY")
           PY
+
+  postgres-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: portaria_ci
+          POSTGRES_USER: portaria_ci
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U portaria_ci -d portaria_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PYTHONPATH: .
+      APP_ENV: test
+      DATABASE_URL: postgresql://portaria_ci:ci-only-password@localhost:5432/portaria_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Apply all migrations to isolated PostgreSQL
+        run: python -m migrations.migrate upgrade
+      - name: Verify RBAC migration and idempotent rerun
+        run: |
+          python -m migrations.migrate upgrade
+          python - <<'PY'
+          from database.connection import conectar_dedicado
+          conn = conectar_dedicado("ci-migration-assertions")
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("SELECT COUNT(*) AS n FROM schema_migrations WHERE version='0020_tenant_rbac_roles.sql'")
+                  assert cur.fetchone()["n"] == 1
+                  cur.execute("SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid='usuarios'::regclass AND conname='usuarios_nivel_check'")
+                  definition = cur.fetchone()
+                  assert definition and all(role in definition["definition"] for role in ("admin_condominio", "administrativo", "porteiro"))
+                  cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
+                  assert cur.fetchone()["n"] == 20
+          finally:
+              conn.close()
+          PY
