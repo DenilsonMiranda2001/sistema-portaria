@@ -778,3 +778,27 @@ body{font-size:14px}
 .pc-package-intake .pc-deliverer-results{top:78px}
 .pc-package-intake .pc-form-heading.pc-span-2{grid-column:1/-1;margin-top:8px}
 @media(max-width:760px){.pc-package-intake{padding:14px}.pc-package-intake .pc-package-steps{grid-template-columns:minmax(0,1fr)}.pc-package-intake .pc-deliverer-lookup,.pc-package-intake .pc-package-carrier{grid-column:1;grid-row:auto}.pc-package-intake .pc-deliverer-quick-grid{grid-template-columns:1fr}}
+
+
+/* Visitor registration/edit: isolate photo layers and prevent floating native video */
+.pc-module:has(.pc-form-shell){min-width:0}
+.pc-module:has(.pc-form-shell) .pc-form-shell{grid-template-columns:minmax(0,1fr) minmax(290px,390px);align-items:start;min-width:0;width:100%}
+.pc-module:has(.pc-form-shell) .pc-form-main{min-width:0}
+.pc-module:has(.pc-form-shell) .pc-form-grid{min-width:0}
+.pc-module:has(.pc-form-shell) .pc-form-grid>*{min-width:0}
+.pc-module:has(.pc-form-shell) .pc-field input,.pc-module:has(.pc-form-shell) .pc-field select{width:100%;min-width:0}
+.pc-module:has(.pc-form-shell) .pc-photo-panel{min-width:0;align-self:stretch}
+.pc-module:has(.pc-form-shell) .pc-photo-stage{position:relative;display:grid;place-items:center;isolation:isolate;height:220px;min-height:220px;max-height:220px;overflow:hidden}
+.pc-module:has(.pc-form-shell) .pc-photo-stage .camera-box,.pc-module:has(.pc-form-shell) .pc-photo-stage .preview-box{position:absolute;inset:0;z-index:2;width:100%;height:100%;min-height:0;margin:0;overflow:hidden;border:0;border-radius:inherit;background:#17212b}
+.pc-module:has(.pc-form-shell) .pc-photo-stage .camera-box[hidden],.pc-module:has(.pc-form-shell) .pc-photo-stage .preview-box[hidden]{display:none!important}
+.pc-module:has(.pc-form-shell) .pc-photo-stage .camera-box:not([style*="display: block"]):not([style*="display: flex"]):not([style*="display: grid"]),.pc-module:has(.pc-form-shell) .pc-photo-stage .preview-box:not([style*="display: block"]):not([style*="display: flex"]):not([style*="display: grid"]){display:none}
+.pc-module:has(.pc-form-shell) .pc-photo-stage video,.pc-module:has(.pc-form-shell) .pc-photo-stage img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}
+.pc-module:has(.pc-form-shell) .pc-photo-stage .photo-placeholder{position:relative;z-index:0;padding:16px}
+.pc-module:has(.pc-form-shell) .pc-photo-stage .edit-current-photo{position:absolute;inset:0;z-index:1;object-fit:contain}
+.pc-module:has(.pc-form-shell) .pc-form-footer{position:static;grid-column:1/-1;min-width:0;width:100%;box-shadow:none}
+.pc-module:has(.pc-form-shell) .pc-form-footer-actions{display:flex;align-items:center;gap:8px}
+.pc-module:has(.pc-form-shell) .pc-file-field input[type=file]{display:block;width:100%;min-width:0;max-width:100%;font-size:11px}
+.pc-module:has(.pc-form-shell) .pc-form-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:950px){.pc-module:has(.pc-form-shell) .pc-form-shell{grid-template-columns:minmax(0,1fr)}.pc-module:has(.pc-form-shell) .pc-photo-panel{grid-row:auto}}
+@media(max-width:600px){.pc-module:has(.pc-form-shell) .pc-form-grid,.pc-module:has(.pc-form-shell) .pc-form-grid-3{grid-template-columns:minmax(0,1fr)}.pc-module:has(.pc-form-shell) .pc-span-2{grid-column:auto}.pc-module:has(.pc-form-shell) .pc-form-footer{flex-direction:column;align-items:stretch}.pc-module:has(.pc-form-shell) .pc-form-footer-actions{justify-content:flex-end}}
+
