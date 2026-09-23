@@ -217,3 +217,43 @@ jobs:
           ALLOW_ISOLATED_PREFLIGHT: 'yes'
           EXPECTED_ISOLATED_DATABASE: portaria_ci
         run: python scripts/isolated_release_preflight.py
+      - name: Prove preflight fails closed on wrong database and tenant anomaly
+        env:
+          ALLOW_ISOLATED_PREFLIGHT: 'yes'
+          EXPECTED_ISOLATED_DATABASE: portaria_ci
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          import sys
+          from uuid import uuid4
+          from database.connection import conectar_dedicado
+
+          script = [sys.executable, "scripts/isolated_release_preflight.py"]
+          wrong_db = dict(os.environ, EXPECTED_ISOLATED_DATABASE="not_the_connected_database")
+          result = subprocess.run(script, env=wrong_db, capture_output=True, text=True)
+          assert result.returncode != 0 and "differs from expected" in result.stderr, result.stderr
+
+          conn = conectar_dedicado("ci-preflight-negative-control")
+          tenant_id = None
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("INSERT INTO condominios(nome,slug) VALUES (%s,%s) RETURNING id",
+                              ("CI preflight negative", "preflight-negative-" + uuid4().hex))
+                  tenant_id = cur.fetchone()["id"]
+                  cur.execute("""INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel)
+                                 VALUES (%s,'CI operator',%s,'ci-only-hash','porteiro')""",
+                              (tenant_id, "preflight-negative-" + uuid4().hex))
+              conn.commit()
+              result = subprocess.run(script, capture_output=True, text=True)
+              assert result.returncode != 0, "Preflight accepted active tenant without active administrator"
+              assert "active_condominiums_without_active_admin: 1" in result.stdout, result.stdout + result.stderr
+          finally:
+              if tenant_id is not None:
+                  with conn.cursor() as cur:
+                      cur.execute("DELETE FROM usuarios WHERE condominio_id=%s", (tenant_id,))
+                      cur.execute("DELETE FROM condominios WHERE id=%s", (tenant_id,))
+                  conn.commit()
+              conn.close()
+          subprocess.run(script, check=True)
+          PY
