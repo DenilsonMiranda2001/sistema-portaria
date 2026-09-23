@@ -342,8 +342,8 @@ function renderizarResultados(data, termo) {
         arrival.addEventListener("change",()=>{estado.tipoChegada=arrival.value;if(arrival.value==="PEDESTRE"){estado.placa=estado.marca=estado.modelo="";vehicleFields.hidden=true}else vehicleFields.hidden=false});
         vehicle.append(arrival,vehicleFields);
         dest.appendChild(node("span","label-ui","Destino"));
-        const row=node("div","home-entry-destination"),address=document.createElement("input");address.id="endereco_"+v.id;address.className="input-padrao input-destino-compacto";address.placeholder="Unidade ou destino";address.value=estado.endereco||"";
-        address.addEventListener("input",()=>atualizarCampoEstado(v.id,"endereco",address.value));
+        const row=node("div","home-entry-destination"),address=document.createElement("input");address.id="endereco_"+v.id;address.className="input-padrao input-destino-compacto input-endereco";address.dataset.id=v.id;address.placeholder="Unidade ou destino";address.value=estado.endereco||"";
+        address.addEventListener("input",()=>atualizarCampoEstado(v.id,"endereco",address.value));address.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();registrarEntrada(v.id)}});
         const enter=node("button","btn-principal","Registrar entrada");enter.type="button";enter.addEventListener("click",()=>registrarEntrada(v.id));row.append(address,enter);dest.appendChild(row);
         if(estado.ultimoEndereco){const last=node("button","home-last-destination","Último destino: "+estado.ultimoEndereco);last.type="button";last.addEventListener("click",()=>{address.value=estado.ultimoEndereco;atualizarCampoEstado(v.id,"endereco",estado.ultimoEndereco);address.focus()});dest.appendChild(last)}
         operation.append(vehicle,dest);main.append(details,extras,operation);card.append(photoWrap,main);card.addEventListener("click",()=>{indiceSelecionado=index});lista.appendChild(card);
@@ -447,7 +447,9 @@ document.addEventListener("keydown", function(event) {
     registrarEntrada(id);
 });
 
+const entradasEmAndamento = new Set();
 function registrarEntrada(id) {
+    if (entradasEmAndamento.has(String(id))) return;
     limparMensagem();
 
     const enderecoInput = document.getElementById(`endereco_${id}`);
@@ -484,6 +486,9 @@ function registrarEntrada(id) {
     body.append("observacao", observacao);
     body.append("csrf_token", document.querySelector('meta[name="csrf-token"]').content);
 
+    entradasEmAndamento.add(String(id));
+    const botaoEntrada = document.querySelector(`.visitor-card[data-id="${CSS.escape(String(id))}"] .home-entry-destination .btn-principal`);
+    if (botaoEntrada) { botaoEntrada.disabled = true; botaoEntrada.textContent = "Registrando..."; }
     fetch("/entrada_ajax", {
         method: "POST",
         headers: {
@@ -510,6 +515,9 @@ function registrarEntrada(id) {
     .catch((erro) => {
         mostrarMensagem(erro.message);
         console.error("Erro:", erro);
+    }).finally(() => {
+        entradasEmAndamento.delete(String(id));
+        if (botaoEntrada?.isConnected) { botaoEntrada.disabled = false; botaoEntrada.textContent = "Registrar entrada"; }
     });
 }
 
