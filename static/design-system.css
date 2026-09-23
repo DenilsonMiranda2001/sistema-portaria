@@ -577,3 +577,15 @@ body{font-size:14px}
   .pc-module > .pc-form-shell .pc-form-footer > div{width:100%}
   .pc-module > .pc-form-shell .pc-form-footer > div > *{flex:1;justify-content:center}
 }
+
+/* Visitor photo stage: camera, preview and placeholder occupy one layer only. */
+.pc-module > .pc-form-shell .pc-photo-stage{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(190px,auto);isolation:isolate}
+.pc-module > .pc-form-shell .pc-photo-stage > .camera-box,
+.pc-module > .pc-form-shell .pc-photo-stage > .preview-box,
+.pc-module > .pc-form-shell .pc-photo-stage > .photo-placeholder{grid-area:1/1;min-width:0;min-height:0}
+.pc-module > .pc-form-shell .pc-photo-stage > .camera-box[hidden],
+.pc-module > .pc-form-shell .pc-photo-stage > .preview-box[hidden],
+.pc-module > .pc-form-shell .pc-photo-stage > .photo-placeholder[hidden]{display:none!important}
+.pc-module > .pc-form-shell .pc-photo-stage > .camera-box,
+.pc-module > .pc-form-shell .pc-photo-stage > .preview-box{height:100%;align-self:stretch}
+.pc-module > .pc-form-shell .pc-photo-stage > .photo-placeholder{align-self:center;justify-self:center;padding:16px}
