@@ -7,6 +7,7 @@ from database.platform import (
     listar_condominios_com_metricas, buscar_condominio_detalhe,
     atualizar_condominio, definir_status_condominio, definir_status_usuario_tenant,
     criar_condominio_com_usuario, criar_usuario_tenant, resumo_operacional_plataforma,
+    listar_auditoria_plataforma_tenant,
 )
 
 platform_admin_bp = Blueprint("platform_admin", __name__, url_prefix="/plataforma")
@@ -76,7 +77,8 @@ def detalhe_condominio(condominio_id):
     if not condominio:
         flash("Condomínio não encontrado.", "erro")
         return redirect(url_for("platform_admin.condominios"))
-    return render_template("platform_condominio_detalhe.html", condominio=condominio, usuarios=usuarios)
+    eventos_administrativos = listar_auditoria_plataforma_tenant(condominio_id)
+    return render_template("platform_condominio_detalhe.html", condominio=condominio, usuarios=usuarios, eventos_administrativos=eventos_administrativos)
 
 
 @platform_admin_bp.post("/condominios/<int:condominio_id>/editar")
