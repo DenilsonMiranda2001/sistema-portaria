@@ -148,6 +148,8 @@ def definir_status_usuario_tenant(condominio_id,usuario_id,ativo,actor_id=None):
 
 
 def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=None, usuario_senha_hash=None, nivel="admin_condominio", actor_id=None):
+    if usuario_login and (nivel != "admin_condominio" or not usuario_nome or not usuario_senha_hash):
+        raise ValueError("O acesso inicial do condomínio deve ser um administrador válido.")
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -183,6 +185,8 @@ def criar_condominio_com_usuario(nome, slug, usuario_nome=None, usuario_login=No
 
 
 def criar_usuario_tenant(condominio_id, nome, usuario, senha_hash, nivel, actor_id=None):
+    if nivel not in ("admin_condominio", "administrativo", "porteiro"):
+        raise ValueError("Perfil de usuário inválido.")
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -190,9 +194,12 @@ def criar_usuario_tenant(condominio_id, nome, usuario, senha_hash, nivel, actor_
                 cur.execute("SELECT 1 FROM platform_admins WHERE id=%s AND ativo=TRUE", (actor_id,))
                 if not cur.fetchone():
                     raise ValueError("Administrador da plataforma inválido.")
-            cur.execute("SELECT id FROM condominios WHERE id=%s AND ativo=TRUE FOR SHARE", (condominio_id,))
+            cur.execute("SELECT id FROM condominios WHERE id=%s AND ativo=TRUE FOR UPDATE", (condominio_id,))
             if not cur.fetchone():
                 raise ValueError("Condomínio não encontrado ou inativo.")
+            cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin_condominio' AND ativo=TRUE", (condominio_id,))
+            if cur.fetchone()["total"] == 0 and nivel != "admin_condominio":
+                raise ValueError("Cadastre primeiro um administrador do condomínio.")
             cur.execute("SELECT 1 FROM platform_admins WHERE usuario=%s", (usuario,))
             if cur.fetchone():
                 raise ValueError("Este login é reservado pela plataforma.")
