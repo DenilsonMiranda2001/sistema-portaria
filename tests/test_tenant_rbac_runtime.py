@@ -202,3 +202,23 @@ def test_login_canonicalizes_legacy_tenant_role(app, monkeypatch):
         assert session["usuario_id"] == 9
         assert session["usuario_tipo"] == "porteiro"
         assert session["condominio_id"] == 17
+
+
+def test_tenant_user_edit_does_not_claim_success_when_update_misses(app, monkeypatch):
+    from routes import admin
+    app.register_blueprint(admin.admin_bp)
+    monkeypatch.setattr(admin, "buscar_usuario_por_id", lambda *args, **kwargs: {
+        "id": 18, "nome": "Operador", "usuario": "operador", "nivel": "porteiro",
+    })
+    monkeypatch.setattr(admin, "atualizar_usuario", lambda *args: False)
+    with app.test_request_context("/usuarios/editar/18", method="POST", data={
+        "nome": "Operador", "usuario": "operador", "tipo": "porteiro",
+    }):
+        g.current_user = {"id": 2, "nivel": "admin_condominio"}
+        session["usuario_id"] = 2
+        response = admin.editar_usuario(18)
+        assert response.status_code == 302
+        assert response.location.endswith("/usuarios")
+        messages = session.get("_flashes", [])
+        assert ("erro", "Usuário não encontrado neste condomínio.") in messages
+        assert not any("sucesso" in message.lower() for _, message in messages)
