@@ -4,6 +4,7 @@ Run only against a disposable database after all migrations. Never point at prod
 """
 import os
 from uuid import uuid4
+from urllib.parse import urlparse
 
 from werkzeug.security import generate_password_hash
 
@@ -19,7 +20,9 @@ def assert_status(response, expected, context):
 
 def main():
     assert os.getenv("APP_ENV") == "test", "Refusing to seed outside APP_ENV=test"
-    assert "portaria_ci" in os.environ.get("DATABASE_URL", ""), "Disposable CI database required"
+    database_url = urlparse(os.environ.get("DATABASE_URL", ""))
+    assert database_url.hostname in ("localhost", "127.0.0.1"), "Local CI database host required"
+    assert database_url.path == "/portaria_ci", "Exact disposable CI database required"
     suffix = uuid4().hex[:10]
     password = "ci-authenticated-smoke-only"
     conn = conectar_dedicado("ci-authenticated-smoke")
