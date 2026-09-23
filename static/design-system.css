@@ -495,3 +495,38 @@ body{font-size:14px}
 .platform-audit-feed{overflow:hidden}.platform-events{border-top:1px solid var(--line)}.platform-events article{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:52px;padding:8px 14px;border-bottom:1px solid var(--line)}.platform-events article:last-child{border-bottom:0}.platform-event-dot{width:7px;height:7px;border-radius:50%;background:var(--brand)}.platform-events strong,.platform-events small{display:block}.platform-events strong{font-size:10px}.platform-events small{margin-top:2px;color:var(--muted);font-size:8px}.platform-events time{color:var(--muted);font-size:8px;font-weight:650}
 @media(max-width:1000px){.platform-summary-wide{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.platform-summary-wide{grid-template-columns:1fr}.platform-commandbar{align-items:stretch;flex-direction:column}.platform-commandbar .platform-create{min-width:0;width:100%}}
+
+/* Operational layout contract — page titles are navigation, not hero sections */
+.container:has(.pc-module),.container:has(.pc-dashboard){margin-top:12px}
+.pc-module,.pc-dashboard{gap:10px}
+.pc-module>.pc-pagehead,.pc-dashboard>.pc-pagehead{min-height:40px;margin:0;padding:0;align-items:center;gap:12px}
+.pc-module>.pc-pagehead>div:first-child,.pc-dashboard>.pc-pagehead>div:first-child{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
+.pc-module>.pc-pagehead h2,.pc-dashboard>.pc-pagehead h2{order:0;margin:0;font-size:19px;line-height:1.2;letter-spacing:-.02em}
+.pc-module>.pc-pagehead .pc-eyebrow,.pc-dashboard>.pc-pagehead .pc-eyebrow{order:1;margin:0;font-size:8px}
+.pc-module>.pc-pagehead p,.pc-dashboard>.pc-pagehead p{display:none}
+.pc-module>.pc-pagehead .pc-page-actions,.pc-dashboard>.pc-pagehead .pc-page-actions{margin-left:auto}
+.pc-module>.pc-taskbar{min-height:40px}.pc-module>.pc-taskbar>div>span{display:none}
+.pc-packages .pc-subnav{margin-bottom:0}.pc-packages .pc-pagehead-compact{margin:0}
+.pc-reference-dashboard{padding-top:0;min-height:0!important}
+.pc-dashboard-head{margin-bottom:0!important}
+.pc-home-summary{margin-bottom:0}.pc-reference-grid{gap:12px}
+.pc-access-hero{padding:14px 16px}
+.pc-access-hero-copy{margin-bottom:9px}
+.pc-access-hero-copy .pc-kicker,.pc-access-hero-copy p{display:none}
+.pc-access-hero-copy h3{margin:0;font-size:17px}
+.pc-hero-search{min-height:46px}
+.pc-reference-dashboard .pc-search-results{max-height:none;overflow:visible;min-height:0;margin-top:8px}
+.pc-reference-dashboard .visitor-card{min-width:0;overflow:visible}
+.pc-reference-dashboard .visitor-main,.pc-reference-dashboard .card-visitante,.pc-reference-dashboard .linha-dupla{min-width:0}
+.pc-reference-dashboard .visitor-card .info-item,.pc-reference-dashboard .visitor-card .extra-card{min-width:0}
+.pc-reference-dashboard .visitor-card input,.pc-reference-dashboard .visitor-card select{width:100%;min-width:0}
+.pc-reference-dashboard .home-entry-destination{min-width:0}
+.pc-reference-dashboard .home-last-destination{max-width:100%;white-space:normal;text-align:left;overflow-wrap:anywhere}
+.pc-reference-dashboard .pc-hero-actions{margin-top:8px}
+@media(min-width:1000px){.pc-reference-dashboard{height:auto!important;overflow:visible!important}.pc-reference-dashboard .pc-reference-main{min-width:0}}
+@media(max-width:760px){.pc-module>.pc-pagehead,.pc-dashboard>.pc-pagehead{align-items:stretch;flex-direction:column}.pc-module>.pc-pagehead>div:first-child,.pc-dashboard>.pc-pagehead>div:first-child{display:block}.pc-module>.pc-pagehead .pc-eyebrow,.pc-dashboard>.pc-pagehead .pc-eyebrow{display:none}.pc-module>.pc-pagehead .pc-page-actions,.pc-dashboard>.pc-pagehead .pc-page-actions{margin-left:0}.pc-reference-dashboard .visitor-card .linha-dupla{flex-direction:column;align-items:stretch}}
+/* Native controls: consistent closed-state styling; retain OS option menu for accessibility */
+.app-shell select,.platform-shell select{appearance:none;-webkit-appearance:none;color:var(--ink);background-color:#fff;background-image:linear-gradient(45deg,transparent 50%,#526571 50%),linear-gradient(135deg,#526571 50%,transparent 50%);background-position:calc(100% - 17px) calc(50% - 2px),calc(100% - 12px) calc(50% - 2px);background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+.app-shell select:focus-visible,.platform-shell select:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.app-shell select:disabled,.platform-shell select:disabled{background-color:var(--surface-2);color:var(--muted);cursor:not-allowed}
+.app-shell input:-webkit-autofill,.app-shell input:-webkit-autofill:hover,.app-shell input:-webkit-autofill:focus{-webkit-text-fill-color:var(--ink);-webkit-box-shadow:0 0 0 1000px #fff inset;transition:background-color 9999s}
