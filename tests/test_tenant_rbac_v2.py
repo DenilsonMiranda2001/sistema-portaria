@@ -102,3 +102,13 @@ def test_platform_tenant_audit_only_exposes_control_plane_events():
     assert "LIMIT %s" in section
     assert "listar_auditoria_plataforma_tenant(condominio_id)" in route
     assert "eventos_administrativos" in template
+
+
+def test_platform_mutations_fail_closed_on_invalid_status_and_role():
+    platform_route = Path("routes/platform_admin.py").read_text(encoding="utf-8")
+    tenant_route = Path("routes/admin.py").read_text(encoding="utf-8")
+    assert platform_route.count('request.form.get("ativo") not in ("0", "1")') == 2
+    assert "abort(400)" in platform_route
+    assert "abort(403)" in platform_route
+    assert tenant_route.count('flash("Perfil de usuário inválido.", "erro")') == 2
+    assert 'tipo = "porteiro"' not in tenant_route
