@@ -51,7 +51,14 @@ def usuarios():
 
     dados = listar_usuarios()
     residencial = resumo_unidades()
-    return render_template("usuarios.html", usuarios=dados, residencial=residencial)
+    resumo_equipe = {
+        "total": len(dados),
+        "ativos": sum(bool(u["ativo"]) for u in dados),
+        "administradores": sum(bool(u["ativo"]) and u["nivel"] == "admin_condominio" for u in dados),
+        "administrativos": sum(bool(u["ativo"]) and u["nivel"] == "administrativo" for u in dados),
+        "porteiros": sum(bool(u["ativo"]) and u["nivel"] == "porteiro" for u in dados),
+    }
+    return render_template("usuarios.html", usuarios=dados, residencial=residencial, resumo_equipe=resumo_equipe)
 
 
 @admin_bp.route("/usuarios/editar/<int:id>", methods=["GET", "POST"])
