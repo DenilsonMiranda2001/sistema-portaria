@@ -359,8 +359,6 @@ function renderizarResultados(data, termo) {
         }
         vehicleFields.append(plate,vehicleSuggestionField(brand,"marca"),vehicleSuggestionField(model,"modelo"));
         if(estado.tipoChegada==="PEDESTRE")vehicleFields.hidden=true;
-        criarAutocompleteDinamico(brand.id,"home_sugestoes_marca_"+v.id,MARCAS,v.id,"marca");
-        criarAutocompleteDinamico(model.id,"home_sugestoes_modelo_"+v.id,MODELOS,v.id,"modelo");
         arrival.addEventListener("change",()=>{estado.tipoChegada=arrival.value;if(arrival.value==="PEDESTRE"){estado.placa=estado.marca=estado.modelo="";vehicleFields.hidden=true}else vehicleFields.hidden=false});
         vehicle.append(arrival,vehicleFields);
         dest.appendChild(node("span","label-ui","Destino"));
@@ -369,6 +367,9 @@ function renderizarResultados(data, termo) {
         const enter=node("button","btn-principal","Registrar entrada");enter.type="button";enter.addEventListener("click",()=>registrarEntrada(v.id));row.append(address,enter);dest.appendChild(row);
         if(estado.ultimoEndereco){const last=node("button","home-last-destination","Usar último destino: "+estado.ultimoEndereco);last.type="button";last.addEventListener("click",()=>{address.value=estado.ultimoEndereco;atualizarCampoEstado(v.id,"endereco",estado.ultimoEndereco);address.focus()});dest.appendChild(last)}
         operation.append(vehicle,dest);main.append(details,extras,operation);card.append(photoWrap,main);card.addEventListener("click",()=>{indiceSelecionado=index});lista.appendChild(card);
+        // Autocomplete looks up inputs by ID: initialize only after the card is in the DOM.
+        criarAutocompleteDinamico(brand.id,"home_sugestoes_marca_"+v.id,MARCAS,v.id,"marca");
+        criarAutocompleteDinamico(model.id,"home_sugestoes_modelo_"+v.id,MODELOS,v.id,"modelo");
     });
 }
 
