@@ -44,3 +44,14 @@ def test_last_active_tenant_admin_cannot_be_demoted():
 def test_new_install_schema_uses_tenant_roles():
     schema = Path("database/schema.sql").read_text(encoding="utf-8")
     assert "CHECK (nivel IN ('admin_condominio', 'administrativo', 'porteiro'))" in schema
+
+
+def test_last_admin_mutations_serialize_on_tenant_row():
+    models = Path("database/models.py").read_text(encoding="utf-8")
+    platform = Path("database/platform.py").read_text(encoding="utf-8")
+    for name, following in (("atualizar_usuario", "atualizar_senha_usuario"), ("inativar_usuario", "ativar_usuario")):
+        section = models[models.index(f"def {name}("):models.index(f"def {following}(")]
+        assert 'SELECT id FROM condominios WHERE id=%s FOR UPDATE' in section
+        assert section.index('SELECT id FROM condominios WHERE id=%s FOR UPDATE') < section.index('SELECT COUNT(*) AS total FROM usuarios')
+    section = platform[platform.index("def definir_status_usuario_tenant("):platform.index("def criar_condominio_com_usuario(")]
+    assert 'SELECT id FROM condominios WHERE id=%s FOR UPDATE' in section
