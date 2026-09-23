@@ -215,4 +215,5 @@ jobs:
       - name: Read-only tenant integrity preflight on isolated PostgreSQL
         env:
           ALLOW_ISOLATED_PREFLIGHT: 'yes'
+          EXPECTED_ISOLATED_DATABASE: portaria_ci
         run: python scripts/isolated_release_preflight.py
