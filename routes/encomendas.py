@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import quote
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
 
 from database.encomendas import (
     adicionar_encomenda,
@@ -17,7 +17,7 @@ from database.encomendas import (
     resumo_painel,
 )
 from database.models import listar_moradores
-from database.entregadores import listar_entregadores
+from database.entregadores import listar_entregadores, criar_entregador
 from utils.audit import registrar_auditoria
 from utils.authz import roles_required
 
@@ -84,6 +84,27 @@ def lotes():
     return render_template("encomendas/lotes.html", lotes=listar_lotes())
 
 
+@encomendas_bp.route("/entregadores/rapido", methods=["POST"])
+@roles_required("admin_condominio", "administrativo", "porteiro")
+def cadastrar_entregador_rapido():
+    """Cadastro operacional na central; CSRF aplicado pelo middleware global."""
+    nome = (request.form.get("nome") or "").strip()
+    documento = (request.form.get("documento") or "").strip()
+    transportadora = (request.form.get("transportadora") or "").strip()
+    if not nome or len(nome) > 150 or len(documento) > 50:
+        return jsonify({"erro": "Confira o nome e o documento do entregador."}), 400
+    if transportadora not in TRANSPORTADORAS:
+        return jsonify({"erro": "Selecione uma transportadora válida."}), 400
+    try:
+        novo_id = criar_entregador(nome, documento, None, transportadora, session["usuario_id"])
+    except ValueError as exc:
+        return jsonify({"erro": str(exc)}), 400
+    except Exception:
+        logger.exception("Falha no cadastro rápido de entregador")
+        return jsonify({"erro": "Não foi possível cadastrar. Confira se o documento já existe."}), 409
+    return jsonify({"id": novo_id, "nome": nome.upper(), "transportadora": transportadora}), 201
+
+
 @encomendas_bp.route("/lotes/novo", methods=["GET", "POST"])
 @roles_required("admin_condominio", "administrativo", "porteiro")
 def novo_lote():
@@ -91,6 +112,9 @@ def novo_lote():
         transportadora = request.form.get("transportadora", "").strip()
         if transportadora not in TRANSPORTADORAS:
             flash("Selecione uma transportadora válida.", "erro")
+            return redirect(url_for("encomendas.novo_lote"))
+        if not request.form.get("entregador_id", type=int):
+            flash("Identifique ou cadastre o entregador antes de iniciar o recebimento.", "erro")
             return redirect(url_for("encomendas.novo_lote"))
         try:
             lote_id = criar_lote(
