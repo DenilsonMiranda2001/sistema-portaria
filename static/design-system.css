@@ -693,3 +693,9 @@ body{font-size:14px}
 .login-brand .controleid-login-logo{filter:brightness(0) invert(1)}
 .login-brand .brand-subtitle{color:#c5dcd7}
 @media(max-width:820px){.controleid-header-icon{width:36px;height:36px}}
+
+/* Brand lockup: keep ID inline with Controle (generic subtitle span rules must not affect it). */
+.navbar-brand-textos h1{display:flex;align-items:baseline;gap:0;white-space:nowrap;font-size:17px;line-height:1.15;letter-spacing:-.045em;font-weight:800;color:var(--controleid-ink)}
+.navbar-brand-textos h1>.controleid-accent{display:inline!important;margin:0!important;color:var(--controleid-teal);font:inherit;letter-spacing:inherit;text-transform:none;white-space:nowrap}
+.navbar-brand-textos>span{display:block;margin-top:4px;font-size:8px;letter-spacing:.065em}
+@media(max-width:820px){.navbar-brand-textos h1{font-size:15px}}
