@@ -1,3 +1,42 @@
-{% extends "base.html" %}{% from "encomendas/_macros.html" import subnav %}{% block title %}Receber encomendas · Portaria Control{% endblock %}{% block content %}
+{% extends "base.html" %}{% from "encomendas/_macros.html" import subnav %}{% block title %}Receber encomendas · ControleID{% endblock %}{% block content %}
 <section class="pc-module pc-packages"><div class="pc-subnav">{{ subnav('novo') }}</div><header class="pc-pagehead pc-pagehead-compact pc-form-pagehead"><div><span class="pc-eyebrow">RECEBIMENTO</span><h2>Novo lote</h2><p>Identifique a chegada e inicie o cadastro rápido dos pacotes.</p></div></header>
-<form method="post" class="pc-panel pc-package-intake"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="pc-form-heading"><span>01</span><div><strong>Dados da chegada</strong><small>Transportadora e responsável pela entrega</small></div></div><div class="pc-form-grid"><label class="pc-field"><span>Transportadora *</span><select name="transportadora" required autofocus><option value="">Selecione</option>{% for item in transportadoras %}<option>{{ item }}</option>{% endfor %}</select></label><label class="pc-field pc-span-2"><span>Entregador recorrente</span><select name="entregador_id" id="entregador_id"><option value="">Selecione um entregador cadastrado</option>{% for item in entregadores %}<option value="{{ item.id }}" data-transportadora="{{ item.transportadora or '' }}" {{ 'selected' if entregador_selecionado == item.id }}>{{ item.nome }}{% if item.transportadora %} · {{ item.transportadora }}{% endif %}</option>{% endfor %}</select><small>O cadastro fica salvo para os próximos recebimentos. <a href="{{ url_for('entregadores.novo', next='novo_lote') }}">Cadastrar novo entregador</a> · <a href="{{ url_for('entregadores.listar') }}">Gerenciar entregadores</a></small></label><label class="pc-field pc-span-2"><span>Observação</span><textarea name="observacao" rows="3" placeholder="Informação opcional sobre esta chegada"></textarea></label></div><div class="pc-inline-actions"><a class="pc-btn pc-btn-secondary" href="{{ url_for('encomendas.lotes') }}">Cancelar</a><button class="pc-btn pc-btn-primary" type="submit">Criar lote e iniciar recebimento →</button></div></form><script>const entregador=document.getElementById("entregador_id");if(entregador){entregador.addEventListener("change",()=>{const opcao=entregador.options[entregador.selectedIndex];const transportadora=opcao.dataset.transportadora;if(transportadora){const campo=document.querySelector('select[name="transportadora"]');if([...campo.options].some(item=>item.value===transportadora)){campo.value=transportadora;}}});}</script></section>{% endblock %}
+<form method="post" class="pc-panel pc-package-intake"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="pc-form-heading"><span>01</span><div><strong>Dados da chegada</strong><small>Transportadora e responsável pela entrega</small></div></div><div class="pc-form-grid"><label class="pc-field"><span>Transportadora *</span><select name="transportadora" required autofocus><option value="">Selecione</option>{% for item in transportadoras %}<option>{{ item }}</option>{% endfor %}</select></label><div class="pc-field pc-span-2 pc-deliverer-lookup"><label for="busca_entregador"><span>Identificar entregador</span></label><input type="search" id="busca_entregador" placeholder="Buscar por nome ou CPF (mínimo 2 caracteres)" autocomplete="off" aria-controls="resultados_entregador" aria-expanded="false"><div id="resultados_entregador" class="pc-deliverer-results" role="listbox" hidden></div><label for="entregador_id" class="pc-deliverer-selected-label">Entregador selecionado</label><select name="entregador_id" id="entregador_id"><option value="">Selecione um entregador cadastrado</option>{% for item in entregadores %}<option value="{{ item.id }}" data-transportadora="{{ item.transportadora or '' }}" {{ 'selected' if entregador_selecionado == item.id }}>{{ item.nome }}{% if item.transportadora %} · {{ item.transportadora }}{% endif %}</option>{% endfor %}</select><small>Selecione um resultado da busca ou use a lista de cadastros. O cadastro fica salvo para os próximos recebimentos. <a href="{{ url_for('entregadores.novo', next='novo_lote') }}">Cadastrar novo entregador</a> · <a href="{{ url_for('entregadores.listar') }}">Gerenciar entregadores</a></small></div><label class="pc-field pc-span-2"><span>Observação</span><textarea name="observacao" rows="3" placeholder="Informação opcional sobre esta chegada"></textarea></label></div><div class="pc-inline-actions"><a class="pc-btn pc-btn-secondary" href="{{ url_for('encomendas.lotes') }}">Cancelar</a><button class="pc-btn pc-btn-primary" type="submit">Criar lote e iniciar recebimento →</button></div></form><script>
+(()=>{
+const select=document.getElementById("entregador_id");
+const busca=document.getElementById("busca_entregador");
+const lista=document.getElementById("resultados_entregador");
+const transportadora=document.querySelector('select[name="transportadora"]');
+if(!select||!busca||!lista)return;
+let timer,controller;
+function fechar(){lista.hidden=true;lista.replaceChildren();busca.setAttribute("aria-expanded","false")}
+function selecionar(id){select.value=String(id);select.dispatchEvent(new Event("change",{bubbles:true}));fechar();busca.value=select.selectedOptions[0]?.textContent?.trim()||""}
+select.addEventListener("change",()=>{const opcao=select.selectedOptions[0];const nome=opcao?.dataset.transportadora;if(nome&&[...transportadora.options].some(item=>item.value===nome))transportadora.value=nome;});
+busca.addEventListener("input",()=>{
+ clearTimeout(timer);if(controller)controller.abort();fechar();
+ const termo=busca.value.trim();if(termo.length<2)return;
+ timer=setTimeout(async()=>{
+   controller=new AbortController();
+   try{
+     const url=new URL({{ url_for('entregadores.pesquisar')|tojson }},window.location.origin);
+     url.searchParams.set("q",termo);
+     const response=await fetch(url,{signal:controller.signal,headers:{"Accept":"application/json"}});
+     if(!response.ok)throw Error("lookup failed");
+     const dados=await response.json();
+     if(busca.value.trim()!==termo)return;
+     lista.replaceChildren();
+     for(const pessoa of dados.resultados||[]){
+       const botao=document.createElement("button");botao.type="button";botao.className="pc-deliverer-result";botao.setAttribute("role","option");
+       const nome=document.createElement("strong");nome.textContent=pessoa.nome;
+       const detalhe=document.createElement("small");detalhe.textContent=[pessoa.transportadora,pessoa.documento_final?"Documento final "+pessoa.documento_final:""].filter(Boolean).join(" · ");
+       botao.append(nome,detalhe);botao.addEventListener("click",()=>selecionar(pessoa.id));lista.append(botao);
+     }
+     if(!lista.childElementCount){const vazio=document.createElement("p");vazio.textContent="Nenhum entregador cadastrado encontrado.";lista.append(vazio)}
+     lista.hidden=false;busca.setAttribute("aria-expanded","true");
+   }catch(error){if(error.name!=="AbortError")fechar()}
+ },220);
+});
+busca.addEventListener("keydown",event=>{if(event.key==="Escape")fechar();if(event.key==="ArrowDown"&&!lista.hidden){event.preventDefault();lista.querySelector("button")?.focus()}});
+lista.addEventListener("keydown",event=>{if(event.key==="Escape"){fechar();busca.focus()}});
+document.addEventListener("click",event=>{if(!event.target.closest(".pc-deliverer-lookup"))fechar()});
+})();
+</script></section>{% endblock %}
