@@ -179,3 +179,32 @@ jobs:
           finally:
               conn.close()
           PY
+
+      - name: Verify cross-tenant delivery association is rejected by PostgreSQL
+        run: |
+          python - <<'PY'
+          from psycopg2.errors import ForeignKeyViolation
+          from database.connection import conectar_dedicado
+          conn = conectar_dedicado("ci-delivery-tenant-fk")
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("""INSERT INTO condominios(nome,slug) VALUES
+                                 ('Tenant A','delivery-ci-a'),('Tenant B','delivery-ci-b') RETURNING id""")
+                  tenant_a, tenant_b = [row["id"] for row in cur.fetchall()]
+                  cur.execute("""INSERT INTO entregadores(condominio_id,nome)
+                                 VALUES (%s,'CI Courier') RETURNING id""", (tenant_a,))
+                  courier_id = cur.fetchone()["id"]
+                  cur.execute("SAVEPOINT cross_tenant_delivery")
+                  try:
+                      cur.execute("""INSERT INTO lotes_encomendas(condominio_id,entregador_id,transportadora)
+                                     VALUES (%s,%s,'CI')""", (tenant_b,courier_id))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_delivery")
+                  else:
+                      raise AssertionError("Cross-tenant courier association was accepted")
+                  cur.execute("""INSERT INTO lotes_encomendas(condominio_id,entregador_id,transportadora)
+                                 VALUES (%s,%s,'CI')""", (tenant_a,courier_id))
+              conn.rollback()
+          finally:
+              conn.close()
+          PY
