@@ -279,4 +279,32 @@ jobs:
                   conn.commit()
               conn.close()
           subprocess.run(script, check=True)
+
+          # Prove that a valid FK alone does not establish tenant ownership.
+          conn = conectar_dedicado("ci-tenant-link-negative-control")
+          ids = []
+          try:
+              with conn.cursor() as cur:
+                  for label in ("a", "b"):
+                      cur.execute("INSERT INTO condominios(nome,slug) VALUES (%s,%s) RETURNING id",
+                                  ("CI link " + label, "ci-link-" + uuid4().hex))
+                      ids.append(cur.fetchone()["id"])
+                  cur.execute("INSERT INTO unidades(condominio_id,codigo) VALUES (%s,'CI') RETURNING id",
+                              (ids[0],))
+                  unit_id = cur.fetchone()["id"]
+                  cur.execute("INSERT INTO moradores(condominio_id,nome,unidade_id) VALUES (%s,'CI',%s)",
+                              (ids[1], unit_id))
+              conn.commit()
+              result = subprocess.run(script, capture_output=True, text=True)
+              assert result.returncode != 0, "Preflight accepted a foreign-tenant unit"
+              assert "resident_unit_tenant_mismatch: 1" in result.stdout, result.stdout + result.stderr
+          finally:
+              if ids:
+                  with conn.cursor() as cur:
+                      cur.execute("DELETE FROM moradores WHERE condominio_id=ANY(%s)", (ids,))
+                      cur.execute("DELETE FROM unidades WHERE condominio_id=ANY(%s)", (ids,))
+                      cur.execute("DELETE FROM condominios WHERE id=ANY(%s)", (ids,))
+                  conn.commit()
+              conn.close()
+          subprocess.run(script, check=True)
           PY
