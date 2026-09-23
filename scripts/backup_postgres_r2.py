@@ -6,7 +6,8 @@ Never log connection strings, object credentials, or dump contents.
 import hashlib
 import json
 import os
-import subprocess
+import subprocess  # nosec B404 - backup job runs fixed PostgreSQL tools without a shell
+import shutil
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -45,6 +46,11 @@ def run():
         aws_secret_access_key=secret, region_name="auto",
         config=BotoConfig(retries={"max_attempts": 3, "mode": "standard"}),
     )
+    # Resolve trusted executables before invoking them; never pass user input as a command.
+    pg_dump = shutil.which("pg_dump")
+    pg_restore = shutil.which("pg_restore")
+    if not pg_dump or not pg_restore:
+        raise RuntimeError("PostgreSQL backup tools pg_dump and pg_restore are required")
     with tempfile.TemporaryDirectory(prefix="controleid-backup-") as directory:
         dump = Path(directory) / "database.dump"
         # Pass the DSN via environment rather than command arguments.
@@ -60,9 +66,9 @@ def run():
                    PGSSLMODE=params.get("sslmode", ["prefer"])[0])
         env.pop("BACKUP_DATABASE_URL", None)
         subprocess.run(
-            ["pg_dump", "--format=custom", "--no-owner", "--no-acl",
+            [pg_dump, "--format=custom", "--no-owner", "--no-acl",
              "--file", str(dump)],
-            env=env, check=True, timeout=3600, stdout=subprocess.DEVNULL,
+            env=env, check=True, timeout=3600, stdout=subprocess.DEVNULL,  # nosec B603 - fixed executable and arguments; no shell
         )
         size = dump.stat().st_size
         if size == 0:
@@ -71,7 +77,7 @@ def run():
         with dump.open("rb") as source:
             for chunk in iter(lambda: source.read(1024 * 1024), b""):
                 digest.update(chunk)
-        subprocess.run(["pg_restore", "--list", str(dump)], check=True,
+        subprocess.run([pg_restore, "--list", str(dump)], check=True,  # nosec B603 - fixed executable and arguments; no shell
                        stdout=subprocess.DEVNULL, timeout=120)
         object_key = prefix + "/database.dump"
         client.upload_file(str(dump), bucket, object_key)
