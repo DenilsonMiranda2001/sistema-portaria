@@ -13,7 +13,7 @@ def canonical_role(role):
 def load_identity():
     if session.get("is_platform_admin"):
         admin = buscar_platform_admin_por_id(session.get("usuario_id"))
-        if not admin:
+        if not admin or not admin.get("ativo"):
             session.clear()
             g.current_user = None
             g.tenant_id = None
