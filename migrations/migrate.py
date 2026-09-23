@@ -13,10 +13,12 @@ BASE_SCHEMA = MIGRATIONS_DIR.parent / "database" / "schema.sql"
 def migrate():
     conn = conectar_dedicado("sistema-portaria-migrations")
     try:
+        fresh_bootstrap = False
         with conn.cursor() as cur:
             cur.execute("SELECT pg_advisory_lock(%s)", (MIGRATION_LOCK_ID,))
             cur.execute("SELECT to_regclass('public.usuarios') AS usuarios")
             if not cur.fetchone()["usuarios"]:
+                fresh_bootstrap = True
                 cur.execute(BASE_SCHEMA.read_text(encoding="utf-8"))
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -37,7 +39,19 @@ def migrate():
                     if existing["checksum"] != checksum:
                         raise RuntimeError(f"Migration checksum mismatch: {path.name}")
                     continue
-                cur.execute(sql)
+                if fresh_bootstrap and path.name == "0019_delivery_people.sql":
+                    # The baseline already creates delivery tables and columns.
+                    # Migration 0021 reconciles its constraints without altering 0019's checksum.
+                    cur.execute("SELECT to_regclass('public.entregadores') AS entregadores")
+                    if not cur.fetchone()["entregadores"]:
+                        raise RuntimeError("Fresh baseline is missing entregadores")
+                    cur.execute("""SELECT 1 FROM information_schema.columns
+                                   WHERE table_schema='public' AND table_name='lotes_encomendas'
+                                   AND column_name='entregador_id'""")
+                    if not cur.fetchone():
+                        raise RuntimeError("Fresh baseline is missing lotes_encomendas.entregador_id")
+                else:
+                    cur.execute(sql)
                 cur.execute(
                     "INSERT INTO schema_migrations(version, checksum) VALUES (%s,%s)",
                     (path.name, checksum),
