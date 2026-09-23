@@ -683,11 +683,12 @@ def resumo_unidades():
         liberar(conn)
 
 
-def listar_auditoria_tenant(limite=100, pagina=1):
+def listar_auditoria_tenant(limite=51, pagina=1):
     tenant_id = _tenant_id()
     limite = max(1, min(int(limite or 100), 100))
     pagina = max(1, min(int(pagina or 1), 1000))
-    deslocamento = (pagina - 1) * min(limite, 50)
+    # One lookahead row is fetched by the route; page boundaries remain 50 rows.
+    deslocamento = (pagina - 1) * 50
     conn = conectar()
     try:
         with conn.cursor() as cur:
