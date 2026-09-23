@@ -1,6 +1,6 @@
 import logging
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 from psycopg2 import errors
 
 from database.entregadores import (
@@ -9,6 +9,7 @@ from database.entregadores import (
     criar_entregador,
     definir_status_entregador,
     listar_entregadores,
+    pesquisar_entregadores,
 )
 TRANSPORTADORAS = ("Shopee", "Mercado Livre", "Correios", "Amazon", "Outra")
 from utils.authz import roles_required
@@ -91,3 +92,18 @@ def status(entregador_id):
         logger.exception("Erro ao alterar status do entregador")
         flash("Não foi possível alterar o status do entregador.", "erro")
     return redirect(url_for("entregadores.listar"))
+
+
+@entregadores_bp.route("/pesquisar")
+@roles_required("admin_condominio", "administrativo", "porteiro")
+def pesquisar():
+    termo = request.args.get("q", "").strip()[:100]
+    if len(termo) < 2:
+        return jsonify({"resultados": []})
+    resultados = pesquisar_entregadores(termo)
+    return jsonify({"resultados": [
+        {"id": item["id"], "nome": item["nome"],
+         "documento_final": (item["documento"] or "")[-4:],
+         "transportadora": item["transportadora"] or ""}
+        for item in resultados
+    ]})
