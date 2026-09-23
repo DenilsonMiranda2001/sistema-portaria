@@ -683,9 +683,11 @@ def resumo_unidades():
         liberar(conn)
 
 
-def listar_auditoria_tenant(limite=200):
+def listar_auditoria_tenant(limite=100, pagina=1):
     tenant_id = _tenant_id()
-    limite = max(1, min(int(limite or 200), 500))
+    limite = max(1, min(int(limite or 100), 100))
+    pagina = max(1, min(int(pagina or 1), 1000))
+    deslocamento = (pagina - 1) * limite
     conn = conectar()
     try:
         with conn.cursor() as cur:
@@ -696,8 +698,8 @@ def listar_auditoria_tenant(limite=200):
                 LEFT JOIN usuarios u ON u.id=a.usuario_id AND u.condominio_id=a.condominio_id
                 WHERE a.condominio_id=%s
                 ORDER BY a.criado_em DESC, a.id DESC
-                LIMIT %s
-            """, (tenant_id, limite))
+                LIMIT %s OFFSET %s
+            """, (tenant_id, limite, deslocamento))
             return cur.fetchall()
     finally:
         liberar(conn)
