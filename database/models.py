@@ -172,6 +172,16 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
             if cur.fetchone():
                 conn.rollback()
                 return "existe"
+            cur.execute("SELECT nivel, ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE", (usuario_id, tenant_id))
+            alvo = cur.fetchone()
+            if not alvo:
+                conn.rollback()
+                return False
+            novo_nivel = (nivel or "porteiro").strip().lower()
+            if alvo["nivel"] == "admin_condominio" and novo_nivel != "admin_condominio" and alvo["ativo"]:
+                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin_condominio' AND ativo=TRUE", (tenant_id,))
+                if cur.fetchone()["total"] <= 1:
+                    raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
             cur.execute("""
                 UPDATE usuarios SET nome = %s, usuario = %s, nivel = %s WHERE id = %s AND condominio_id = %s
             """, (
