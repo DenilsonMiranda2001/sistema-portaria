@@ -495,3 +495,43 @@ body{font-size:14px}
 .platform-audit-feed{overflow:hidden}.platform-events{border-top:1px solid var(--line)}.platform-events article{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:52px;padding:8px 14px;border-bottom:1px solid var(--line)}.platform-events article:last-child{border-bottom:0}.platform-event-dot{width:7px;height:7px;border-radius:50%;background:var(--brand)}.platform-events strong,.platform-events small{display:block}.platform-events strong{font-size:10px}.platform-events small{margin-top:2px;color:var(--muted);font-size:8px}.platform-events time{color:var(--muted);font-size:8px;font-weight:650}
 @media(max-width:1000px){.platform-summary-wide{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.platform-summary-wide{grid-template-columns:1fr}.platform-commandbar{align-items:stretch;flex-direction:column}.platform-commandbar .platform-create{min-width:0;width:100%}}
+
+
+/* Home access workflow: compact operational layout; scoped to dashboard only. */
+.pc-reference-dashboard .pc-access-hero{padding:14px 16px}
+.pc-reference-dashboard .pc-access-hero-copy{margin-bottom:8px}
+.pc-reference-dashboard .pc-access-hero-copy h3{font-size:16px;margin:2px 0}
+.pc-reference-dashboard .pc-hero-search{min-height:42px;margin:8px 0}
+.pc-reference-dashboard .pc-search-results{min-height:0;max-height:none;overflow:visible;margin-top:8px}
+.pc-reference-dashboard .visitor-card{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:9px}
+.pc-reference-dashboard .visitor-photo-wrap{flex:0 0 40px;width:40px;height:40px}
+.pc-reference-dashboard .visitor-main{display:grid;gap:8px;min-width:0;flex:1}
+.pc-reference-dashboard .card-visitante,.pc-reference-dashboard .info-grid{min-width:0}
+.pc-reference-dashboard .info-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(120px,.7fr);gap:6px}
+.pc-reference-dashboard .info-item{padding:7px 9px;min-width:0}
+.pc-reference-dashboard .extras-grid{display:flex;flex-wrap:wrap;gap:5px}
+.pc-reference-dashboard .extras-grid .extra-card{display:flex;align-items:center;gap:6px;min-width:0;padding:4px 7px;border:0;background:var(--surface-2)}
+.pc-reference-dashboard .extras-grid .label-ui{margin:0;white-space:nowrap}
+.pc-reference-dashboard .extras-grid .badge-ui{min-height:0;padding:0;border:0;background:transparent;overflow-wrap:anywhere}
+.pc-reference-dashboard .linha-dupla{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px;align-items:start}
+.pc-reference-dashboard .linha-dupla>.extra-card{min-width:0;padding:8px}
+.pc-reference-dashboard .home-entry-vehicle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:5px}
+.pc-reference-dashboard .home-entry-vehicle[hidden]{display:none}
+.pc-reference-dashboard .home-entry-vehicle .input-padrao{min-width:0}
+.pc-reference-dashboard .home-entry-destination{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+.pc-reference-dashboard .home-entry-destination .btn-principal{min-height:38px}
+.pc-reference-dashboard .home-entry-destination .btn-principal:disabled{opacity:.65;cursor:wait}
+.pc-reference-dashboard .home-last-destination{display:block;max-width:100%;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.pc-reference-dashboard .visitor-card .input-padrao{min-height:38px;padding:7px 9px}
+@media(max-width:1100px){
+ .pc-reference-dashboard .linha-dupla{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+ .pc-reference-dashboard .visitor-card{gap:7px;padding:9px}
+ .pc-reference-dashboard .visitor-photo-wrap{flex-basis:34px;width:34px;height:34px}
+ .pc-reference-dashboard .info-grid{grid-template-columns:1fr}
+ .pc-reference-dashboard .home-entry-destination{grid-template-columns:1fr}
+ .pc-reference-dashboard .home-entry-destination .btn-principal{width:100%}
+ .pc-reference-dashboard .home-entry-vehicle{grid-template-columns:1fr 1fr}
+ .pc-reference-dashboard .home-entry-vehicle input:last-child{grid-column:1/-1}
+}
