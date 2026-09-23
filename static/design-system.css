@@ -530,3 +530,19 @@ body{font-size:14px}
 .app-shell select:focus-visible,.platform-shell select:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .app-shell select:disabled,.platform-shell select:disabled{background-color:var(--surface-2);color:var(--muted);cursor:not-allowed}
 .app-shell input:-webkit-autofill,.app-shell input:-webkit-autofill:hover,.app-shell input:-webkit-autofill:focus{-webkit-text-fill-color:var(--ink);-webkit-box-shadow:0 0 0 1000px #fff inset;transition:background-color 9999s}
+
+/* Home lookup card — explicit layout, no inherited legacy flex columns */
+.pc-reference-dashboard .visitor-card{display:grid;grid-template-columns:56px minmax(0,1fr);align-items:start;gap:12px;padding:12px}
+.pc-reference-dashboard .visitor-photo-wrap{width:56px;height:64px;overflow:hidden}
+.pc-reference-dashboard .visitor-main{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch;gap:10px;width:100%}
+.pc-reference-dashboard .card-visitante{display:block;width:100%}
+.pc-reference-dashboard .info-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px}
+.pc-reference-dashboard .extras-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pc-reference-dashboard .linha-dupla{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:8px;width:100%}
+.pc-reference-dashboard .linha-dupla>.extra-card{height:100%}
+.pc-reference-dashboard .home-entry-vehicle{display:grid;gap:6px}
+.pc-reference-dashboard .home-entry-destination{display:grid;gap:7px}
+.pc-reference-dashboard .home-entry-destination>.btn-principal{width:100%}
+.pc-reference-dashboard .visitor-card .label-ui{display:block;margin-bottom:4px}
+.pc-reference-dashboard .visitor-card .valor-ui,.pc-reference-dashboard .visitor-card .badge-ui{overflow-wrap:anywhere}
+@media(max-width:760px){.pc-reference-dashboard .visitor-card{grid-template-columns:1fr}.pc-reference-dashboard .visitor-photo-wrap{width:52px;height:52px}.pc-reference-dashboard .extras-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pc-reference-dashboard .linha-dupla{grid-template-columns:1fr}.pc-reference-dashboard .info-grid{grid-template-columns:1fr}}
