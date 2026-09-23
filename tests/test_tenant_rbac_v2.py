@@ -77,3 +77,16 @@ def test_platform_provisioning_requires_first_tenant_admin():
     assert "Cadastre primeiro um administrador do condomínio." in section
     assert "FOR UPDATE" in section
     assert 'flash("Perfil de usuário inválido.", "erro")' in route
+
+
+def test_tenant_audit_pages_are_bounded_and_scoped():
+    models = Path("database/models.py").read_text(encoding="utf-8")
+    route = Path("routes/admin.py").read_text(encoding="utf-8")
+    template = Path("templates/auditoria.html").read_text(encoding="utf-8")
+    section = models[models.index("def listar_auditoria_tenant("):models.index("# VISITANTES")]
+    assert "WHERE a.condominio_id=%s" in section
+    assert "LIMIT %s OFFSET %s" in section
+    assert "deslocamento = (pagina - 1) * 50" in section
+    assert "listar_auditoria_tenant(51, pagina=pagina)" in route
+    assert "eventos=eventos[:50]" in route
+    assert "tem_proxima" in template
