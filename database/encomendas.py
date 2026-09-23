@@ -165,7 +165,7 @@ def adicionar_encomenda(lote_id, morador_id, unidade, nome_morador,
                 unidade_id = morador["unidade_id"]
                 telefone = morador["telefone"]
 
-            cur.execute("SELECT 1 FROM lotes_encomendas WHERE id = %s AND condominio_id = %s AND status IN ('aberto','em_triagem')", (lote_id, tenant_id))
+            cur.execute("SELECT 1 FROM lotes_encomendas WHERE id = %s AND condominio_id = %s AND status IN ('aberto','em_triagem') FOR UPDATE", (lote_id, tenant_id))
             if not cur.fetchone():
                 raise ValueError("Lote não encontrado ou já encerrado.")
 
