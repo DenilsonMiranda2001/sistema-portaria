@@ -42,3 +42,14 @@ The authorization layer temporarily canonicalizes the legacy values so rolling d
 ## Future evolution
 
 If a future management company needs one human identity across multiple condominiums, introduce a dedicated membership relation rather than overloading `usuarios.condominio_id`. That migration should be performed as a separate identity-model change with explicit data migration and authorization tests.
+
+## Release gate
+
+1. Verify a recoverable PostgreSQL backup before any production migration.
+2. Run migration 0020 on a database clone with representative existing `admin` and `funcionario` accounts. Verify their role conversion and the checksum recorded in `schema_migrations`.
+3. Verify a new installation uses the same role constraint as the upgraded database.
+4. Exercise authenticated tenant and platform sessions, cross-tenant URL attempts, admin demotion, deactivation and simultaneous last-admin mutations.
+5. Confirm tenant audit events, user creation, password reset and operational routes remain functional.
+6. Merge only after CI and staging checks; deploy with rollback and recovery plan. The migration is forward-only; reverting application code without a compatible role strategy is not a safe rollback.
+
+Tenant administrator demotion and deactivation acquire a lock on the condominium row before checking the last-active-admin invariant; the platform-side deactivation path takes the same lock.
