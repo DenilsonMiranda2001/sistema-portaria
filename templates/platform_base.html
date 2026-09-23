@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ global_csrf_token() }}">
-  <title>{% block title %}Administração Geral | Portaria Control{% endblock %}</title>
+  <title>{% block title %}Administração Geral | ControleID{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css', v='select-v2') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}">
 </head>
 <body class="platform-body">
 <div class="platform-shell">
 <header class="platform-topbar">
-  <a class="platform-brand" href="{{ url_for('platform_admin.condominios') }}"><span class="platform-brand-mark">PC</span><span><strong>Portaria Control</strong><small>Control Plane</small></span></a>
+  <a class="platform-brand" href="{{ url_for('platform_admin.condominios') }}"><img class="controleid-platform-icon" src="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}" width="34" height="34" alt=""><span><strong>Controle<span class="controleid-accent">ID</span></strong><small>Control Plane</small></span></a>
   <span class="platform-environment">ADMINISTRAÇÃO DA PLATAFORMA</span>
   <div class="platform-account"><span><strong>{{ session.get("usuario_nome", "Administrador") }}</strong><small>Admin geral</small></span><form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button type="submit">Sair</button></form></div>
 </header>
