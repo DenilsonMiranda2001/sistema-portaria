@@ -90,3 +90,15 @@ def test_tenant_audit_pages_are_bounded_and_scoped():
     assert "listar_auditoria_tenant(51, pagina=pagina)" in route
     assert "eventos=eventos[:50]" in route
     assert "tem_proxima" in template
+
+
+def test_platform_tenant_audit_only_exposes_control_plane_events():
+    platform = Path("database/platform.py").read_text(encoding="utf-8")
+    route = Path("routes/platform_admin.py").read_text(encoding="utf-8")
+    template = Path("templates/platform_condominio_detalhe.html").read_text(encoding="utf-8")
+    section = platform[platform.index("def listar_auditoria_plataforma_tenant("):platform.index("def atualizar_condominio(")]
+    assert "a.condominio_id=%s AND a.actor_tipo='platform_admin'" in section
+    assert "a.detalhes" not in section
+    assert "LIMIT %s" in section
+    assert "listar_auditoria_plataforma_tenant(condominio_id)" in route
+    assert "eventos_administrativos" in template
