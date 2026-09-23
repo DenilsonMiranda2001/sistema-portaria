@@ -125,3 +125,19 @@ def test_tenant_operator_cannot_use_platform_status_route(app):
         from werkzeug.exceptions import Forbidden
         with pytest.raises(Forbidden):
             platform_admin.status_condominio(7)
+
+
+def test_tenant_user_creation_rejects_unknown_role_before_database_call(app, monkeypatch):
+    from routes import admin
+    app.register_blueprint(admin.admin_bp)
+    calls = []
+    monkeypatch.setattr(admin, "criar_usuario", lambda *args: calls.append(args))
+    with app.test_request_context("/usuarios", method="POST", data={
+        "nome": "Operador", "usuario": "operador", "senha": "senha-teste-12345", "tipo": "superuser",
+    }):
+        g.current_user = {"id": 2, "nivel": "admin_condominio"}
+        session["usuario_id"] = 2
+        response = admin.usuarios()
+        assert response.status_code == 302
+        assert response.location.endswith("/usuarios")
+    assert calls == []
