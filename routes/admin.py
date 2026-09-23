@@ -98,6 +98,9 @@ def editar_usuario(id):
         if resultado == "existe":
             flash("Já existe outro usuário com esse login.", "erro")
             return redirect(url_for("admin.editar_usuario", id=id))
+        if not resultado:
+            flash("Usuário não encontrado neste condomínio.", "erro")
+            return redirect(url_for("admin.usuarios"))
 
         flash("Usuário atualizado com sucesso!", "sucesso")
         return redirect(url_for("admin.usuarios"))
