@@ -17,7 +17,7 @@ from database.encomendas import (
     resumo_painel,
 )
 from database.models import listar_moradores
-from database.entregadores import listar_entregadores, criar_entregador
+from database.entregadores import buscar_entregador, criar_entregador
 from utils.audit import registrar_auditoria
 from utils.authz import roles_required
 
@@ -130,11 +130,13 @@ def novo_lote():
             logger.exception("Erro ao criar lote de encomendas")
             flash("Não foi possível criar o lote.", "erro")
             return redirect(url_for("encomendas.novo_lote"))
-    entregador_selecionado = request.args.get("entregador_id", type=int)
+    entregador_id = request.args.get("entregador_id", type=int)
+    entregador_selecionado = buscar_entregador(entregador_id) if entregador_id else None
+    if entregador_selecionado and not entregador_selecionado["ativo"]:
+        entregador_selecionado = None
     return render_template(
         "encomendas/novo_lote.html",
         transportadoras=TRANSPORTADORAS,
-        entregadores=listar_entregadores(apenas_ativos=True),
         entregador_selecionado=entregador_selecionado,
     )
 
