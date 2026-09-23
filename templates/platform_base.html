@@ -16,4 +16,5 @@
 <main class="platform-main">
 {% with messages = get_flashed_messages(with_categories=true) %}{% for categoria, msg in messages %}<div class="platform-alert platform-alert-{{ categoria }}" role="alert"><span>{{ msg }}</span></div>{% endfor %}{% endwith %}
 {% block content %}{% endblock %}
-</main></div></body></html>
+</main></div><script src="{{ url_for('static', filename='select-system.js') }}" defer></script>
+</body></html>
