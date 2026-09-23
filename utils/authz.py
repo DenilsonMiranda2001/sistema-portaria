@@ -33,6 +33,11 @@ def load_identity():
         g.tenant_id = None
         return
     user["nivel"] = canonical_role(user.get("nivel"))
+    if user["nivel"] not in TENANT_ROLES or not user.get("condominio_id"):
+        session.clear()
+        g.current_user = None
+        g.tenant_id = None
+        return
     g.current_user = user
     g.tenant_id = user.get("condominio_id")
 
