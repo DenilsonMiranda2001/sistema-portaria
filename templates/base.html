@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ global_csrf_token() }}">
     <title>{% block title %}Portaria Control{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css', v='select-v2') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js" defer></script>
@@ -102,6 +102,6 @@
     })();
     </script>
 
-<script src="{{ url_for('static', filename='select-system.js') }}" defer></script>
+<script src="{{ url_for('static', filename='select-system.js', v='select-v2') }}" defer></script>
 </body>
 </html>
