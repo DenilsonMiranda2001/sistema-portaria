@@ -34,7 +34,7 @@ PR #5 remains draft and production remains unchanged until staging and recoverab
 ## Candidate validation added to the quality gate
 
 - `scripts/ci_authenticated_smoke.py` exercises real login, tenant session identity, foreign-tenant visitor/parcel access, a denied foreign-tenant mutation, role separation and session revocation on a disposable PostgreSQL database.
-- `scripts/isolated_release_preflight.py` performs read-only role, tenant association, active-administrator and foreign-key checks. It refuses to run unless `APP_ENV=test|staging`, `ALLOW_ISOLATED_PREFLIGHT=yes` and an explicit database URL are supplied. Its database-name guard is a secondary safeguard, **not** a substitute for verifying the actual staging connection.
+- `scripts/isolated_release_preflight.py` performs read-only role, tenant association, active-administrator and foreign-key checks. It refuses to run unless `APP_ENV=test|staging`, `ALLOW_ISOLATED_PREFLIGHT=yes`, an explicit database URL and `EXPECTED_ISOLATED_DATABASE` matching the connected database are supplied. It also compares all migration versions and SHA-256 checksums with the candidate source. Its database-name guard is a secondary safeguard, **not** a substitute for verifying the actual staging connection.
 - Both scripts run after the PostgreSQL migration tests. A green run validates the isolated CI dataset only. Repeat the preflight on a representative isolated restored/sanitized staging dataset before production release.
 
 ## Deployment preparation (not execution)
@@ -44,3 +44,7 @@ PR #5 remains draft and production remains unchanged until staging and recoverab
 3. After migrating staging, run the authenticated smoke and preflight. Verify that role conversion and tenant relationships preserved the expected records.
 4. Before production merge, require a proven restore and a recovery decision for forward-only role migration. An application rollback alone may be incompatible with migrated roles.
 5. On deployment, verify migration logs, readiness, deployed commit, login for each role, foreign-tenant denials and parcel/visitor flows. Halt further changes on any failed gate.
+
+## Current CI hardening
+
+The disposable PostgreSQL authenticated smoke covers successful visitor entry/exit and parcel creation, plus rejection of foreign-tenant visitor entry and parcel creation. The isolated preflight requires an exact expected database name and checks every applied migration checksum against the candidate files. These safeguards do not establish that a production backup or staging restore exists.
