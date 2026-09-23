@@ -2,6 +2,13 @@ from functools import wraps
 from flask import abort, g, redirect, session, url_for
 from database.models import buscar_usuario_por_id, buscar_platform_admin_por_id
 
+TENANT_ROLES = {"admin_condominio", "administrativo", "porteiro"}
+ROLE_ALIASES = {"admin": "admin_condominio", "funcionario": "porteiro"}
+
+
+def canonical_role(role):
+    return ROLE_ALIASES.get(role, role)
+
 
 def load_identity():
     if session.get("is_platform_admin"):
@@ -25,6 +32,7 @@ def load_identity():
         g.current_user = None
         g.tenant_id = None
         return
+    user["nivel"] = canonical_role(user.get("nivel"))
     g.current_user = user
     g.tenant_id = user.get("condominio_id")
 
@@ -46,7 +54,7 @@ def roles_required(*roles):
             user = getattr(g, "current_user", None)
             if not user:
                 return redirect(url_for("auth.login"))
-            if user.get("nivel") not in allowed:
+            if canonical_role(user.get("nivel")) not in {canonical_role(role) for role in allowed}:
                 abort(403)
             return view(*args, **kwargs)
         return wrapped
