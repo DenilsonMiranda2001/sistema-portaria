@@ -82,8 +82,13 @@ def main():
         assert sess["condominio_id"] == tenants[0]
         assert sess["usuario_tipo"] == "admin_condominio"
 
+    assert_status(client.get(f"/historico/{visitors[0]}"), 200, "own visitor history")
+    assert_status(client.get(f"/encomendas/lotes/{lots[0]}"), 200, "own parcel lot")
     assert_status(client.get(f"/foto/{visitors[1]}"), 404, "foreign visitor photo")
     assert_status(client.get(f"/historico/{visitors[1]}"), 302, "foreign visitor history")
+    foreign_lot_response = client.get(f"/encomendas/lotes/{lots[1]}")
+    assert_status(foreign_lot_response, 302, "foreign parcel lot")
+    assert "/encomendas/lotes" in foreign_lot_response.headers["Location"]
     assert_status(client.get(f"/encomendas/lotes/{lots[1]}"), 302, "foreign parcel lot")
     assert_status(client.post(f"/encomendas/lotes/{lots[1]}/status",
                               data={"status": "concluido"}), 302, "foreign lot mutation")
