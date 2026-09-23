@@ -58,7 +58,7 @@ def _adicionar_links_whatsapp(encomendas):
 
 
 @encomendas_bp.route("/")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def painel():
     filtro = request.args.get("filtro", "hoje")
     termo = request.args.get("q", "").strip()
@@ -79,13 +79,13 @@ def painel():
 
 
 @encomendas_bp.route("/lotes")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def lotes():
     return render_template("encomendas/lotes.html", lotes=listar_lotes())
 
 
 @encomendas_bp.route("/lotes/novo", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def novo_lote():
     if request.method == "POST":
         transportadora = request.form.get("transportadora", "").strip()
@@ -116,7 +116,7 @@ def novo_lote():
 
 
 @encomendas_bp.route("/lotes/<int:lote_id>", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def lote_detalhe(lote_id):
     lote = buscar_lote(lote_id)
     if not lote:
@@ -154,7 +154,7 @@ def lote_detalhe(lote_id):
 
 
 @encomendas_bp.route("/lotes/<int:lote_id>/status", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def status_lote(lote_id):
     status = request.form.get("status", "")
     try:
@@ -169,7 +169,7 @@ def status_lote(lote_id):
 
 
 @encomendas_bp.route("/<int:encomenda_id>/status", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def status_encomenda(encomenda_id):
     encomenda = buscar_encomenda(encomenda_id)
     if not encomenda:
@@ -195,7 +195,7 @@ def status_encomenda(encomenda_id):
 
 
 @encomendas_bp.route("/retidas")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def retidas():
     termo = request.args.get("q", "").strip()
     dados = listar_encomendas("retidas", termo)
@@ -207,7 +207,7 @@ def retidas():
 
 
 @encomendas_bp.route("/historico")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def historico():
     termo = request.args.get("q", "").strip()
     dados = listar_encomendas("historico", termo)
