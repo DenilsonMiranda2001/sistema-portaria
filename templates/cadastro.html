@@ -10,7 +10,7 @@
 <label class="pc-field pc-span-2"><span>Nome completo *</span><input type="text" name="nome" id="nome" required autofocus></label>
 <label class="pc-field"><span>CPF *</span><input type="text" name="cpf" id="cpf" value="{{ cpf_pre or '' }}" required></label>
 <label class="pc-field"><span>Tipo</span><div class="campo-autocomplete"><input type="text" name="tipo" id="tipo" placeholder="Visitante, entregador..."><div id="sugestoes_tipo" class="caixa-sugestoes"></div></div></label>
-<label class="pc-field pc-span-2"><span>Endereço</span><input type="text" name="endereco" id="endereco" placeholder="Endereço do visitante" autocomplete="off"><small id="sugestao-endereco"></small></label>
+<label class="pc-field pc-span-2"><span>Destino no condomínio</span><input type="text" name="endereco" id="endereco" placeholder="Unidade, bloco ou endereço de destino" autocomplete="off"><small id="sugestao-endereco"></small></label>
 <label class="pc-field pc-span-2"><span>Observação</span><input name="observacao" id="observacao" placeholder="Informação permanente do cadastro"></label>
 </div></section>
 <section class="pc-panel pc-form-section"><div class="pc-form-heading"><span>02</span><div><strong>Veículo</strong><small>Opcional</small></div></div><div class="pc-form-grid pc-form-grid-3">
@@ -20,7 +20,7 @@
 </div></section>
 </main>
 <aside class="pc-panel pc-photo-panel"><div class="pc-form-heading"><span>03</span><div><strong>Foto de identificação</strong><small>Câmera ou arquivo</small></div></div>
-<div class="pc-photo-stage"><div id="camera-container" class="camera-box" hidden><video id="video" autoplay playsinline></video></div><div id="preview-container" class="preview-box" hidden><img id="preview-foto" alt="Prévia da foto"></div><div class="photo-placeholder"><span>◎</span><strong>Sem foto</strong><small>Adicione uma imagem para facilitar a identificação.</small></div></div>
+<div class="pc-photo-stage"><div id="camera-container" class="camera-box" style="display:none"><video id="video" autoplay playsinline></video></div><div id="preview-container" class="preview-box" style="display:none"><img id="preview-foto" alt="Prévia da foto"></div><div class="photo-placeholder"><span>◎</span><strong>Sem foto</strong><small>Adicione uma imagem para facilitar a identificação.</small></div></div>
 <canvas id="canvas" style="display:none"></canvas><input type="hidden" name="foto_webcam" id="foto_webcam">
 <div class="pc-photo-actions"><button type="button" class="pc-btn pc-btn-primary" id="btnAbrirCamera">Abrir câmera</button><button type="button" class="pc-btn pc-btn-secondary" id="btnCapturar" style="display:none">Capturar</button><button type="button" class="pc-btn pc-btn-secondary" id="btnFecharCamera" style="display:none">Fechar</button><button type="button" class="pc-btn pc-btn-secondary" id="btnNovaFoto" style="display:none">Refazer</button></div>
 <label class="pc-file-field"><span>Enviar arquivo</span><input type="file" name="foto" id="foto" accept=".jpg,.jpeg,.png,.webp,image/*"></label>
