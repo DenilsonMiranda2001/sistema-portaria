@@ -612,3 +612,38 @@ body{font-size:14px}
 .pc-select-option:hover,.pc-select-option.is-active{background:var(--surface-3);color:var(--ink)}
 .pc-select-option.is-selected{background:var(--brand-soft);color:var(--brand-ink);font-weight:700}
 .pc-select-option:disabled{opacity:.4;cursor:not-allowed}
+
+/* Residents directory — operational SaaS layout, scoped to residents only. */
+.pc-residents-directory{gap:18px}
+.pc-residents-head{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:7px 2px 2px}
+.pc-residents-eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--brand);font-size:10px;font-weight:800;letter-spacing:.12em}
+.pc-residents-eyebrow i{width:4px;height:4px;border-radius:50%;background:var(--line-strong)}
+.pc-residents-head h2{margin:8px 0 3px;font-size:30px;letter-spacing:-.045em;line-height:1.1}
+.pc-residents-head p{margin:0;color:var(--muted);font-size:12px}
+.pc-residents-add{min-height:43px;padding:0 17px;font-size:12px;border-radius:8px}
+.pc-residents-add span{font-size:19px;font-weight:400;line-height:1}
+.pc-residents-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pc-residents-overview>div{position:relative;min-width:0;padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-md);background:#fff;box-shadow:var(--shadow-1)}
+.pc-residents-overview>div:before{content:"";position:absolute;top:18px;right:18px;width:8px;height:8px;border-radius:50%;background:var(--brand-soft);box-shadow:0 0 0 1px #c4dbde}
+.pc-residents-overview>div:nth-child(2):before{background:var(--success-soft);box-shadow:0 0 0 1px #b7dcc9}
+.pc-residents-overview>div>span,.pc-residents-overview>div>small{display:block;color:var(--muted);font-size:11px}
+.pc-residents-overview>div>span{font-weight:700}.pc-residents-overview strong{display:block;margin:6px 0 3px;font-size:30px;line-height:1.15;letter-spacing:-.05em;color:var(--ink)}
+.pc-residents-directory .pc-list-panel{border-radius:12px}
+.pc-residents-directory .pc-list-toolbar{gap:20px;padding:19px 20px;background:#fff}
+.pc-residents-directory .pc-list-title{display:grid;gap:3px}
+.pc-residents-directory .pc-list-title strong{font-size:14px;color:var(--ink)}
+.pc-residents-directory .pc-list-title small{font-size:11px;color:var(--muted)}
+.pc-residents-directory .pc-toolbar-search{gap:9px}
+.pc-residents-directory .pc-search-compact{min-width:min(360px,40vw)}
+.pc-residents-directory .pc-table th{padding:14px 18px;background:#f8fafb;font-size:10px;letter-spacing:.065em}
+.pc-residents-directory .pc-table td{padding:16px 18px;font-size:12px;vertical-align:middle}
+.pc-residents-directory .pc-table tbody tr{transition:background .15s}
+.pc-residents-directory .pc-table tbody tr:hover{background:#f6fafb}
+.pc-residents-directory .pc-person-link strong{font-size:12px;line-height:1.3}
+.pc-residents-directory .pc-avatar{width:39px;height:39px;border-radius:10px;font-size:12px}
+.pc-residents-directory .pc-unit{font-size:11px;padding:6px 9px;border-radius:6px}
+.pc-residents-directory .pc-status{font-size:10px;padding:6px 10px;border-radius:6px}
+.pc-residents-directory .pc-row-actions{justify-content:flex-end;flex-wrap:nowrap}
+.pc-residents-directory .pc-icon-action{min-height:34px;padding:0 10px;font-size:10px}
+@media(max-width:1050px){.pc-residents-directory .pc-list-toolbar{align-items:stretch;flex-direction:column}.pc-residents-directory .pc-toolbar-search{width:100%}.pc-residents-directory .pc-search-compact{flex:1;min-width:0}.pc-residents-directory .pc-table{min-width:930px}}
+@media(max-width:700px){.pc-residents-directory{gap:13px}.pc-residents-head{align-items:flex-start;flex-direction:column;gap:14px}.pc-residents-head h2{font-size:26px}.pc-residents-add{width:100%}.pc-residents-overview{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.pc-residents-overview>div{padding:12px 10px}.pc-residents-overview>div:before{display:none}.pc-residents-overview>div>span,.pc-residents-overview>div>small{font-size:9px}.pc-residents-overview strong{font-size:23px}.pc-residents-directory .pc-list-toolbar{padding:14px}.pc-residents-directory .pc-toolbar-search{flex-wrap:wrap}.pc-residents-directory .pc-search-compact{flex-basis:100%}.pc-residents-directory .pc-toolbar-search>.pc-btn{flex:1}.pc-residents-directory .pc-table-wrap{overflow:visible}.pc-residents-directory .pc-table,.pc-residents-directory .pc-table tbody{display:block;min-width:0}.pc-residents-directory .pc-table thead{display:none}.pc-residents-directory .pc-table tr{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;border-bottom:1px solid var(--line)}.pc-residents-directory .pc-table td{display:grid;align-content:start;gap:5px;min-width:0;padding:0;border:0;font-size:11px}.pc-residents-directory .pc-table td:before{content:attr(data-label);color:var(--muted);font-size:9px;font-weight:750;letter-spacing:.04em;text-transform:uppercase}.pc-residents-directory .pc-table td:first-child,.pc-residents-directory .pc-table td:last-child{grid-column:1/-1}.pc-residents-directory .pc-table td:first-child:before{display:none}.pc-residents-directory .pc-table td:last-child{padding-top:9px;border-top:1px solid var(--line)}.pc-residents-directory .pc-row-actions{justify-content:flex-start;flex-wrap:wrap}}
