@@ -211,3 +211,8 @@ jobs:
 
       - name: Authenticated tenant isolation and RBAC smoke on disposable PostgreSQL
         run: python scripts/ci_authenticated_smoke.py
+
+      - name: Read-only tenant integrity preflight on isolated PostgreSQL
+        env:
+          ALLOW_ISOLATED_PREFLIGHT: 'yes'
+        run: python scripts/isolated_release_preflight.py
