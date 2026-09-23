@@ -1,6 +1,5 @@
 -- Tenant RBAC v2. The platform control plane remains in platform_admins.
--- A single transaction ensures legacy values are converted before the new constraint is validated.
-BEGIN;
+-- The migration runner owns the transaction, including schema_migrations bookkeeping.
 
 ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS usuarios_nivel_check;
 
@@ -25,4 +24,3 @@ ALTER TABLE usuarios
 CREATE INDEX IF NOT EXISTS idx_usuarios_tenant_role_active
     ON usuarios(condominio_id, nivel, ativo);
 
-COMMIT;
