@@ -119,6 +119,15 @@ def main():
         with conn.cursor() as cur:
             cur.execute("SELECT status FROM lotes_encomendas WHERE id=%s", (lots[1],))
             assert cur.fetchone()["status"] == "aberto", "Cross-tenant lot was modified"
+            cur.execute("SELECT nome, usuario, nivel, ativo, senha FROM usuarios WHERE id=%s",
+                        (users[1],))
+            foreign_user = cur.fetchone()
+            assert foreign_user["nome"] == "Admin b", foreign_user
+            assert foreign_user["usuario"] == f"smoke-b-{suffix}", foreign_user
+            assert foreign_user["nivel"] == "admin_condominio", foreign_user
+            assert foreign_user["ativo"] is True, foreign_user
+            from werkzeug.security import check_password_hash
+            assert check_password_hash(foreign_user["senha"], password), "Foreign tenant password was changed"
     finally:
         conn.close()
 
