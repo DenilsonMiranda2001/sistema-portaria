@@ -94,6 +94,15 @@ def main():
                               data={"status": "concluido"}), 302, "foreign lot mutation")
     assert_status(client.get("/usuarios"), 200, "tenant admin user management")
 
+    # Stale or forged session tenant/role fields must not override database identity.
+    with client.session_transaction() as sess:
+        sess["condominio_id"] = tenants[1]
+        sess["usuario_tipo"] = "platform_admin"
+        sess["is_platform_admin"] = False
+    assert_status(client.get("/usuarios"), 200, "database-backed admin identity despite stale session")
+    assert_status(client.get(f"/encomendas/lotes/{lots[1]}"), 302,
+                  "forged session tenant cannot access foreign lot")
+
     conn = conectar_dedicado("ci-smoke-check")
     try:
         with conn.cursor() as cur:
