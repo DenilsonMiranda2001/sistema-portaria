@@ -1,0 +1,12 @@
+# Dedicated one-shot backup job. PostgreSQL client major matches Railway PostgreSQL 18.
+FROM postgres:18
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-venv ca-certificates \
+    && python3 -m venv /opt/backup-venv \
+    && /opt/backup-venv/bin/pip install --no-cache-dir boto3==1.40.39 \
+    && rm -rf /var/lib/apt/lists/*
+ENV PATH="/opt/backup-venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1
+WORKDIR /backup
+COPY scripts/backup_postgres_r2.py /backup/backup_postgres_r2.py
+USER postgres
+CMD ["python", "/backup/backup_postgres_r2.py"]
