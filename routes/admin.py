@@ -175,4 +175,9 @@ def alterar_senha_usuario(id):
 @admin_bp.route("/auditoria")
 @roles_required("admin_condominio")
 def auditoria():
-    return render_template("auditoria.html", eventos=listar_auditoria_tenant(250))
+    try:
+        pagina = max(1, min(int(request.args.get("pagina", "1")), 1000))
+    except (TypeError, ValueError):
+        pagina = 1
+    eventos = listar_auditoria_tenant(51, pagina=pagina)
+    return render_template("auditoria.html", eventos=eventos[:50], pagina=pagina, tem_proxima=len(eventos) > 50)
