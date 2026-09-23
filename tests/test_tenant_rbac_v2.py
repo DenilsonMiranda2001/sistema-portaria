@@ -66,3 +66,14 @@ def test_rbac_migration_does_not_commit_before_checksum_record():
     assert "INSERT INTO schema_migrations(version, checksum)" in runner
     assert runner.index("cur.execute(sql)") < runner.index("INSERT INTO schema_migrations(version, checksum)")
     assert runner.index("INSERT INTO schema_migrations(version, checksum)") < runner.index("conn.commit()", runner.index("cur.execute(sql)"))
+
+
+def test_platform_provisioning_requires_first_tenant_admin():
+    platform = Path("database/platform.py").read_text(encoding="utf-8")
+    route = Path("routes/platform_admin.py").read_text(encoding="utf-8")
+    section = platform[platform.index("def criar_usuario_tenant("):]
+    assert 'if nivel not in ("admin_condominio", "administrativo", "porteiro"):' in section
+    assert 'if cur.fetchone()["total"] == 0 and nivel != "admin_condominio":' in section
+    assert "Cadastre primeiro um administrador do condomínio." in section
+    assert "FOR UPDATE" in section
+    assert 'flash("Perfil de usuário inválido.", "erro")' in route
