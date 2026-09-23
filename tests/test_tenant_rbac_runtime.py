@@ -185,7 +185,9 @@ def test_login_rejects_invalid_tenant_identity_without_session(app, monkeypatch,
 
 def test_login_canonicalizes_legacy_tenant_role(app, monkeypatch):
     from routes import auth
+    from routes.main import main_bp
     app.register_blueprint(auth.auth_bp)
+    app.register_blueprint(main_bp)
     monkeypatch.setattr(auth, "_login_rate_limited", lambda: False)
     monkeypatch.setattr(auth, "_clear_login_failures", lambda: None)
     monkeypatch.setattr(auth, "buscar_platform_admin", lambda login: None)
