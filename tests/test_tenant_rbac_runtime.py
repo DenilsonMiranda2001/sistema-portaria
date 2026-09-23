@@ -81,3 +81,17 @@ def test_platform_identity_does_not_inherit_tenant_context(app, monkeypatch):
         authz.load_identity()
         assert g.current_user["nivel"] == "platform_admin"
         assert g.tenant_id is None
+
+
+def test_inactive_platform_admin_session_is_revoked(app, monkeypatch):
+    monkeypatch.setattr(authz, "buscar_platform_admin_por_id", lambda user_id: {
+        "id": user_id, "nome": "Admin", "ativo": False,
+    })
+    with app.test_request_context("/"):
+        session["usuario_id"] = 5
+        session["is_platform_admin"] = True
+        authz.load_identity()
+        assert g.current_user is None
+        assert g.tenant_id is None
+        assert "usuario_id" not in session
+        assert "is_platform_admin" not in session
