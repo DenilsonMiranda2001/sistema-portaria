@@ -248,3 +248,17 @@ def test_authenticated_tenant_identity_includes_condominium_name_for_header():
     assert 'g.current_user.get("condominio_nome", "Condomínio")' in base
     assert 'g.current_user.get("nivel") == "admin_condominio"' in base
     assert 'g.current_user.get("nivel") == "administrativo"' in base
+
+
+def test_visitor_forms_share_layout_and_destination_semantics():
+    registration = Path("templates/cadastro.html").read_text(encoding="utf-8")
+    editing = Path("templates/editar.html").read_text(encoding="utf-8")
+    for template in (registration, editing):
+        assert 'class="pc-form-shell"' in template
+        assert 'class="pc-form-main"' in template
+        assert 'class="pc-field pc-span-2"' in template
+        assert "Destino no condomínio" in template
+        assert "Endereço do visitante" not in template
+        assert 'class="camera-box" style="display:none"' in template
+        assert 'class="preview-box" style="display:none"' in template
+    assert 'class="pc-form-grid pc-form-grid-3"' in editing
