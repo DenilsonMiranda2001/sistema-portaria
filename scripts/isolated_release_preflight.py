@@ -21,9 +21,21 @@ CHECKS = {
     "visitor_tenant_mismatch": """SELECT COUNT(*) AS n FROM visitas vi
         JOIN visitantes v ON v.id=vi.visitante_id
         WHERE vi.condominio_id IS DISTINCT FROM v.condominio_id""",
+    "visit_entry_user_tenant_mismatch": """SELECT COUNT(*) AS n FROM visitas vi
+        JOIN usuarios u ON u.id=vi.usuario_entrada_id
+        WHERE vi.condominio_id IS DISTINCT FROM u.condominio_id""",
+    "visit_exit_user_tenant_mismatch": """SELECT COUNT(*) AS n FROM visitas vi
+        JOIN usuarios u ON u.id=vi.usuario_saida_id
+        WHERE vi.condominio_id IS DISTINCT FROM u.condominio_id""",
     "parcel_lot_tenant_mismatch": """SELECT COUNT(*) AS n FROM encomendas e
         JOIN lotes_encomendas l ON l.id=e.lote_id
         WHERE e.condominio_id IS DISTINCT FROM l.condominio_id""",
+    "parcel_resident_tenant_mismatch": """SELECT COUNT(*) AS n FROM encomendas e
+        JOIN moradores m ON m.id=e.morador_id
+        WHERE e.condominio_id IS DISTINCT FROM m.condominio_id""",
+    "parcel_creator_tenant_mismatch": """SELECT COUNT(*) AS n FROM encomendas e
+        JOIN usuarios u ON u.id=e.usuario_criacao_id
+        WHERE e.condominio_id IS DISTINCT FROM u.condominio_id""",
     "courier_lot_tenant_mismatch": """SELECT COUNT(*) AS n FROM lotes_encomendas l
         JOIN entregadores e ON e.id=l.entregador_id
         WHERE l.condominio_id IS DISTINCT FROM e.condominio_id""",
