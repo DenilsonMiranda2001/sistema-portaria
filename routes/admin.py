@@ -76,6 +76,10 @@ def editar_usuario(id):
         if tipo not in ["admin_condominio", "administrativo", "porteiro"]:
             tipo = "porteiro"
 
+        if id == session["usuario_id"] and tipo != "admin_condominio":
+            flash("Você não pode remover seu próprio acesso de administrador.", "erro")
+            return redirect(url_for("admin.editar_usuario", id=id))
+
         try:
             resultado = atualizar_usuario(id, nome, usuario, tipo, session["usuario_id"])
         except ValueError as exc:
