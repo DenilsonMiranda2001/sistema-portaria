@@ -152,7 +152,7 @@ def main():
         else:
             raise AssertionError("Last active tenant admin was deactivated")
         assert inativar_usuario(users[1], actor_id=users[0]) is False
-        assert atualizar_usuario(users[1], "Admin B", f"smoke-b-{suffix}",
+        assert atualizar_usuario(users[1], "Admin B", f"smoke-b-foreign-update-{suffix}",
                                  "porteiro", actor_id=users[0]) is False
 
     conn = conectar_dedicado("ci-smoke-admin-invariants")
