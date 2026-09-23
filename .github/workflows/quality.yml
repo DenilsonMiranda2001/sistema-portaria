@@ -256,4 +256,27 @@ jobs:
                   conn.commit()
               conn.close()
           subprocess.run(script, check=True)
+
+          # A modified recorded migration checksum must block release.
+          conn = conectar_dedicado("ci-preflight-checksum-negative-control")
+          original_checksum = None
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("SELECT checksum FROM schema_migrations WHERE version=%s",
+                              ("0020_tenant_rbac_roles.sql",))
+                  original_checksum = cur.fetchone()["checksum"]
+                  cur.execute("UPDATE schema_migrations SET checksum=%s WHERE version=%s",
+                              ("0" * 64, "0020_tenant_rbac_roles.sql"))
+              conn.commit()
+              result = subprocess.run(script, capture_output=True, text=True)
+              assert result.returncode != 0, "Preflight accepted altered migration checksum"
+              assert "migration versions/checksums differ" in result.stderr, result.stdout + result.stderr
+          finally:
+              if original_checksum is not None:
+                  with conn.cursor() as cur:
+                      cur.execute("UPDATE schema_migrations SET checksum=%s WHERE version=%s",
+                                  (original_checksum, "0020_tenant_rbac_roles.sql"))
+                  conn.commit()
+              conn.close()
+          subprocess.run(script, check=True)
           PY
