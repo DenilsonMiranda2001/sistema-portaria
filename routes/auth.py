@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from database.models import buscar_usuario, buscar_platform_admin, verificar_senha
 from database.connection import conectar, liberar
+from utils.authz import TENANT_ROLES, canonical_role
 
 auth_bp = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)
@@ -114,6 +115,12 @@ def login():
             flash("Usuário ou senha inválidos.", "erro")
             return redirect(url_for("auth.login"))
 
+        if not is_platform_admin and (canonical_role(user.get("nivel")) not in TENANT_ROLES or not user.get("condominio_id")):
+            logger.warning("Tenant login rejected due to invalid role or missing tenant")
+            _record_failed_login()
+            flash("Usuário ou senha inválidos.", "erro")
+            return redirect(url_for("auth.login"))
+
         _clear_login_failures()
         session.clear()
         session["usuario_id"] = user["id"]
@@ -126,7 +133,7 @@ def login():
             flash("Login realizado com sucesso!", "sucesso")
             return redirect(url_for("platform_admin.condominios"))
 
-        session["usuario_tipo"] = user["nivel"]
+        session["usuario_tipo"] = canonical_role(user["nivel"])
         session["condominio_id"] = user.get("condominio_id")
         session.permanent = True
         flash("Login realizado com sucesso!", "sucesso")
