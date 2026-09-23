@@ -55,10 +55,11 @@ def criar_usuario_condominio(condominio_id):
     senha=request.form.get("senha","")
     nivel=request.form.get("nivel","porteiro").strip().lower()
     if nivel not in ("admin_condominio","administrativo","porteiro"):
-        nivel="porteiro"
+        flash("Perfil de usuário inválido.", "erro")
+        return redirect(url_for("platform_admin.detalhe_condominio", condominio_id=condominio_id))
     if not nome or not usuario or len(usuario) > 100 or len(senha)<12:
         flash("Preencha os dados do usuário; a senha deve ter pelo menos 12 caracteres.","erro")
-        return redirect(url_for("platform_admin.condominios"))
+        return redirect(url_for("platform_admin.detalhe_condominio", condominio_id=condominio_id))
     try:
         novo_usuario_id = criar_usuario_tenant(condominio_id, nome, usuario, generate_password_hash(senha), nivel, session["usuario_id"])
         flash("Usuário do condomínio criado com sucesso.","sucesso")
