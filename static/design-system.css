@@ -735,3 +735,13 @@ body{font-size:14px}
 .pc-reference-dashboard .pc-hero-actions{margin-top:10px}
 @media(max-width:1050px){.pc-reference-dashboard .linha-dupla{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:650px){.pc-reference-dashboard .visitor-card{grid-template-columns:36px minmax(0,1fr);gap:8px;padding:10px}.pc-reference-dashboard .visitor-photo-wrap{width:36px;height:36px}.pc-reference-dashboard .info-grid{grid-template-columns:minmax(0,1fr)}.pc-home-person-cpf{justify-self:start}.pc-reference-dashboard .home-entry-destination{grid-template-columns:minmax(0,1fr)}.pc-reference-dashboard .home-entry-destination .btn-principal{width:100%}.pc-reference-dashboard .pc-access-hero{padding:12px}.pc-reference-dashboard .pc-hero-search .busca-input{font-size:14px}}
+
+/* Dashboard vehicle suggestions: contained, readable and consistent with ControleID. */
+.pc-reference-dashboard .pc-home-vehicle-autocomplete{position:relative;min-width:0}
+.pc-reference-dashboard .pc-home-vehicle-autocomplete>.input-padrao{width:100%;min-width:0;box-sizing:border-box}
+.pc-reference-dashboard .pc-home-vehicle-suggestions{display:none;position:absolute;top:100%;left:0;right:0;width:100%;max-height:190px;overflow-y:auto;overflow-x:hidden;z-index:80;margin-top:5px;padding:4px;box-sizing:border-box;border:1px solid var(--line-strong);border-radius:9px;background:var(--surface,#fff);box-shadow:0 12px 28px rgba(15,46,44,.14)}
+.pc-reference-dashboard .pc-home-vehicle-suggestions:empty{display:none!important}
+.pc-reference-dashboard .pc-home-vehicle-suggestions .item-sugestao{display:block;padding:9px 10px;border:0;border-radius:6px;color:var(--ink-2);font-size:12px;line-height:1.4;overflow-wrap:anywhere;white-space:normal}
+.pc-reference-dashboard .pc-home-vehicle-suggestions .item-sugestao:hover,.pc-reference-dashboard .pc-home-vehicle-suggestions .item-sugestao.selecionado{background:var(--brand-soft);color:var(--brand);font-weight:700}
+.pc-reference-dashboard .home-entry-vehicle{overflow:visible}
+@media(max-width:650px){.pc-reference-dashboard .pc-home-vehicle-suggestions{max-height:165px}}
