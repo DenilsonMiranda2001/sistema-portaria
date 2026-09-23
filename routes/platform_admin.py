@@ -1,6 +1,6 @@
 import logging
 from functools import wraps
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, flash, g, redirect, render_template, request, session, url_for
 import re
 from werkzeug.security import generate_password_hash
 from database.platform import (
@@ -17,8 +17,10 @@ def platform_admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         user = getattr(g, "current_user", None)
-        if not user or user.get("nivel") != "platform_admin":
+        if not user:
             return redirect(url_for("auth.login"))
+        if user.get("nivel") != "platform_admin":
+            abort(403)
         return view(*args, **kwargs)
     return wrapped
 
@@ -103,7 +105,9 @@ def editar_condominio(condominio_id):
 @platform_admin_bp.post("/condominios/<int:condominio_id>/status")
 @platform_admin_required
 def status_condominio(condominio_id):
-    ativo=request.form.get("ativo")=="1"
+    if request.form.get("ativo") not in ("0", "1"):
+        abort(400)
+    ativo=request.form["ativo"]=="1"
     try:
         if definir_status_condominio(condominio_id,ativo,session["usuario_id"]):
             flash("Status do condomínio atualizado.","sucesso")
@@ -115,7 +119,9 @@ def status_condominio(condominio_id):
 @platform_admin_bp.post("/condominios/<int:condominio_id>/usuarios/<int:usuario_id>/status")
 @platform_admin_required
 def status_usuario_condominio(condominio_id,usuario_id):
-    ativo=request.form.get("ativo")=="1"
+    if request.form.get("ativo") not in ("0", "1"):
+        abort(400)
+    ativo=request.form["ativo"]=="1"
     try:
         if definir_status_usuario_tenant(condominio_id,usuario_id,ativo,session["usuario_id"]):
             flash("Status do usuário atualizado.","sucesso")
