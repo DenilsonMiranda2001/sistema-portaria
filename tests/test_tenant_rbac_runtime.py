@@ -161,3 +161,42 @@ def test_invalid_tenant_identity_is_revoked_before_operational_routes(app, monke
         assert g.current_user is None
         assert g.tenant_id is None
         assert "usuario_id" not in session
+
+
+@pytest.mark.parametrize("role,tenant_id", [("platform_admin", 17), ("unknown", 17), ("porteiro", None)])
+def test_login_rejects_invalid_tenant_identity_without_session(app, monkeypatch, role, tenant_id):
+    from routes import auth
+    app.register_blueprint(auth.auth_bp)
+    monkeypatch.setattr(auth, "_login_rate_limited", lambda: False)
+    monkeypatch.setattr(auth, "_record_failed_login", lambda: None)
+    monkeypatch.setattr(auth, "buscar_platform_admin", lambda login: None)
+    monkeypatch.setattr(auth, "buscar_usuario", lambda login: {
+        "id": 9, "nome": "Operador", "senha": "unused", "nivel": role,
+        "ativo": True, "condominio_id": tenant_id,
+    })
+    monkeypatch.setattr(auth, "verificar_senha", lambda user, password: True)
+    with app.test_request_context("/login", method="POST", data={"usuario": "operador", "senha": "valid"}):
+        response = auth.login()
+        assert response.status_code == 302
+        assert response.location.endswith("/login")
+        assert "usuario_id" not in session
+        assert "is_platform_admin" not in session
+
+
+def test_login_canonicalizes_legacy_tenant_role(app, monkeypatch):
+    from routes import auth
+    app.register_blueprint(auth.auth_bp)
+    monkeypatch.setattr(auth, "_login_rate_limited", lambda: False)
+    monkeypatch.setattr(auth, "_clear_login_failures", lambda: None)
+    monkeypatch.setattr(auth, "buscar_platform_admin", lambda login: None)
+    monkeypatch.setattr(auth, "buscar_usuario", lambda login: {
+        "id": 9, "nome": "Operador", "senha": "unused", "nivel": "funcionario",
+        "ativo": True, "condominio_id": 17,
+    })
+    monkeypatch.setattr(auth, "verificar_senha", lambda user, password: True)
+    with app.test_request_context("/login", method="POST", data={"usuario": "operador", "senha": "valid"}):
+        response = auth.login()
+        assert response.status_code == 302
+        assert session["usuario_id"] == 9
+        assert session["usuario_tipo"] == "porteiro"
+        assert session["condominio_id"] == 17
