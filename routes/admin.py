@@ -37,8 +37,9 @@ def usuarios():
             flash("A senha deve ter pelo menos 12 caracteres.", "erro")
             return redirect(url_for("admin.usuarios"))
 
-        if tipo not in ["admin_condominio", "administrativo", "porteiro"]:
-            tipo = "porteiro"
+        if tipo not in ("admin_condominio", "administrativo", "porteiro"):
+            flash("Perfil de usuário inválido.", "erro")
+            return redirect(url_for("admin.usuarios"))
 
         resultado = criar_usuario(nome, usuario, senha, tipo, session["usuario_id"])
 
@@ -80,8 +81,9 @@ def editar_usuario(id):
             flash("Preencha nome e usuário.", "erro")
             return redirect(url_for("admin.editar_usuario", id=id))
 
-        if tipo not in ["admin_condominio", "administrativo", "porteiro"]:
-            tipo = "porteiro"
+        if tipo not in ("admin_condominio", "administrativo", "porteiro"):
+            flash("Perfil de usuário inválido.", "erro")
+            return redirect(url_for("admin.editar_usuario", id=id))
 
         if id == session["usuario_id"] and tipo != "admin_condominio":
             flash("Você não pode remover seu próprio acesso de administrador.", "erro")
