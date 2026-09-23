@@ -758,3 +758,23 @@ body{font-size:14px}
 .pc-package-intake .pc-deliverer-result small,.pc-package-intake .pc-deliverer-results p{color:var(--muted);font-size:11px}
 .pc-package-intake .pc-deliverer-results p{margin:8px}
 .pc-package-intake .pc-deliverer-selected-label{margin-top:4px;color:var(--muted);font-size:10px;font-weight:750;text-transform:uppercase}
+
+/* Dedicated package reception: compact identification and arrival confirmation. */
+.pc-package-intake{max-width:1120px;margin-inline:auto;padding:22px}
+.pc-package-intake .pc-package-steps{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.42fr);gap:17px;align-items:start}
+.pc-package-intake .pc-deliverer-lookup{grid-column:1;grid-row:1}
+.pc-package-intake .pc-package-carrier{grid-column:2;grid-row:1}
+.pc-package-intake .pc-deliverer-lookup>input{min-height:48px;font-size:14px}
+.pc-package-intake .pc-deliverer-confirmed{padding:11px 13px;border:1px solid #a8d5c9;border-radius:8px;background:#ecf8f3;color:#175b4e;font-size:12px;font-weight:750}
+.pc-package-intake .pc-deliverer-link{padding:0;border:0;background:transparent;color:var(--brand);font:inherit;font-weight:750;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.pc-package-intake .pc-deliverer-quick{display:grid;gap:12px;padding:15px;border:1px solid #b9d8d6;border-radius:9px;background:#f5faf9}
+.pc-package-intake .pc-deliverer-quick[hidden]{display:none!important}
+.pc-package-intake .pc-deliverer-quick>strong{font-size:13px}
+.pc-package-intake .pc-deliverer-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pc-package-intake .pc-deliverer-quick-grid label{display:grid;gap:5px;color:var(--muted);font-size:10px;font-weight:750;text-transform:uppercase}
+.pc-package-intake .pc-deliverer-quick-grid input{width:100%;min-width:0;box-sizing:border-box;padding:11px;border:1px solid var(--line-strong);border-radius:7px;background:#fff;color:var(--ink);font-size:13px}
+.pc-package-intake .pc-deliverer-quick p{margin:0;color:var(--muted);font-size:11px}
+.pc-package-intake #erro_cadastro_rapido{color:#a33131;font-weight:750}
+.pc-package-intake .pc-deliverer-results{top:78px}
+.pc-package-intake .pc-form-heading.pc-span-2{grid-column:1/-1;margin-top:8px}
+@media(max-width:760px){.pc-package-intake{padding:14px}.pc-package-intake .pc-package-steps{grid-template-columns:minmax(0,1fr)}.pc-package-intake .pc-deliverer-lookup,.pc-package-intake .pc-package-carrier{grid-column:1;grid-row:auto}.pc-package-intake .pc-deliverer-quick-grid{grid-template-columns:1fr}}
