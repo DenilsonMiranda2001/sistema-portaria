@@ -54,7 +54,7 @@ def criar_usuario_condominio(condominio_id):
     usuario=request.form.get("usuario","").strip()
     senha=request.form.get("senha","")
     nivel=request.form.get("nivel","porteiro").strip().lower()
-    if nivel not in ("admin_condominio","porteiro"):
+    if nivel not in ("admin_condominio","administrativo","porteiro"):
         nivel="porteiro"
     if not nome or not usuario or len(usuario) > 100 or len(senha)<12:
         flash("Preencha os dados do usuário; a senha deve ter pelo menos 12 caracteres.","erro")
