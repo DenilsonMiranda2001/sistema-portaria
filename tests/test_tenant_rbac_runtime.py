@@ -141,3 +141,23 @@ def test_tenant_user_creation_rejects_unknown_role_before_database_call(app, mon
         assert response.status_code == 302
         assert response.location.endswith("/usuarios")
     assert calls == []
+
+
+@pytest.mark.parametrize("role,tenant_id", [
+    ("platform_admin", 17),
+    ("superuser", 17),
+    ("", 17),
+    (None, 17),
+    ("porteiro", None),
+])
+def test_invalid_tenant_identity_is_revoked_before_operational_routes(app, monkeypatch, role, tenant_id):
+    monkeypatch.setattr(authz, "buscar_usuario_por_id", lambda user_id: {
+        "id": user_id, "nivel": role, "ativo": True,
+        "condominio_id": tenant_id, "condominio_ativo": True,
+    })
+    with app.test_request_context("/"):
+        session["usuario_id"] = 9
+        authz.load_identity()
+        assert g.current_user is None
+        assert g.tenant_id is None
+        assert "usuario_id" not in session
