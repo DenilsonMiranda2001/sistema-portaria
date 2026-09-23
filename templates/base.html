@@ -42,12 +42,12 @@
                 <a class="btn btn-nav {% if request.endpoint and (request.endpoint.startswith('encomendas') or request.endpoint.startswith('entregadores')) %}btn-nav-ativo{% endif %}"
                    href="{{ url_for('encomendas.painel') }}">Encomendas</a>
 
-                {% if session.get("usuario_tipo") in ("admin_condominio", "admin") %}
+                {% if g.current_user and g.current_user.get("nivel") == "admin_condominio" %}
                     <a class="btn btn-nav {% if request.endpoint == 'visitantes.importar_visitantes' %}btn-nav-ativo{% endif %}"
                        href="{{ url_for('visitantes.importar_visitantes') }}">Importar</a>
 
                     <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('admin') %}btn-nav-ativo{% endif %}"
-                       href="{{ url_for('admin.usuarios') }}">Usuários</a>
+                       href="{{ url_for('admin.usuarios') }}">Administração</a>
                 {% endif %}
             </nav>
 
