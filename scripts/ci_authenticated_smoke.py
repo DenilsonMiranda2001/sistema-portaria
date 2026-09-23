@@ -179,6 +179,33 @@ def main():
     finally:
         conn.close()
 
+    # With two administrators, demotion is allowed; the remaining admin is protected.
+    conn = conectar_dedicado("ci-smoke-two-admins")
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel)
+                   VALUES (%s,'Second admin CI',%s,%s,'admin_condominio') RETURNING id""",
+                (tenants[0], f"smoke-second-admin-{suffix}", generate_password_hash(password)),
+            )
+            second_admin = cur.fetchone()["id"]
+        conn.commit()
+    finally:
+        conn.close()
+    with app.test_request_context("/"):
+        g.tenant_id = tenants[0]
+        assert atualizar_usuario(second_admin, "Second admin CI",
+                                 f"smoke-second-admin-{suffix}", "administrativo",
+                                 actor_id=users[0]) is True
+        try:
+            atualizar_usuario(users[0], "Admin A", f"smoke-a-{suffix}",
+                              "porteiro", actor_id=users[0])
+        except ValueError as exc:
+            assert "administrador ativo" in str(exc)
+        else:
+            raise AssertionError("Demotion of the last active admin was accepted")
+    assert definir_status_usuario_tenant(tenants[0], second_admin, False) is True
+
     # Switching accounts must not retain the previous tenant or administrator privileges.
     assert_status(client.post("/logout"), 302, "logout")
     response = client.post("/login", data={
