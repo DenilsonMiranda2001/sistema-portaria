@@ -96,6 +96,15 @@ jobs:
                   assert definition and all(role in definition["definition"] for role in ("admin_condominio", "administrativo", "porteiro"))
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
                   assert cur.fetchone()["n"] == 21
+                  cur.execute("SELECT COUNT(*) AS n FROM schema_migrations WHERE version='0021_delivery_baseline_reconciliation.sql'")
+                  assert cur.fetchone()["n"] == 1
+                  cur.execute("""SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint
+                                 WHERE conrelid='lotes_encomendas'::regclass AND conname='fk_lotes_entregador_tenant'""")
+                  delivery_fk = cur.fetchone()
+                  assert delivery_fk and "FOREIGN KEY (entregador_id, condominio_id)" in delivery_fk["definition"]
+                  cur.execute("""SELECT 1 FROM pg_constraint WHERE conrelid='entregadores'::regclass
+                                 AND conname='ck_entregadores_nome'""")
+                  assert cur.fetchone()
           finally:
               conn.close()
           PY
