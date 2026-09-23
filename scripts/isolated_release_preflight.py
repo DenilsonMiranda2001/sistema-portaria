@@ -12,7 +12,7 @@ CHECKS = {
     "tenant_users_without_condominium": """SELECT COUNT(*) AS n FROM usuarios
         WHERE condominio_id IS NULL""",
     "active_condominiums_without_active_admin": """SELECT COUNT(*) AS n FROM condominios c
-        WHERE c.ativo AND NOT EXISTS (
+        WHERE c.ativo AND EXISTS (SELECT 1 FROM usuarios existing WHERE existing.condominio_id=c.id) AND NOT EXISTS (
             SELECT 1 FROM usuarios u WHERE u.condominio_id=c.id
               AND u.ativo AND u.nivel='admin_condominio'
         )""",
