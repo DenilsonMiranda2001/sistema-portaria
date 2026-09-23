@@ -589,3 +589,8 @@ body{font-size:14px}
 .pc-module > .pc-form-shell .pc-photo-stage > .camera-box,
 .pc-module > .pc-form-shell .pc-photo-stage > .preview-box{height:100%;align-self:stretch}
 .pc-module > .pc-form-shell .pc-photo-stage > .photo-placeholder{align-self:center;justify-self:center;padding:16px}
+
+/* Registration autocomplete: anchor popovers to their input, and never render empty boxes. */
+.pc-module > .pc-form-shell .campo-autocomplete{position:relative;width:100%}
+.pc-module > .pc-form-shell .caixa-sugestoes{display:none;left:0;right:0;width:100%;box-sizing:border-box;max-height:240px;overflow-y:auto}
+.pc-module > .pc-form-shell .caixa-sugestoes:empty{display:none!important}
