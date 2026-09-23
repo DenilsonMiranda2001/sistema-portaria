@@ -39,17 +39,24 @@ def migrate():
                     if existing["checksum"] != checksum:
                         raise RuntimeError(f"Migration checksum mismatch: {path.name}")
                     continue
-                if fresh_bootstrap and path.name == "0019_delivery_people.sql":
-                    # The baseline already creates delivery tables and columns.
-                    # Migration 0021 reconciles its constraints without altering 0019's checksum.
+                if path.name == "0019_delivery_people.sql":
+                    # The baseline already includes delivery tables. A failed predeploy
+                    # may have committed migrations 0001-0018 before reaching 0019;
+                    # therefore fresh_bootstrap alone cannot identify this case.
                     cur.execute("SELECT to_regclass('public.entregadores') AS entregadores")
-                    if not cur.fetchone()["entregadores"]:
-                        raise RuntimeError("Fresh baseline is missing entregadores")
+                    has_couriers = bool(cur.fetchone()["entregadores"])
                     cur.execute("""SELECT 1 FROM information_schema.columns
                                    WHERE table_schema='public' AND table_name='lotes_encomendas'
                                    AND column_name='entregador_id'""")
-                    if not cur.fetchone():
-                        raise RuntimeError("Fresh baseline is missing lotes_encomendas.entregador_id")
+                    has_lot_courier = bool(cur.fetchone())
+                    if has_couriers != has_lot_courier:
+                        raise RuntimeError("Incomplete delivery schema before migration 0019; inspect manually")
+                    if has_couriers:
+                        # Migration 0021 reconciles baseline constraints. Never rewrite
+                        # 0019: deployed databases already record its checksum.
+                        logger.info("Delivery baseline already present; recording migration 0019")
+                    else:
+                        cur.execute(sql)
                 else:
                     cur.execute(sql)
                 cur.execute(
