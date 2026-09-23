@@ -24,16 +24,11 @@ def _operator():
 def test_quick_deliverer_registration_is_authorized_and_audited_through_model(app, monkeypatch):
     calls = []
     monkeypatch.setattr(encomendas, "criar_entregador", lambda *args: calls.append(args) or 44)
+    valid = next(value for value in encomendas.TRANSPORTADORAS if value)
     with app.test_request_context("/encomendas/entregadores/rapido", method="POST", data={
-        "nome": " Maria Silva ", "documento": "", "transportadora": "Correios",
+        "nome": " Maria Silva ", "documento": "", "transportadora": valid,
     }):
         _operator()
-        # Use an actual configured transportadora, independent of its display spelling.
-        from routes.encomendas import TRANSPORTADORAS
-        valid = next(value for value in TRANSPORTADORAS if value)
-        from werkzeug.datastructures import ImmutableMultiDict
-        request = __import__("flask").request
-        request.form = ImmutableMultiDict({"nome": " Maria Silva ", "documento": "", "transportadora": valid})
         response, status = encomendas.cadastrar_entregador_rapido()
         assert status == 201
         assert response.get_json()["id"] == 44
