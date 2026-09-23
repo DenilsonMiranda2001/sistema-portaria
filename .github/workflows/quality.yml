@@ -120,7 +120,7 @@ jobs:
           finally:
               admin.close()
 
-          upgrade_url = os.environ["DATABASE_URL"].replace("/portaria_ci", "/portaria_upgrade_ci")
+          upgrade_url = os.environ["DATABASE_URL"].rsplit("/", 1)[0] + "/portaria_upgrade_ci"
           conn = psycopg2.connect(upgrade_url, cursor_factory=RealDictCursor)
           try:
               with conn.cursor() as cur:
