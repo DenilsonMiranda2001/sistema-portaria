@@ -94,6 +94,16 @@ def main():
     assert_status(client.post(f"/encomendas/lotes/{lots[1]}/status",
                               data={"status": "concluido"}), 302, "foreign lot mutation")
     assert_status(client.get("/usuarios"), 200, "tenant admin user management")
+    assert_status(client.get(f"/usuarios/editar/{users[1]}"), 302,
+                  "foreign tenant user edit page denial")
+    assert_status(client.post(f"/usuarios/editar/{users[1]}", data={
+        "nome": "Tampered", "usuario": f"tampered-{suffix}", "tipo": "porteiro",
+    }), 302, "foreign tenant user edit mutation denial")
+    assert_status(client.post(f"/usuarios/inativar/{users[1]}"), 302,
+                  "foreign tenant user deactivation denial")
+    assert_status(client.post(f"/usuarios/senha/{users[1]}", data={
+        "nova_senha": "ci-foreign-password-123", "confirmar_senha": "ci-foreign-password-123",
+    }), 302, "foreign tenant user password mutation denial")
 
     # Stale or forged session tenant/role fields must not override database identity.
     with client.session_transaction() as sess:
