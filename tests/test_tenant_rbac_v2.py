@@ -55,3 +55,14 @@ def test_last_admin_mutations_serialize_on_tenant_row():
         assert section.index('SELECT id FROM condominios WHERE id=%s FOR UPDATE') < section.index('SELECT COUNT(*) AS total FROM usuarios')
     section = platform[platform.index("def definir_status_usuario_tenant("):platform.index("def criar_condominio_com_usuario(")]
     assert 'SELECT id FROM condominios WHERE id=%s FOR UPDATE' in section
+
+
+def test_rbac_migration_does_not_commit_before_checksum_record():
+    sql = Path("migrations/0020_tenant_rbac_roles.sql").read_text(encoding="utf-8")
+    runner = Path("migrations/migrate.py").read_text(encoding="utf-8")
+    assert "BEGIN;" not in sql
+    assert "COMMIT;" not in sql
+    assert "cur.execute(sql)" in runner
+    assert "INSERT INTO schema_migrations(version, checksum)" in runner
+    assert runner.index("cur.execute(sql)") < runner.index("INSERT INTO schema_migrations(version, checksum)")
+    assert runner.index("INSERT INTO schema_migrations(version, checksum)") < runner.index("conn.commit()", runner.index("cur.execute(sql)"))
