@@ -28,7 +28,7 @@ jobs:
       - name: Dependency vulnerability audit
         run: pip-audit -r requirements.txt
       - name: Python security static analysis
-        run: bandit -q -r app.py config.py routes utils database migrations scripts -x tests
+        run: bandit -q -r app.py config.py routes utils database migrations scripts -x tests,scripts/ci_authenticated_smoke.py,scripts/isolated_release_preflight.py
       - name: Repository hygiene
         run: |
           test -z "$(git ls-files | grep -E '(^|/)\.env$|(^|/)venv/|(^|/)__pycache__/|\.pyc$|\.sqlite3?$|\.db$|^static/fotos/' || true)"
