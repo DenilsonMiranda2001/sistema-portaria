@@ -693,7 +693,7 @@ def listar_auditoria_tenant(limite=51, pagina=1):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT a.id, a.acao, a.entidade, a.entidade_id, a.detalhes, a.criado_em,
+                SELECT a.id, a.acao, a.entidade, a.entidade_id, a.criado_em,
                        COALESCE(u.nome, CASE WHEN a.actor_tipo='platform_admin' THEN 'ADMINISTRAÇÃO DA PLATAFORMA' END, 'SISTEMA') AS ator
                 FROM audit_logs a
                 LEFT JOIN usuarios u ON u.id=a.usuario_id AND u.condominio_id=a.condominio_id
