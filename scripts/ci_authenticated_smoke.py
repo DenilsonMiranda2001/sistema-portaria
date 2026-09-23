@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash
 from database.connection import conectar_dedicado
 from app import app
 from flask import g
-from database.models import registrar_entrada, registrar_saida
+from database.models import registrar_entrada, registrar_saida, atualizar_usuario, inativar_usuario
 from database.encomendas import adicionar_encomenda, buscar_encomenda
 
 
@@ -133,6 +133,41 @@ def main():
             pass
         else:
             raise AssertionError("Foreign-tenant parcel creation was accepted")
+
+    # Protect the last active administrator through both demotion and deactivation.
+    # The second tenant's administrator must not be manageable by tenant A.
+    with app.test_request_context("/"):
+        g.tenant_id = tenants[0]
+        try:
+            atualizar_usuario(users[0], "Admin A", f"smoke-a-{suffix}",
+                              "porteiro", actor_id=users[0])
+        except ValueError as exc:
+            assert "administrador ativo" in str(exc)
+        else:
+            raise AssertionError("Last active tenant admin was demoted")
+        try:
+            inativar_usuario(users[0], actor_id=users[0])
+        except ValueError as exc:
+            assert "administrador ativo" in str(exc)
+        else:
+            raise AssertionError("Last active tenant admin was deactivated")
+        assert inativar_usuario(users[1], actor_id=users[0]) is False
+        assert atualizar_usuario(users[1], "Admin B", f"smoke-b-{suffix}",
+                                 "porteiro", actor_id=users[0]) is False
+
+    conn = conectar_dedicado("ci-smoke-admin-invariants")
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT condominio_id,nivel,ativo FROM usuarios WHERE id=%s", (users[0],))
+            admin_a = cur.fetchone()
+            assert admin_a == {"condominio_id": tenants[0], "nivel": "admin_condominio",
+                               "ativo": True}, admin_a
+            cur.execute("SELECT condominio_id,nivel,ativo FROM usuarios WHERE id=%s", (users[1],))
+            admin_b = cur.fetchone()
+            assert admin_b == {"condominio_id": tenants[1], "nivel": "admin_condominio",
+                               "ativo": True}, admin_b
+    finally:
+        conn.close()
 
     # Switching accounts must not retain the previous tenant or administrator privileges.
     assert_status(client.post("/logout"), 302, "logout")
