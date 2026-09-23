@@ -61,7 +61,7 @@ def test_tenant_admin_has_queryable_audit_trail():
     routes = Path("routes/admin.py").read_text(encoding="utf-8")
     model = Path("database/models.py").read_text(encoding="utf-8")
     assert '@admin_bp.route("/auditoria")' in routes
-    assert '@roles_required("admin")' in routes[routes.index('@admin_bp.route("/auditoria")'):]
+    assert '@roles_required("admin_condominio")' in routes[routes.index('@admin_bp.route("/auditoria")'):]
     assert "WHERE a.condominio_id=%s" in model
 
 
