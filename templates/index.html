@@ -197,6 +197,7 @@ function criarAutocompleteDinamico(inputId, sugestoesId, listaDados, visitanteId
     function fecharSugestoes() {
         box.style.display = "none";
         box.innerHTML = "";
+        inputEl.setAttribute("aria-expanded","false");
         indiceLocal = -1;
     }
 
@@ -225,6 +226,7 @@ function criarAutocompleteDinamico(inputId, sugestoesId, listaDados, visitanteId
         });
 
         box.style.display = "block";
+        inputEl.setAttribute("aria-expanded","true");
         box.style.position = "absolute";
         box.style.zIndex = "9999";
         box.style.width = "100%";
@@ -341,8 +343,24 @@ function renderizarResultados(data, termo) {
         const plate=document.createElement("input");plate.id="placa_"+v.id;plate.className="input-padrao";plate.placeholder="Placa";plate.value=estado.placa||"";
         const brand=document.createElement("input");brand.id="marca_"+v.id;brand.className="input-padrao";brand.placeholder="Marca";brand.value=estado.marca||"";
         const model=document.createElement("input");model.id="modelo_"+v.id;model.className="input-padrao";model.placeholder="Modelo";model.value=estado.modelo||"";
+        // Vehicle details are operational inputs, not browser autofill fields.
+        [plate,brand,model].forEach(el=>{el.autocomplete="off";el.setAttribute("autocorrect","off");el.spellcheck=false;});
         [[plate,"placa"],[brand,"marca"],[model,"modelo"]].forEach(([input,campo])=>input.addEventListener("input",()=>{input.value=input.value.toUpperCase();atualizarCampoEstado(v.id,campo,input.value)}));
-        vehicleFields.append(plate,brand,model);if(estado.tipoChegada==="PEDESTRE")vehicleFields.hidden=true;
+        function vehicleSuggestionField(field,kind){
+            const wrap=node("div","pc-home-vehicle-autocomplete");
+            const suggestions=node("div","caixa-sugestoes pc-home-vehicle-suggestions");
+            suggestions.id="home_sugestoes_"+kind+"_"+v.id;
+            suggestions.setAttribute("role","listbox");
+            suggestions.setAttribute("aria-label",kind==="marca"?"Sugestões de marcas":"Sugestões de modelos");
+            field.setAttribute("aria-autocomplete","list");
+            field.setAttribute("aria-controls",suggestions.id);
+            wrap.append(field,suggestions);
+            return wrap;
+        }
+        vehicleFields.append(plate,vehicleSuggestionField(brand,"marca"),vehicleSuggestionField(model,"modelo"));
+        if(estado.tipoChegada==="PEDESTRE")vehicleFields.hidden=true;
+        criarAutocompleteDinamico(brand.id,"home_sugestoes_marca_"+v.id,MARCAS,v.id,"marca");
+        criarAutocompleteDinamico(model.id,"home_sugestoes_modelo_"+v.id,MODELOS,v.id,"modelo");
         arrival.addEventListener("change",()=>{estado.tipoChegada=arrival.value;if(arrival.value==="PEDESTRE"){estado.placa=estado.marca=estado.modelo="";vehicleFields.hidden=true}else vehicleFields.hidden=false});
         vehicle.append(arrival,vehicleFields);
         dest.appendChild(node("span","label-ui","Destino"));
