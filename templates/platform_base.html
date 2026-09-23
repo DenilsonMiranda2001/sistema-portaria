@@ -4,7 +4,7 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ global_csrf_token() }}">
   <title>{% block title %}Administração Geral | Portaria Control{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css', v='select-v2') }}">
 </head>
 <body class="platform-body">
 <div class="platform-shell">
@@ -16,5 +16,5 @@
 <main class="platform-main">
 {% with messages = get_flashed_messages(with_categories=true) %}{% for categoria, msg in messages %}<div class="platform-alert platform-alert-{{ categoria }}" role="alert"><span>{{ msg }}</span></div>{% endfor %}{% endwith %}
 {% block content %}{% endblock %}
-</main></div><script src="{{ url_for('static', filename='select-system.js') }}" defer></script>
+</main></div><script src="{{ url_for('static', filename='select-system.js', v='select-v2') }}" defer></script>
 </body></html>
