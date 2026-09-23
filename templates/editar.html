@@ -14,7 +14,7 @@
 <label class="pc-field pc-span-2"><span>Nome completo *</span><input type="text" name="nome" id="nome" value="{{ visitante.nome or '' }}" required autofocus></label>
 <label class="pc-field"><span>CPF *</span><input type="text" name="cpf" id="cpf" value="{{ visitante.cpf or cpf_pre or '' }}" required></label>
 <label class="pc-field"><span>Tipo</span><div class="campo-autocomplete"><input type="text" name="tipo" id="tipo" value="{{ visitante.tipo or '' }}" placeholder="Visitante, entregador..."><div id="sugestoes_tipo" class="caixa-sugestoes"></div></div></label>
-<label class="pc-field pc-span-2"><span>Endereço</span><input type="text" name="endereco" id="endereco" value="{{ visitante.endereco or '' }}" placeholder="Endereço do visitante" autocomplete="off"><small id="sugestao-endereco"></small></label>
+<label class="pc-field pc-span-2"><span>Destino no condomínio</span><input class="" type="text" name="endereco" id="endereco" value="{{ visitante.endereco or '' }}" placeholder="Unidade, bloco ou endereço de destino" autocomplete="off"><small id="sugestao-endereco"></small></label>
 <label class="pc-field pc-span-2"><span>Observação</span><input name="observacao" id="observacao" value="{{ visitante.observacao or '' }}" placeholder="Informação permanente do cadastro"></label>
 </div></section>
 <section class="pc-panel pc-form-section">
