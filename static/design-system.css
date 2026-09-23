@@ -681,3 +681,15 @@ body{font-size:14px}
 .campo-autocomplete .pc-autocomplete-option strong{display:inline;font:inherit;font-weight:750;letter-spacing:inherit;color:inherit}
 .campo-autocomplete .caixa-sugestoes{z-index:40;padding:4px;max-height:240px;overflow-y:auto;overflow-x:hidden;border-radius:9px}
 .campo-autocomplete .pc-autocomplete-option{border-radius:6px}
+
+/* ControleID identity — approved dark petrol and turquoise direction. */
+:root{--controleid-ink:#102e2c;--controleid-teal:#139e91;--controleid-mint:#19b5a5}
+.controleid-header-icon{display:block;flex:none;width:42px;height:42px;border-radius:10px}
+.controleid-accent{color:var(--controleid-teal)}
+.controleid-platform-icon{display:block;flex:none;width:34px;height:34px;border-radius:8px}
+.controleid-login-logo{display:block;width:min(355px,100%);height:auto;margin:0 0 17px}
+.controleid-login-panel-icon{display:block;width:42px;height:42px;margin-bottom:18px;border-radius:10px}
+.login-brand{background:linear-gradient(140deg,#0f1f1d 0%,#163b37 100%)}
+.login-brand .controleid-login-logo{filter:brightness(0) invert(1)}
+.login-brand .brand-subtitle{color:#c5dcd7}
+@media(max-width:820px){.controleid-header-icon{width:36px;height:36px}}
