@@ -15,11 +15,11 @@ def test_sensitive_tenant_routes_have_explicit_rbac():
     moradores = Path("routes/moradores.py").read_text(encoding="utf-8")
     visitantes = Path("routes/visitantes.py").read_text(encoding="utf-8")
     encomendas = Path("routes/encomendas.py").read_text(encoding="utf-8")
-    _assert_route_decorated(moradores, '/<int:id>/inativar', '@roles_required("admin")')
-    _assert_route_decorated(moradores, '/<int:id>/ativar', '@roles_required("admin")')
-    _assert_route_decorated(visitantes, '/remover/<int:id>', '@roles_required("admin")')
-    _assert_route_decorated(visitantes, '/importar_visitantes', '@roles_required("admin")')
-    assert encomendas.count('@roles_required("admin", "funcionario")') >= 7
+    _assert_route_decorated(moradores, '/<int:id>/inativar', '@roles_required("admin_condominio")')
+    _assert_route_decorated(moradores, '/<int:id>/ativar', '@roles_required("admin_condominio")')
+    _assert_route_decorated(visitantes, '/remover/<int:id>', '@roles_required("admin_condominio")')
+    _assert_route_decorated(visitantes, '/importar_visitantes', '@roles_required("admin_condominio")')
+    assert encomendas.count('@roles_required("admin_condominio", "administrativo", "porteiro")') >= 7
 
 
 def test_operational_routes_are_not_left_implicit():
