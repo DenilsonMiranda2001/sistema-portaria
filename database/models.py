@@ -159,6 +159,10 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            # Serialize role changes for this tenant to protect the last active admin.
+            cur.execute("SELECT id FROM condominios WHERE id=%s FOR UPDATE", (tenant_id,))
+            if not cur.fetchone():
+                raise ValueError("Condomínio inválido.")
             if actor_id:
                 cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
@@ -233,6 +237,10 @@ def inativar_usuario(usuario_id, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            # Serialize role changes for this tenant to protect the last active admin.
+            cur.execute("SELECT id FROM condominios WHERE id=%s FOR UPDATE", (tenant_id,))
+            if not cur.fetchone():
+                raise ValueError("Condomínio inválido.")
             if actor_id:
                 cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
