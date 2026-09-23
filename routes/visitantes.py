@@ -88,7 +88,7 @@ def _save_photo_production(arquivo_foto, foto_webcam_b64):
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/cadastro", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def cadastro():
     cpf_pre = request.args.get("cpf", "")
     if request.method == "POST":
@@ -155,7 +155,7 @@ def cadastro():
 
 
 @visitantes_bp.route("/foto/<int:id>")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def foto(id):
     visitante = buscar_visitante_por_id(id)
     if not visitante or not visitante.get("foto"):
@@ -177,7 +177,7 @@ def foto(id):
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/visitantes", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def visitantes():
     pagina = request.args.get("pagina", 1, type=int)
     por_pagina = 20
@@ -198,7 +198,7 @@ def visitantes():
 
 
 @visitantes_bp.route("/ativos")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def ativos():
     dados = visitantes_ativos()
     return render_template("ativos.html", visitantes=dados)
@@ -209,7 +209,7 @@ def ativos():
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/entrada", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def entrada():
     unidades = listar_unidades()
 
@@ -246,7 +246,7 @@ def entrada():
 
 
 @visitantes_bp.route("/saida/<int:id>", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def saida(id):
     try:
         alterou = registrar_saida(id, session["usuario_id"])
@@ -266,7 +266,7 @@ def saida(id):
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/editar/<int:id>", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def editar(id):
     visitante = buscar_visitante_por_id(id)
     if not visitante:
@@ -331,7 +331,7 @@ def editar(id):
 
 
 @visitantes_bp.route("/remover/<int:id>", methods=["POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def remover(id):
     visitante = buscar_visitante_por_id(id)
     if not visitante:
@@ -355,7 +355,7 @@ def remover(id):
 
 
 @visitantes_bp.route("/historico/<int:id>")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def historico(id):
     visitante = buscar_visitante_por_id(id)
     if not visitante:
@@ -371,7 +371,7 @@ def historico(id):
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/buscar_ajax")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def buscar_ajax():
     termo = request.args.get("q", "").strip()
     if len(termo) < 2:
@@ -393,7 +393,7 @@ def buscar_ajax():
 
 
 @visitantes_bp.route("/buscar_cpf_ajax", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def buscar_cpf_ajax():
     cpf = limpar_cpf(request.form.get("cpf", ""))
     if len(cpf) != 11 or not validar_cpf(cpf):
@@ -411,7 +411,7 @@ def buscar_cpf_ajax():
 
 
 @visitantes_bp.route("/buscar_ativos_ajax")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def buscar_ativos_ajax():
     termo = request.args.get("q", "").strip()
     if len(termo) < 2:
@@ -436,7 +436,7 @@ def buscar_ativos_ajax():
 
 
 @visitantes_bp.route("/buscar_moradores_ajax")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def buscar_moradores_ajax_rota():
     termo = request.args.get("q", "").strip()
     if len(termo) < 2:
@@ -451,7 +451,7 @@ def buscar_moradores_ajax_rota():
 
 
 @visitantes_bp.route("/entrada_ajax", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def entrada_ajax():
     try:
         visitante_id = request.form.get("id", "").strip()
@@ -482,7 +482,7 @@ def entrada_ajax():
 
 
 @visitantes_bp.route("/atualizar_observacao_ajax", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def atualizar_observacao_ajax():
     visitante_id = request.form.get("id", "").strip()
     observacao   = request.form.get("observacao", "").strip().upper()
@@ -497,7 +497,7 @@ def atualizar_observacao_ajax():
 
 
 @visitantes_bp.route("/atualizar_foto_ajax", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def atualizar_foto_ajax():
     try:
         visitante_id  = request.form.get("id", "").strip()
@@ -562,9 +562,9 @@ def atualizar_foto_ajax():
 # ──────────────────────────────────────────────────────────────
 
 @visitantes_bp.route("/importar_visitantes", methods=["GET", "POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def importar_visitantes():
-    if session.get("usuario_tipo") != "admin":
+    if session.get("usuario_tipo") not in ("admin_condominio", "admin"):
         flash("Apenas administradores podem acessar essa área.", "erro")
         return redirect(url_for("main.index"))
 
