@@ -3,6 +3,7 @@ import re
 from urllib.parse import quote
 
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
+from psycopg2 import errors
 
 from database.encomendas import (
     adicionar_encomenda,
@@ -99,9 +100,11 @@ def cadastrar_entregador_rapido():
         novo_id = criar_entregador(nome, documento, None, transportadora, session["usuario_id"])
     except ValueError as exc:
         return jsonify({"erro": str(exc)}), 400
+    except errors.UniqueViolation:
+        return jsonify({"erro": "Já existe um entregador com esse documento neste condomínio."}), 409
     except Exception:
         logger.exception("Falha no cadastro rápido de entregador")
-        return jsonify({"erro": "Não foi possível cadastrar. Confira se o documento já existe."}), 409
+        return jsonify({"erro": "Não foi possível cadastrar o entregador. Tente novamente."}), 500
     return jsonify({"id": novo_id, "nome": nome.upper(), "transportadora": transportadora}), 201
 
 
