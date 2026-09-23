@@ -11,6 +11,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+from urllib.parse import urlsplit, unquote, parse_qs
 
 import boto3
 from botocore.config import Config as BotoConfig
@@ -47,8 +48,17 @@ def run():
     with tempfile.TemporaryDirectory(prefix="controleid-backup-") as directory:
         dump = Path(directory) / "database.dump"
         # Pass the DSN via environment rather than command arguments.
-        env = dict(os.environ, PGCONNECT_TIMEOUT="15", PGDATABASE=database_url)
-        env.pop("PGPASSWORD", None)
+        parsed = urlsplit(database_url)
+        if parsed.scheme not in ("postgres", "postgresql") or not parsed.hostname or not parsed.path.strip("/"):
+            raise RuntimeError("BACKUP_DATABASE_URL must be a PostgreSQL connection URL")
+        params = parse_qs(parsed.query)
+        env = dict(os.environ, PGCONNECT_TIMEOUT="15",
+                   PGHOST=parsed.hostname, PGPORT=str(parsed.port or 5432),
+                   PGUSER=unquote(parsed.username or ""),
+                   PGPASSWORD=unquote(parsed.password or ""),
+                   PGDATABASE=unquote(parsed.path.lstrip("/")),
+                   PGSSLMODE=params.get("sslmode", ["prefer"])[0])
+        env.pop("BACKUP_DATABASE_URL", None)
         subprocess.run(
             ["pg_dump", "--format=custom", "--no-owner", "--no-acl",
              "--file", str(dump)],
