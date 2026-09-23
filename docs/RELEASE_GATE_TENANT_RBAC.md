@@ -30,3 +30,17 @@ Railway project `sistema-portaria` currently exposes only a `production` environ
 ## Current decision
 
 PR #5 remains draft and production remains unchanged until staging and recoverable backup/restore are verified. This document records the release dependency; it does not claim those external gates have passed.
+
+## Candidate validation added to the quality gate
+
+- `scripts/ci_authenticated_smoke.py` exercises real login, tenant session identity, foreign-tenant visitor/parcel access, a denied foreign-tenant mutation, role separation and session revocation on a disposable PostgreSQL database.
+- `scripts/isolated_release_preflight.py` performs read-only role, tenant association, active-administrator and foreign-key checks. It refuses to run unless `APP_ENV=test|staging`, `ALLOW_ISOLATED_PREFLIGHT=yes` and an explicit database URL are supplied. Its database-name guard is a secondary safeguard, **not** a substitute for verifying the actual staging connection.
+- Both scripts run after the PostgreSQL migration tests. A green run validates the isolated CI dataset only. Repeat the preflight on a representative isolated restored/sanitized staging dataset before production release.
+
+## Deployment preparation (not execution)
+
+1. Confirm the exact candidate commit, Railway tracked branch and pending configuration changes. Keep the production-tracked branch unchanged until release approval.
+2. Record the schema_migrations state and row counts for condominiums, users, visitors, visits, lots and parcels in the isolated staging dataset. Review all preflight anomalies before migration.
+3. After migrating staging, run the authenticated smoke and preflight. Verify that role conversion and tenant relationships preserved the expected records.
+4. Before production merge, require a proven restore and a recovery decision for forward-only role migration. An application rollback alone may be incompatible with migrated roles.
+5. On deployment, verify migration logs, readiness, deployed commit, login for each role, foreign-tenant denials and parcel/visitor flows. Halt further changes on any failed gate.
