@@ -29,3 +29,18 @@ def test_operational_roles_are_explicit():
     for path in ("routes/moradores.py", "routes/visitantes.py", "routes/encomendas.py", "routes/entregadores.py"):
         source = Path(path).read_text(encoding="utf-8")
         assert expected in source
+
+
+def test_last_active_tenant_admin_cannot_be_demoted():
+    source = Path("database/models.py").read_text(encoding="utf-8")
+    update = source[source.index("def atualizar_usuario("):source.index("def atualizar_senha_usuario(")]
+    assert "FOR UPDATE" in update
+    assert 'novo_nivel != "admin_condominio"' in update
+    assert "O condomínio precisa manter pelo menos um administrador ativo." in update
+    route = Path("routes/admin.py").read_text(encoding="utf-8")
+    assert "except ValueError as exc:" in route
+
+
+def test_new_install_schema_uses_tenant_roles():
+    schema = Path("database/schema.sql").read_text(encoding="utf-8")
+    assert "CHECK (nivel IN ('admin_condominio', 'administrativo', 'porteiro'))" in schema
