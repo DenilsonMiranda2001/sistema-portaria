@@ -13,6 +13,7 @@ from app import app
 from flask import g
 from database.models import registrar_entrada, registrar_saida, atualizar_usuario, inativar_usuario
 from database.encomendas import adicionar_encomenda, buscar_encomenda
+from database.platform import definir_status_usuario_tenant
 
 
 def assert_status(response, expected, context):
@@ -154,6 +155,15 @@ def main():
         assert inativar_usuario(users[1], actor_id=users[0]) is False
         assert atualizar_usuario(users[1], "Admin B", f"smoke-b-foreign-update-{suffix}",
                                  "porteiro", actor_id=users[0]) is False
+
+    # The platform control plane must obey the same last-admin and tenant guards.
+    try:
+        definir_status_usuario_tenant(tenants[0], users[0], False)
+    except ValueError as exc:
+        assert "administrador ativo" in str(exc)
+    else:
+        raise AssertionError("Platform operation deactivated last tenant admin")
+    assert definir_status_usuario_tenant(tenants[0], users[1], False) is False
 
     conn = conectar_dedicado("ci-smoke-admin-invariants")
     try:
