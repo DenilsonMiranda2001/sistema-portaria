@@ -145,6 +145,8 @@ def main():
         assert sess["condominio_id"] == tenants[0]
         assert sess["usuario_tipo"] == "porteiro"
     assert_status(client.get("/usuarios"), 403, "porter administrator denial")
+    assert_status(client.get(f"/encomendas/lotes/{lots[0]}"), 200,
+                  "porter can access own tenant parcel lot")
     assert_status(client.get(f"/encomendas/lotes/{lots[1]}"), 302, "porter foreign lot denial")
 
     # A deactivated account must lose its existing session on its next request.
@@ -158,6 +160,24 @@ def main():
     assert_status(client.get("/usuarios"), 302, "deactivated account redirect")
     with client.session_transaction() as sess:
         assert "usuario_id" not in sess
+    # A different tenant administrator must have legitimate access only to their tenant.
+    other_client = app.test_client()
+    response = other_client.post("/login", data={
+        "usuario": f"smoke-b-{suffix}", "senha": password,
+    })
+    assert_status(response, 302, "second tenant admin login")
+    with other_client.session_transaction() as sess:
+        assert sess["usuario_id"] == users[1]
+        assert sess["condominio_id"] == tenants[1]
+        assert sess["usuario_tipo"] == "admin_condominio"
+    assert_status(other_client.get(f"/encomendas/lotes/{lots[1]}"), 200,
+                  "second tenant can access own parcel lot")
+    assert_status(other_client.get(f"/encomendas/lotes/{lots[0]}"), 302,
+                  "second tenant cannot access first tenant parcel lot")
+    assert_status(other_client.get(f"/historico/{visitors[0]}"), 302,
+                  "second tenant cannot access first tenant visitor history")
+    assert_status(other_client.get("/usuarios"), 200,
+                  "second tenant admin can access own user management")
     print("Authenticated multi-tenant/RBAC smoke passed on disposable PostgreSQL")
 
 
