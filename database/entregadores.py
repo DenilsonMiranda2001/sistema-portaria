@@ -180,10 +180,20 @@ def pesquisar_entregadores(termo, limite=12):
                 SELECT id, nome, documento, transportadora
                 FROM entregadores
                 WHERE condominio_id=%s AND ativo=TRUE
-                  AND (nome ILIKE %s OR (documento IS NOT NULL AND documento LIKE %s))
+                  AND (
+                      POSITION(LOWER(%s) IN LOWER(nome)) > 0
+                      OR (documento IS NOT NULL AND LEFT(documento, LENGTH(%s)) = %s)
+                  )
                 ORDER BY CASE WHEN documento=%s THEN 0 ELSE 1 END, nome, id
                 LIMIT %s
-            """, (tenant_id, f"%{termo}%", f"{documento or termo}%", documento, min(max(int(limite), 1), 20)))
+            """, (
+                tenant_id,
+                termo,
+                documento or termo,
+                documento or termo,
+                documento,
+                min(max(int(limite), 1), 20),
+            ))
             return cur.fetchall()
     finally:
         liberar(conn)
