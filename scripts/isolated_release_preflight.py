@@ -39,6 +39,21 @@ CHECKS = {
     "courier_lot_tenant_mismatch": """SELECT COUNT(*) AS n FROM lotes_encomendas l
         JOIN entregadores e ON e.id=l.entregador_id
         WHERE l.condominio_id IS DISTINCT FROM e.condominio_id""",
+    "resident_unit_tenant_mismatch": """SELECT COUNT(*) AS n FROM moradores m
+        JOIN unidades u ON u.id=m.unidade_id
+        WHERE m.condominio_id IS DISTINCT FROM u.condominio_id""",
+    "visit_unit_tenant_mismatch": """SELECT COUNT(*) AS n FROM visitas vi
+        JOIN unidades u ON u.id=vi.unidade_id
+        WHERE vi.condominio_id IS DISTINCT FROM u.condominio_id""",
+    "visit_resident_tenant_mismatch": """SELECT COUNT(*) AS n FROM visitas vi
+        JOIN moradores m ON m.id=vi.morador_id
+        WHERE vi.condominio_id IS DISTINCT FROM m.condominio_id""",
+    "parcel_unit_tenant_mismatch": """SELECT COUNT(*) AS n FROM encomendas e
+        JOIN unidades u ON u.id=e.unidade_id
+        WHERE e.condominio_id IS DISTINCT FROM u.condominio_id""",
+    "lot_creator_tenant_mismatch": """SELECT COUNT(*) AS n FROM lotes_encomendas l
+        JOIN usuarios u ON u.id=l.usuario_criacao_id
+        WHERE l.condominio_id IS DISTINCT FROM u.condominio_id""",
     "invalid_foreign_keys": """SELECT COUNT(*) AS n FROM pg_constraint
         WHERE contype='f' AND NOT convalidated
           AND connamespace='public'::regnamespace""",
