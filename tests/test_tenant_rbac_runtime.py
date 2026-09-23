@@ -95,3 +95,33 @@ def test_inactive_platform_admin_session_is_revoked(app, monkeypatch):
         assert g.tenant_id is None
         assert "usuario_id" not in session
         assert "is_platform_admin" not in session
+
+
+def test_platform_status_rejects_malformed_value_before_database_call(app, monkeypatch):
+    from routes import platform_admin
+    app.register_blueprint(platform_admin.platform_admin_bp)
+    calls = []
+    monkeypatch.setattr(platform_admin, "definir_status_condominio", lambda *args: calls.append(args))
+    monkeypatch.setattr(platform_admin, "definir_status_usuario_tenant", lambda *args: calls.append(args))
+    with app.test_request_context("/plataforma/condominios/7/status", method="POST", data={"ativo": "yes"}):
+        g.current_user = {"id": 1, "nivel": "platform_admin"}
+        session["usuario_id"] = 1
+        from werkzeug.exceptions import BadRequest
+        with pytest.raises(BadRequest):
+            platform_admin.status_condominio(7)
+    with app.test_request_context("/plataforma/condominios/7/usuarios/8/status", method="POST", data={}):
+        g.current_user = {"id": 1, "nivel": "platform_admin"}
+        session["usuario_id"] = 1
+        with pytest.raises(BadRequest):
+            platform_admin.status_usuario_condominio(7, 8)
+    assert calls == []
+
+
+def test_tenant_operator_cannot_use_platform_status_route(app):
+    from routes import platform_admin
+    app.register_blueprint(platform_admin.platform_admin_bp)
+    with app.test_request_context("/plataforma/condominios/7/status", method="POST", data={"ativo": "0"}):
+        g.current_user = {"id": 8, "nivel": "admin_condominio"}
+        from werkzeug.exceptions import Forbidden
+        with pytest.raises(Forbidden):
+            platform_admin.status_condominio(7)
