@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 def claim_command_batch(limit=20):
     """Claim commands durably and release the database transaction before device I/O."""
+    if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 100:
+        raise ValueError("limit must be an integer between 1 and 100")
     conn = conectar()
     try:
         repo = HardwareRepository(conn)
