@@ -60,6 +60,11 @@ class HardwareRepository:
                         (tenant_id, device_id, external_event_id))
             return cur.fetchone() is not None
 
+    @staticmethod
+    def _safe_event_payload(payload):
+        blocked = {"credential", "tag", "token", "password", "secret", "authorization", "document", "cpf"}
+        return {str(k): v for k, v in dict(payload).items() if str(k).lower() not in blocked}
+
     def persist_event(self, event: HardwareEvent):
         credential_hash = credential_fingerprint(event.credential) if event.credential else None
         with self.conn.cursor() as cur:
@@ -68,7 +73,7 @@ class HardwareRepository:
                 VALUES (%s,%s::uuid,%s,%s,%s,%s::jsonb,%s)
                 ON CONFLICT (condominio_id, device_id, external_event_id) DO NOTHING""",
                 (event.tenant_id, event.device_id, event.event_id, event.event_type.value,
-                 credential_hash, json.dumps(dict(event.payload), ensure_ascii=False), event.occurred_at))
+                 credential_hash, json.dumps(self._safe_event_payload(event.payload), ensure_ascii=False), event.occurred_at))
 
     def enqueue_command(self, command: HardwareCommand):
         with self.conn.cursor() as cur:
