@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 def dispatch_claimed_commands(conn, registry, limit=20):
     """Dispatch an already durable outbox. Designed for a separate worker process."""
     repo = HardwareRepository(conn)
+    repo.expire_commands()
     commands = repo.claim_pending_commands(limit)
     completed = 0
     for row in commands:
@@ -24,10 +25,12 @@ def dispatch_claimed_commands(conn, registry, limit=20):
                 payload=row["payload"] or {},
             )
             result = adapter.send_command(command)
-            repo.finish_command(row["id"], succeeded=result.accepted, error=result.detail)
+            retry_seconds = min(300, 5 * (2 ** max(0, row["tentativas"] - 1)))
+            repo.finish_command(row["id"], succeeded=result.accepted, error=result.detail, retry_seconds=retry_seconds)
             completed += int(result.accepted)
         except Exception as exc:
             logger.exception("Hardware command dispatch failed command_id=%s", row["id"])
-            repo.finish_command(row["id"], succeeded=False, error=type(exc).__name__)
+            retry_seconds = min(300, 5 * (2 ** max(0, row["tentativas"] - 1)))
+            repo.finish_command(row["id"], succeeded=False, error=type(exc).__name__, retry_seconds=retry_seconds)
     conn.commit()
     return {"claimed": len(commands), "succeeded": completed}
