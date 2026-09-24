@@ -1,6 +1,7 @@
 import uuid
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from database.connection import conectar, liberar
+from database.models import listar_moradores
 from hardware.provisioning import provision_simulator_device, revoke_device_auth, rotate_simulator_secret
 from hardware.repository import HardwareRepository
 from utils.authz import roles_required
@@ -27,7 +28,8 @@ def credenciais():
     conn = conectar()
     try:
         credentials = HardwareRepository(conn).list_credentials(g.tenant_id)
-        return render_template("hardware/credenciais.html", credentials=credentials)
+        residents = listar_moradores(apenas_ativos=True)
+        return render_template("hardware/credenciais.html", credentials=credentials, residents=residents)
     finally:
         liberar(conn)
 
