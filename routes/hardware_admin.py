@@ -17,9 +17,10 @@ def dispositivos():
     conn = conectar()
     try:
         repo = HardwareRepository(conn)
-        devices = repo.list_devices(g.tenant_id)
+        devices = repo.list_device_operational_status(g.tenant_id)
         zones = [z for z in repo.list_access_zones(g.tenant_id) if z["ativo"]]
-        return render_template("hardware/dispositivos.html", devices=devices, zones=zones)
+        alerts = [d for d in devices if d["operational_status"] != "online"]
+        return render_template("hardware/dispositivos.html", devices=devices, zones=zones, alerts=alerts)
     finally:
         liberar(conn)
 
