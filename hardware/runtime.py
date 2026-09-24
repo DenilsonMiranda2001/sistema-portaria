@@ -33,15 +33,30 @@ def reconcile_incidents_once():
         reconcile_hardware_incidents(tenant_id)
 
 
+def _acquire_monitor_leader():
+    conn = conectar_dedicado("controleid-hardware-monitor-leader")
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT pg_try_advisory_lock(%s) AS acquired", (_LOCK_ID,))
+            if cur.fetchone()["acquired"]:
+                return conn
+    except Exception:
+        conn.close()
+        raise
+    conn.close()
+    return None
+
+
 def run_forever(registry, *, poll_seconds=2, monitor_seconds=30):
     """Run command dispatch continuously; elect one monitor leader via PostgreSQL advisory lock."""
     signal.signal(signal.SIGTERM, _stop)
     signal.signal(signal.SIGINT, _stop)
-    leader = conectar_dedicado("controleid-hardware-monitor-leader")
-    with leader.cursor() as cur:
-        cur.execute("SELECT pg_try_advisory_lock(%s) AS acquired", (_LOCK_ID,))
-        monitor_leader = bool(cur.fetchone()["acquired"])
-    logger.info("hardware runtime started monitor_leader=%s", monitor_leader)
+    leader = None
+    try:
+        leader = _acquire_monitor_leader()
+    except Exception as exc:
+        logger.error("hardware monitor leader election failed error_type=%s", type(exc).__name__)
+    logger.info("hardware runtime started monitor_leader=%s", leader is not None)
     next_monitor = 0.0
     consecutive_failures = 0
     try:
@@ -49,7 +64,12 @@ def run_forever(registry, *, poll_seconds=2, monitor_seconds=30):
             try:
                 dispatch_claimed_commands(registry)
                 now = time.monotonic()
-                if monitor_leader and now >= next_monitor:
+                if leader is None:
+                    try:
+                        leader = _acquire_monitor_leader()
+                    except Exception as exc:
+                        logger.error("hardware monitor leader election failed error_type=%s", type(exc).__name__)
+                if leader is not None and now >= next_monitor:
                     reconcile_incidents_once()
                     next_monitor = now + monitor_seconds
                 consecutive_failures = 0
@@ -61,10 +81,12 @@ def run_forever(registry, *, poll_seconds=2, monitor_seconds=30):
                              type(exc).__name__, consecutive_failures, delay)
                 time.sleep(delay)
     finally:
-        if monitor_leader:
-            with leader.cursor() as cur:
-                cur.execute("SELECT pg_advisory_unlock(%s)", (_LOCK_ID,))
-        leader.close()
+        if leader is not None:
+            try:
+                with leader.cursor() as cur:
+                    cur.execute("SELECT pg_advisory_unlock(%s)", (_LOCK_ID,))
+            finally:
+                leader.close()
 
 
 def main(registry=None):
