@@ -2,7 +2,7 @@ import uuid
 import re
 from datetime import time
 from psycopg2 import errors
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import Blueprint, flash, g, make_response, redirect, render_template, request, url_for
 from database.connection import conectar, liberar
 from database.models import listar_moradores
 from hardware.provisioning import provision_simulator_device, revoke_device_auth, rotate_simulator_secret
@@ -325,7 +325,10 @@ def criar_simulador():
         raise
     finally:
         liberar(conn)
-    return render_template("hardware/segredo_dispositivo.html", provisioned=provisioned)
+    response = make_response(render_template("hardware/segredo_dispositivo.html", provisioned=provisioned))
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    return response
 
 
 @hardware_admin_bp.post("/<uuid:device_id>/rotacionar")
@@ -348,7 +351,13 @@ def rotacionar(device_id):
         raise
     finally:
         liberar(conn)
-    return render_template("hardware/segredo_dispositivo.html", provisioned={"device_id": str(device_id), "secret": secret, "key_id": None})
+    response = make_response(render_template(
+        "hardware/segredo_dispositivo.html",
+        provisioned={"device_id": str(device_id), "secret": secret, "key_id": None},
+    ))
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    return response
 
 
 @hardware_admin_bp.post("/<uuid:device_id>/revogar")
