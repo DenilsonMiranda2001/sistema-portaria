@@ -38,6 +38,20 @@ def finish_dispatched_command(command_id, *, succeeded, error=None, retry_second
         liberar(conn)
 
 
+
+def _access_command_still_authorized(tenant_id, command_id, device_id):
+    conn = conectar()
+    try:
+        valid = HardwareRepository(conn).access_command_still_authorized(tenant_id, command_id, device_id)
+        conn.commit()
+        return valid
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+
+
 def _load_device(tenant_id, device_id):
     conn = conectar()
     try:
@@ -62,18 +76,7 @@ def dispatch_claimed_commands(registry, limit=20):
             if not device or not device["ativo"]:
                 raise RuntimeError("device_unavailable")
             if row["tipo"] == HardwareCommandType.GRANT_ACCESS.value:
-                conn = conectar()
-                try:
-                    valid = HardwareRepository(conn).access_command_still_authorized(
-                        row["condominio_id"], row["id"], row["device_id"]
-                    )
-                    conn.commit()
-                except Exception:
-                    conn.rollback()
-                    raise
-                finally:
-                    liberar(conn)
-                if not valid:
+                if not _access_command_still_authorized(row["condominio_id"], row["id"], row["device_id"]):
                     finish_dispatched_command(row["id"], succeeded=False, error="authorization_revoked", retry_seconds=300)
                     continue
             adapter = registry.get(device["vendor"])
