@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS hardware_commands (
     tentativas INTEGER NOT NULL DEFAULT 0 CHECK (tentativas >= 0),
     proxima_tentativa_em TIMESTAMPTZ,
     erro TEXT,
+    expira_em TIMESTAMPTZ,
+    concluido_em TIMESTAMPTZ,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
