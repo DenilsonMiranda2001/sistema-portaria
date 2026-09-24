@@ -1,5 +1,6 @@
 from hardware.access import AccessDecisionService, credential_fingerprint
 from hardware.simulator import SimulatorAdapter
+from hardware.policy import PolicyDecision
 
 
 def _event(tenant=10, credential="TAG-001"):
@@ -14,7 +15,7 @@ def test_known_authorized_tag_generates_vendor_neutral_grant_command():
         credential_lookup=lambda tenant, fingerprint: {
             "condominio_id": tenant, "ativo": True, "identificador_hash": fingerprint
         } if fingerprint == fp else None,
-        authorization_check=lambda tenant, credential, device: True,
+        authorization_check=lambda tenant, credential, device: PolicyDecision(True, "test_allowed", "policy-test"),
         command_id_factory=lambda: "cmd-1",
     )
     decision = service.decide(_event())
@@ -27,7 +28,7 @@ def test_known_authorized_tag_generates_vendor_neutral_grant_command():
 def test_unknown_or_unauthorized_tag_never_generates_open_command():
     service = AccessDecisionService(
         credential_lookup=lambda tenant, fingerprint: None,
-        authorization_check=lambda tenant, credential, device: True,
+        authorization_check=lambda tenant, credential, device: PolicyDecision(True, "test_allowed", "policy-test"),
         command_id_factory=lambda: "must-not-run",
     )
     decision = service.decide(_event())
@@ -39,7 +40,7 @@ def test_unknown_or_unauthorized_tag_never_generates_open_command():
 def test_cross_tenant_credential_is_rejected():
     service = AccessDecisionService(
         credential_lookup=lambda tenant, fingerprint: {"condominio_id": tenant + 1, "ativo": True},
-        authorization_check=lambda tenant, credential, device: True,
+        authorization_check=lambda tenant, credential, device: PolicyDecision(True, "test_allowed", "policy-test"),
         command_id_factory=lambda: "must-not-run",
     )
     decision = service.decide(_event(tenant=20))
