@@ -103,7 +103,11 @@ def dispatch_claimed_commands(registry, limit=20):
                 "Hardware command dispatch failed command_id=%s error_type=%s",
                 row["id"], type(exc).__name__
             )
+            # GRANT_ACCESS is not automatically retried after an ambiguous I/O failure:
+            # the physical device may already have acted even if its acknowledgement was lost.
+            retryable = row["tipo"] != HardwareCommandType.GRANT_ACCESS.value
             finish_dispatched_command(
-                row["id"], succeeded=False, error=type(exc).__name__, retry_seconds=retry_seconds
+                row["id"], succeeded=False, error=type(exc).__name__,
+                retry_seconds=retry_seconds, retryable=retryable
             )
     return {"claimed": len(commands), "succeeded": completed}
