@@ -20,6 +20,11 @@ CREATE TABLE IF NOT EXISTS hardware_devices (
     UNIQUE (id, condominio_id)
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS uq_hw_moradores_id_tenant
+    ON moradores(id, condominio_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_hw_visitantes_id_tenant
+    ON visitantes(id, condominio_id);
+
 CREATE TABLE IF NOT EXISTS hardware_credentials (
     id UUID PRIMARY KEY,
     condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
@@ -33,10 +38,16 @@ CREATE TABLE IF NOT EXISTS hardware_credentials (
     atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (condominio_id, tipo, identificador_hash),
     UNIQUE (id, condominio_id),
-    CHECK (NOT (morador_id IS NOT NULL AND visitante_id IS NOT NULL)),
-    FOREIGN KEY (morador_id, condominio_id) REFERENCES moradores(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
-    FOREIGN KEY (visitante_id, condominio_id) REFERENCES visitantes(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
+    CHECK (NOT (morador_id IS NOT NULL AND visitante_id IS NOT NULL))
 );
+
+ALTER TABLE hardware_credentials
+    ADD CONSTRAINT fk_hw_credentials_morador_tenant
+      FOREIGN KEY (morador_id, condominio_id) REFERENCES moradores(id, condominio_id)
+      DEFERRABLE INITIALLY IMMEDIATE,
+    ADD CONSTRAINT fk_hw_credentials_visitante_tenant
+      FOREIGN KEY (visitante_id, condominio_id) REFERENCES visitantes(id, condominio_id)
+      DEFERRABLE INITIALLY IMMEDIATE;
 
 CREATE TABLE IF NOT EXISTS hardware_events (
     id BIGSERIAL PRIMARY KEY,
