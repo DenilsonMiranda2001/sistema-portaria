@@ -418,6 +418,18 @@ class HardwareRepository:
                              AND (cmd.expira_em IS NULL OR cmd.expira_em > CURRENT_TIMESTAMP)
                              AND d.ativo AND d.auth_revoked_em IS NULL
                              AND (p.access_zone_id=z.id OR p.device_id=d.id)
+                             AND (p.valido_de IS NULL OR p.valido_de <= CURRENT_TIMESTAMP)
+                             AND (p.valido_ate IS NULL OR p.valido_ate > CURRENT_TIMESTAMP)
+                             AND (p.dias_semana IS NULL OR EXTRACT(ISODOW FROM CURRENT_TIMESTAMP AT TIME ZONE p.timezone)::int - 1 = ANY(p.dias_semana))
+                             AND (
+                               p.hora_inicio IS NULL OR (
+                                 CASE WHEN p.hora_inicio <= p.hora_fim
+                                      THEN (CURRENT_TIMESTAMP AT TIME ZONE p.timezone)::time BETWEEN p.hora_inicio AND p.hora_fim
+                                      ELSE (CURRENT_TIMESTAMP AT TIME ZONE p.timezone)::time >= p.hora_inicio
+                                           OR (CURRENT_TIMESTAMP AT TIME ZONE p.timezone)::time <= p.hora_fim
+                                 END
+                               )
+                             )
                            LIMIT 1""", (command_id, tenant_id, device_id))
             return cur.fetchone() is not None
 
