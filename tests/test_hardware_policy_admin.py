@@ -10,9 +10,9 @@ def test_policy_admin_routes_require_condominium_admin():
     assert segment.count('@roles_required("admin_condominio")') == 3
 
 
-def test_policy_creation_requires_active_same_tenant_credential_and_device():
+def test_policy_creation_requires_active_same_tenant_credential_and_zone():
     method = REPO.split("def create_access_policy", 1)[1].split("def deactivate_access_policy", 1)[0]
-    assert "d.condominio_id=%s AND d.ativo" in method
+    assert "z.condominio_id=%s AND z.ativo" in method
     assert "c.condominio_id=%s AND c.ativo" in method
 
 
