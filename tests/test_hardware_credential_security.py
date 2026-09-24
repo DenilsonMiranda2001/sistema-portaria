@@ -21,3 +21,14 @@ def test_production_has_no_implicit_credential_key(monkeypatch):
     monkeypatch.delenv("HARDWARE_CREDENTIAL_HMAC_KEY", raising=False)
     with pytest.raises(RuntimeError):
         credential_fingerprint("TAG-001")
+
+
+@pytest.mark.parametrize("value", ["", "   ", "x" * 257])
+def test_invalid_credential_values_are_rejected(value):
+    with pytest.raises(ValueError):
+        credential_fingerprint(value, key=b"a" * 32)
+
+
+def test_non_string_credential_is_rejected():
+    with pytest.raises(ValueError):
+        credential_fingerprint(12345, key=b"a" * 32)
