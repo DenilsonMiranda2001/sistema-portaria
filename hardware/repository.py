@@ -56,6 +56,12 @@ class HardwareRepository:
                                       AND d.ultimo_heartbeat_em IS NOT NULL
                                       AND d.ultimo_heartbeat_em >= CURRENT_TIMESTAMP - (%s * INTERVAL '1 second')
                                   ) AS online_devices,
+                                  COUNT(d.id) FILTER (
+                                    WHERE d.ativo
+                                      AND d.auth_revoked_em IS NULL
+                                      AND d.ultimo_heartbeat_em IS NULL
+                                      AND d.criado_em >= CURRENT_TIMESTAMP - (%s * INTERVAL '1 second')
+                                  ) AS commissioning_devices,
                                   CASE
                                     WHEN NOT z.ativo THEN 'inactive'
                                     WHEN COUNT(d.id) FILTER (WHERE d.ativo) = 0 THEN 'no_device'
@@ -64,15 +70,21 @@ class HardwareRepository:
                                         AND d.auth_revoked_em IS NULL
                                         AND d.ultimo_heartbeat_em IS NOT NULL
                                         AND d.ultimo_heartbeat_em >= CURRENT_TIMESTAMP - (%s * INTERVAL '1 second')
-                                    ) = 0 THEN 'unavailable'
-                                    ELSE 'operational'
+                                    ) > 0 THEN 'operational'
+                                    WHEN COUNT(d.id) FILTER (
+                                      WHERE d.ativo
+                                        AND d.auth_revoked_em IS NULL
+                                        AND d.ultimo_heartbeat_em IS NULL
+                                        AND d.criado_em >= CURRENT_TIMESTAMP - (%s * INTERVAL '1 second')
+                                    ) > 0 THEN 'commissioning'
+                                    ELSE 'unavailable'
                                   END AS operational_status
                            FROM hardware_access_zones z
                            LEFT JOIN hardware_devices d
                              ON d.access_zone_id=z.id AND d.condominio_id=z.condominio_id
                            WHERE z.condominio_id=%s
                            GROUP BY z.id,z.nome,z.codigo,z.ativo
-                           ORDER BY z.nome""", (stale_seconds, stale_seconds, tenant_id))
+                           ORDER BY z.nome""", (stale_seconds, 300, stale_seconds, 300, tenant_id))
             return cur.fetchall()
 
     def list_access_zones(self, tenant_id: int):
