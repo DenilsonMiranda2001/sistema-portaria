@@ -3,6 +3,7 @@ from database.connection import conectar, liberar
 from hardware.provisioning import provision_simulator_device, revoke_device_auth, rotate_simulator_secret
 from hardware.repository import HardwareRepository
 from utils.authz import roles_required
+from utils.audit import registrar_auditoria_cursor
 
 
 hardware_admin_bp = Blueprint("hardware_admin", __name__, url_prefix="/admin/dispositivos")
@@ -29,6 +30,10 @@ def criar_simulador():
     conn = conectar()
     try:
         provisioned = provision_simulator_device(HardwareRepository(conn), tenant_id=g.tenant_id, name=nome)
+        with conn.cursor() as cur:
+            registrar_auditoria_cursor(cur, "hardware_device_provisioned", g.current_user["id"], g.tenant_id,
+                                       "hardware_device", provisioned.device_id,
+                                       {"vendor": "simulator", "nome": nome}, actor_tipo="usuario", actor_id=g.current_user["id"])
         conn.commit()
     except Exception:
         conn.rollback()
@@ -44,6 +49,10 @@ def rotacionar(device_id):
     conn = conectar()
     try:
         secret = rotate_simulator_secret(HardwareRepository(conn), tenant_id=g.tenant_id, device_id=str(device_id))
+        with conn.cursor() as cur:
+            registrar_auditoria_cursor(cur, "hardware_device_secret_rotated", g.current_user["id"], g.tenant_id,
+                                       "hardware_device", device_id, {"vendor": "simulator"},
+                                       actor_tipo="usuario", actor_id=g.current_user["id"])
         conn.commit()
     except LookupError:
         conn.rollback()
@@ -63,6 +72,11 @@ def revogar(device_id):
     conn = conectar()
     try:
         changed = revoke_device_auth(HardwareRepository(conn), tenant_id=g.tenant_id, device_id=str(device_id))
+        if changed:
+            with conn.cursor() as cur:
+                registrar_auditoria_cursor(cur, "hardware_device_auth_revoked", g.current_user["id"], g.tenant_id,
+                                           "hardware_device", device_id, {},
+                                           actor_tipo="usuario", actor_id=g.current_user["id"])
         conn.commit()
     except Exception:
         conn.rollback()
