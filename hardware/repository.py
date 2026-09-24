@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from .access import credential_fingerprint
 from .contracts import HardwareCommand, HardwareEvent
 
@@ -107,14 +107,23 @@ class HardwareRepository:
                 (event.tenant_id, event.device_id, event.event_id, event.event_type.value,
                  credential_hash, json.dumps(self._safe_event_payload(event.payload), ensure_ascii=False), event.occurred_at))
 
+    @staticmethod
+    def _command_expiry(command: HardwareCommand, now: datetime):
+        # Access-opening commands must never execute long after the originating event.
+        if command.command_type.value == "grant_access":
+            return now + timedelta(seconds=10)
+        return now + timedelta(minutes=15)
+
     def enqueue_command(self, command: HardwareCommand):
+        now = datetime.now(timezone.utc)
+        expires_at = self._command_expiry(command, now)
         with self.conn.cursor() as cur:
             cur.execute("""INSERT INTO hardware_commands
-                (id, condominio_id, device_id, tipo, payload, proxima_tentativa_em)
-                VALUES (%s::uuid,%s,%s::uuid,%s,%s::jsonb,%s)
+                (id, condominio_id, device_id, tipo, payload, proxima_tentativa_em, expira_em)
+                VALUES (%s::uuid,%s,%s::uuid,%s,%s::jsonb,%s,%s)
                 ON CONFLICT (id) DO NOTHING""",
                 (command.command_id, command.tenant_id, command.device_id, command.command_type.value,
-                 json.dumps(dict(command.payload), ensure_ascii=False), datetime.now(timezone.utc)))
+                 json.dumps(dict(command.payload), ensure_ascii=False), now, expires_at))
 
     def mark_heartbeat(self, tenant_id: int, device_id: str):
         with self.conn.cursor() as cur:
