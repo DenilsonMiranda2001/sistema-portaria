@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Dispositivos · ControleID{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
+    <div><p class="text-uppercase small mb-1">Administração do condomínio</p><h1 class="h3 mb-1">Dispositivos e acessos</h1><p class="text-muted mb-0">Identidades técnicas isoladas deste condomínio.</p></div>
+    <form method="post" action="{{ url_for('hardware_admin.criar_simulador') }}" class="d-flex gap-2">
+      <input type="hidden" name="csrf_token" value="{{ global_csrf_token }}">
+      <input class="form-control" name="nome" maxlength="150" required placeholder="Nome do simulador">
+      <button class="btn btn-primary" type="submit">Criar simulador</button>
+    </form>
+  </div>
+  {% if alerts %}<div class="alert alert-warning mb-4"><strong>Atenção operacional:</strong> {{ alerts|length }} dispositivo(s) exigem verificação. Equipamentos sem heartbeat, offline, sem ponto de acesso ou com autenticação revogada não devem ser considerados operacionais.</div>{% endif %}
+  <div class="card"><div class="card-body">
+    {% if devices %}
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Dispositivo</th><th>Vendor</th><th>Tipo</th><th>Ponto de acesso</th><th>Status</th><th>Heartbeat</th><th>Ações</th></tr></thead><tbody>
+    {% for d in devices %}<tr><td><strong>{{ d.nome }}</strong><br><small class="text-muted">{{ d.external_device_id }}</small></td><td>{{ d.vendor }}</td><td>{{ d.tipo }}</td><td><form method="post" action="{{ url_for('hardware_admin.vincular_zona_dispositivo', device_id=d.id) }}" class="d-flex gap-2"><input type="hidden" name="csrf_token" value="{{ global_csrf_token }}"><select class="form-select form-select-sm" name="zone_id" required><option value="">{{ d.access_zone_nome or "Selecionar" }}</option>{% for z in zones %}<option value="{{ z.id }}">{{ z.nome }}</option>{% endfor %}</select><button class="btn btn-sm btn-outline-secondary" type="submit">Vincular</button></form></td><td>{{ {"online":"Online","offline":"Offline","never_seen":"Sem heartbeat","unassigned":"Sem ponto de acesso","auth_revoked":"Autenticação revogada","inactive":"Inativo"}.get(d.operational_status, d.operational_status) }}</td><td>{{ d.ultimo_heartbeat_em or "Sem heartbeat" }}</td><td class="d-flex gap-2">
+      {% if d.vendor == "simulator" and d.ativo %}<form method="post" action="{{ url_for('hardware_admin.rotacionar', device_id=d.id) }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token }}"><button class="btn btn-sm btn-outline-secondary" type="submit">Rotacionar segredo</button></form>{% endif %}
+      {% if not d.auth_revoked_em %}<form method="post" action="{{ url_for('hardware_admin.revogar', device_id=d.id) }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token }}"><button class="btn btn-sm btn-outline-danger" type="submit">Revogar</button></form>{% endif %}
+    </td></tr>{% endfor %}
+    </tbody></table></div>
+    {% else %}<p class="text-muted mb-0">Nenhum dispositivo provisionado neste condomínio.</p>{% endif %}
+  </div></div>
+</section>
+{% endblock %}

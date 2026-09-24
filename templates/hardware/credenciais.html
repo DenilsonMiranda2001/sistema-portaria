@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Credenciais de acesso · ControleID{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="mb-4"><p class="text-uppercase small mb-1">Administração do condomínio</p><h1 class="h3 mb-1">Credenciais de acesso</h1><p class="text-muted mb-0">Tags vinculadas a pessoas do próprio condomínio. O identificador original não é exibido nem armazenado em texto puro.</p></div>
+  <div class="card mb-4"><div class="card-body"><h2 class="h5">Vincular tag a morador</h2>
+    <form method="post" action="{{ url_for('hardware_admin.criar_credencial_morador') }}" class="row g-2">
+      <input type="hidden" name="csrf_token" value="{{ global_csrf_token }}">
+      <div class="col-md-2"><select class="form-select" name="tipo"><option value="rfid">RFID</option><option value="uhf">UHF</option></select></div>
+      <div class="col-md-4"><select class="form-select" name="morador_id" required><option value="">Selecione o morador</option>{% for r in residents %}<option value="{{ r.id }}">{{ r.nome }}{% if r.unidade_codigo %} · Unidade {{ r.unidade_codigo }}{% endif %}</option>{% endfor %}</select></div>
+      <div class="col-md-4"><input class="form-control" name="identificador" maxlength="256" required autocomplete="off" placeholder="Identificador da tag"></div>
+      <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Vincular</button></div>
+    </form>
+  </div></div>
+  <div class="card"><div class="card-body">
+    {% if credentials %}<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Pessoa</th><th>Tipo</th><th>Status</th><th>Criada em</th><th></th></tr></thead><tbody>
+    {% for c in credentials %}<tr><td>{{ c.morador_nome or c.visitante_nome or "Sem vínculo" }}</td><td>{{ c.tipo|upper }}</td><td>{{ "Ativa" if c.ativo else "Inativa" }}</td><td>{{ c.criado_em }}</td><td>{% if c.ativo %}<form method="post" action="{{ url_for('hardware_admin.desativar_credencial', credential_id=c.id) }}"><input type="hidden" name="csrf_token" value="{{ global_csrf_token }}"><button class="btn btn-sm btn-outline-danger" type="submit">Desativar</button></form>{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<p class="text-muted mb-0">Nenhuma credencial cadastrada.</p>{% endif %}
+  </div></div>
+</section>
+{% endblock %}

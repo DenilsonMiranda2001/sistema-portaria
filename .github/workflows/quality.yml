@@ -95,7 +95,7 @@ jobs:
                   definition = cur.fetchone()
                   assert definition and all(role in definition["definition"] for role in ("admin_condominio", "administrativo", "porteiro"))
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
-                  assert cur.fetchone()["n"] == 21
+                  assert cur.fetchone()["n"] == len(list(__import__("pathlib").Path("migrations").glob("[0-9]*.sql")))
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations WHERE version='0021_delivery_baseline_reconciliation.sql'")
                   assert cur.fetchone()["n"] == 1
                   cur.execute("""SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint
@@ -155,7 +155,7 @@ jobs:
           try:
               with conn.cursor() as cur:
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
-                  assert cur.fetchone()["n"] == 21
+                  assert cur.fetchone()["n"] == len(list(__import__("pathlib").Path("migrations").glob("[0-9]*.sql")))
                   cur.execute("SELECT to_regclass('public.entregadores') AS t")
                   assert cur.fetchone()["t"] == "entregadores"
           finally:
@@ -219,7 +219,7 @@ jobs:
                       ("legacy-admin","admin_condominio"), ("legacy-operator","porteiro")
                   ]
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
-                  assert cur.fetchone()["n"] == 21
+                  assert cur.fetchone()["n"] == len(list(__import__("pathlib").Path("migrations").glob("[0-9]*.sql")))
               conn.rollback()
               from psycopg2.errors import CheckViolation
               try:
@@ -257,6 +257,124 @@ jobs:
                       raise AssertionError("Cross-tenant courier association was accepted")
                   cur.execute("""INSERT INTO lotes_encomendas(condominio_id,entregador_id,transportadora)
                                  VALUES (%s,%s,'CI')""", (tenant_a,courier_id))
+              conn.rollback()
+          finally:
+              conn.close()
+          PY
+
+      - name: Verify cross-tenant hardware associations are rejected by PostgreSQL
+        run: |
+          python - <<'PY'
+          from uuid import uuid4
+          from psycopg2.errors import ForeignKeyViolation
+          from database.connection import conectar_dedicado
+
+          conn = conectar_dedicado("ci-hardware-tenant-fk")
+          try:
+              with conn.cursor() as cur:
+                  suffix = uuid4().hex
+                  cur.execute("""INSERT INTO condominios(nome,slug) VALUES
+                                 ('Hardware A',%s),('Hardware B',%s) RETURNING id""",
+                              ("hw-a-" + suffix, "hw-b-" + suffix))
+                  tenant_a, tenant_b = [row["id"] for row in cur.fetchall()]
+                  device_id = str(uuid4())
+                  cur.execute("""INSERT INTO hardware_devices
+                                 (id,condominio_id,vendor,external_device_id,nome,tipo)
+                                 VALUES (%s::uuid,%s,'simulator',%s,'CI Gate','simulator')""",
+                              (device_id, tenant_a, "ci-" + suffix))
+                  cur.execute("SAVEPOINT cross_tenant_hw_event")
+                  try:
+                      cur.execute("""INSERT INTO hardware_events
+                                     (condominio_id,device_id,external_event_id,tipo,ocorrido_em)
+                                     VALUES (%s,%s::uuid,%s,'credential_read',CURRENT_TIMESTAMP)""",
+                                  (tenant_b, device_id, "evt-" + suffix))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_event")
+                  else:
+                      raise AssertionError("Cross-tenant hardware event was accepted")
+
+                  cur.execute("SAVEPOINT cross_tenant_hw_command")
+                  try:
+                      cur.execute("""INSERT INTO hardware_commands
+                                     (id,condominio_id,device_id,tipo)
+                                     VALUES (%s::uuid,%s,%s::uuid,'ping')""",
+                                  (str(uuid4()), tenant_b, device_id))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_command")
+                  else:
+                      raise AssertionError("Cross-tenant hardware command was accepted")
+
+                  # A credential in tenant B must not reference a resident from tenant A.
+                  cur.execute("INSERT INTO moradores(condominio_id,nome) VALUES (%s,'CI Resident') RETURNING id", (tenant_a,))
+                  resident_a = cur.fetchone()["id"]
+                  cur.execute("SAVEPOINT cross_tenant_hw_credential")
+                  try:
+                      cur.execute("""INSERT INTO hardware_credentials
+                                     (id,condominio_id,tipo,identificador_hash,morador_id)
+                                     VALUES (%s::uuid,%s,'rfid',%s,%s)""",
+                                  (str(uuid4()), tenant_b, uuid4().hex + uuid4().hex, resident_a))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_credential")
+                  else:
+                      raise AssertionError("Cross-tenant hardware credential resident association was accepted")
+
+                  zone_a, zone_b = str(uuid4()), str(uuid4())
+                  cur.execute("""INSERT INTO hardware_access_zones(id,condominio_id,nome,codigo)
+                                 VALUES (%s::uuid,%s,'Gate A',%s),(%s::uuid,%s,'Gate B',%s)""",
+                              (zone_a, tenant_a, "gate-a-" + suffix, zone_b, tenant_b, "gate-b-" + suffix))
+
+                  cur.execute("SAVEPOINT cross_tenant_hw_device_zone")
+                  try:
+                      cur.execute("""UPDATE hardware_devices SET access_zone_id=%s::uuid
+                                     WHERE id=%s::uuid AND condominio_id=%s""",
+                                  (zone_b, device_id, tenant_a))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_device_zone")
+                  else:
+                      raise AssertionError("Cross-tenant hardware device-zone association was accepted")
+
+                  credential_a = str(uuid4())
+                  cur.execute("""INSERT INTO hardware_credentials
+                                 (id,condominio_id,tipo,identificador_hash)
+                                 VALUES (%s::uuid,%s,'rfid',%s)""",
+                              (credential_a, tenant_a, uuid4().hex + uuid4().hex))
+                  cur.execute("SAVEPOINT cross_tenant_hw_policy_zone")
+                  try:
+                      cur.execute("""INSERT INTO hardware_access_policies
+                                     (id,condominio_id,credential_id,access_zone_id,dias_semana)
+                                     VALUES (%s::uuid,%s,%s::uuid,%s::uuid,ARRAY[0]::smallint[])""",
+                                  (str(uuid4()), tenant_a, credential_a, zone_b))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_policy_zone")
+                  else:
+                      raise AssertionError("Cross-tenant hardware policy-zone association was accepted")
+
+                  credential_b = str(uuid4())
+                  cur.execute("""INSERT INTO hardware_credentials
+                                 (id,condominio_id,tipo,identificador_hash)
+                                 VALUES (%s::uuid,%s,'rfid',%s)""",
+                              (credential_b, tenant_b, uuid4().hex + uuid4().hex))
+                  cur.execute("SAVEPOINT cross_tenant_hw_policy_credential")
+                  try:
+                      cur.execute("""INSERT INTO hardware_access_policies
+                                     (id,condominio_id,credential_id,access_zone_id,dias_semana)
+                                     VALUES (%s::uuid,%s,%s::uuid,%s::uuid,ARRAY[0]::smallint[])""",
+                                  (str(uuid4()), tenant_a, credential_b, zone_a))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_policy_credential")
+                  else:
+                      raise AssertionError("Cross-tenant hardware policy-credential association was accepted")
+
+                  cur.execute("SAVEPOINT cross_tenant_hw_incident")
+                  try:
+                      cur.execute("""INSERT INTO hardware_incidents
+                                     (id,condominio_id,access_zone_id,tipo)
+                                     VALUES (%s::uuid,%s,%s::uuid,'access_zone_unavailable')""",
+                                  (str(uuid4()), tenant_a, zone_b))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_incident")
+                  else:
+                      raise AssertionError("Cross-tenant hardware incident-zone association was accepted")
               conn.rollback()
           finally:
               conn.close()
