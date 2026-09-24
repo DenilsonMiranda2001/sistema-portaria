@@ -167,6 +167,7 @@ CREATE TABLE IF NOT EXISTS hardware_access_policies (
     FOREIGN KEY (access_zone_id, condominio_id) REFERENCES hardware_access_zones(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
     CHECK (device_id IS NOT NULL OR access_zone_id IS NOT NULL)
 );
+CREATE UNIQUE INDEX IF NOT EXISTS uq_hw_policy_id_tenant ON hardware_access_policies(id, condominio_id);
 CREATE INDEX IF NOT EXISTS idx_hw_policy_tenant_credential ON hardware_access_policies(condominio_id, credential_id) WHERE ativo;
 CREATE INDEX IF NOT EXISTS idx_hw_devices_heartbeat ON hardware_devices(condominio_id, ultimo_heartbeat_em) WHERE ativo;
 
@@ -179,8 +180,10 @@ CREATE TABLE IF NOT EXISTS hardware_access_decisions (
     granted BOOLEAN NOT NULL,
     reason VARCHAR(80) NOT NULL,
     credential_hash VARCHAR(64),
+    policy_id UUID,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (device_id, condominio_id) REFERENCES hardware_devices(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
-    FOREIGN KEY (event_id, condominio_id) REFERENCES hardware_events(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
+    FOREIGN KEY (event_id, condominio_id) REFERENCES hardware_events(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
+    FOREIGN KEY (policy_id, condominio_id) REFERENCES hardware_access_policies(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
 );
 CREATE INDEX IF NOT EXISTS idx_hw_decisions_tenant_time ON hardware_access_decisions(condominio_id, criado_em DESC);
