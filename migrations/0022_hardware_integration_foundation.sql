@@ -63,6 +63,23 @@ CREATE TABLE IF NOT EXISTS hardware_commands (
 CREATE INDEX IF NOT EXISTS idx_hw_devices_tenant_active ON hardware_devices(condominio_id, ativo);
 CREATE INDEX IF NOT EXISTS idx_hw_events_tenant_time ON hardware_events(condominio_id, ocorrido_em DESC);
 CREATE INDEX IF NOT EXISTS idx_hw_commands_pending ON hardware_commands(status, proxima_tentativa_em) WHERE status IN ('pending','failed');
+CREATE TABLE IF NOT EXISTS hardware_access_policies (
+    id UUID PRIMARY KEY,
+    condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
+    credential_id UUID NOT NULL REFERENCES hardware_credentials(id) ON DELETE CASCADE,
+    device_id UUID REFERENCES hardware_devices(id) ON DELETE CASCADE,
+    zona VARCHAR(80),
+    valido_de TIMESTAMPTZ,
+    valido_ate TIMESTAMPTZ,
+    dias_semana SMALLINT[] NOT NULL DEFAULT ARRAY[0,1,2,3,4,5,6],
+    hora_inicio TIME,
+    hora_fim TIME,
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (valido_ate IS NULL OR valido_de IS NULL OR valido_ate > valido_de),
+    CHECK (hora_fim IS NULL OR hora_inicio IS NOT NULL)
+);
+CREATE INDEX IF NOT EXISTS idx_hw_policy_tenant_credential ON hardware_access_policies(condominio_id, credential_id) WHERE ativo;
 CREATE INDEX IF NOT EXISTS idx_hw_devices_heartbeat ON hardware_devices(condominio_id, ultimo_heartbeat_em) WHERE ativo;
 
 CREATE TABLE IF NOT EXISTS hardware_access_decisions (
