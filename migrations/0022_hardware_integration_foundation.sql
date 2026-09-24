@@ -107,10 +107,13 @@ CREATE TABLE IF NOT EXISTS hardware_access_policies (
     dias_semana SMALLINT[] NOT NULL DEFAULT ARRAY[0,1,2,3,4,5,6],
     hora_inicio TIME,
     hora_fim TIME,
+    timezone VARCHAR(64) NOT NULL DEFAULT 'America/Sao_Paulo',
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (valido_ate IS NULL OR valido_de IS NULL OR valido_ate > valido_de),
-    CHECK (hora_fim IS NULL OR hora_inicio IS NOT NULL),
+    CHECK ((hora_inicio IS NULL) = (hora_fim IS NULL)),
+    CHECK (dias_semana <@ ARRAY[0,1,2,3,4,5,6]::SMALLINT[]),
+    CHECK (cardinality(dias_semana) > 0),
     FOREIGN KEY (credential_id, condominio_id) REFERENCES hardware_credentials(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
     FOREIGN KEY (device_id, condominio_id) REFERENCES hardware_devices(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
 );
