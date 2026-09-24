@@ -1,8 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from .contracts import HardwareEvent, HardwareEventType
 
 
 ALLOWED_PAYLOAD_KEYS = {"reader", "direction", "door", "zone", "signal", "source"}
+MAX_EVENT_AGE = timedelta(minutes=5)
+MAX_EVENT_FUTURE_SKEW = timedelta(minutes=1)
 
 
 class InvalidHardwareEvent(ValueError):
@@ -30,6 +32,12 @@ def build_authenticated_event(device: dict, data: dict) -> HardwareEvent:
         raise InvalidHardwareEvent("invalid_occurred_at") from exc
     if occurred_at.tzinfo is None:
         raise InvalidHardwareEvent("timezone_required")
+    occurred_at = occurred_at.astimezone(timezone.utc)
+    now = datetime.now(timezone.utc)
+    if occurred_at < now - MAX_EVENT_AGE:
+        raise InvalidHardwareEvent("stale_event")
+    if occurred_at > now + MAX_EVENT_FUTURE_SKEW:
+        raise InvalidHardwareEvent("future_event")
     credential = data.get("credential")
     if credential is not None:
         credential = str(credential).strip()
@@ -49,7 +57,7 @@ def build_authenticated_event(device: dict, data: dict) -> HardwareEvent:
         device_id=str(device["id"]),
         event_id=external_event_id,
         event_type=event_type,
-        occurred_at=occurred_at.astimezone(timezone.utc),
+        occurred_at=occurred_at,
         credential=credential,
         payload=payload,
     )
