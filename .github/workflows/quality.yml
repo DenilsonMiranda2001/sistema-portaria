@@ -262,6 +262,52 @@ jobs:
               conn.close()
           PY
 
+      - name: Verify cross-tenant hardware associations are rejected by PostgreSQL
+        run: |
+          python - <<'PY'
+          from uuid import uuid4
+          from psycopg2.errors import ForeignKeyViolation
+          from database.connection import conectar_dedicado
+
+          conn = conectar_dedicado("ci-hardware-tenant-fk")
+          try:
+              with conn.cursor() as cur:
+                  suffix = uuid4().hex
+                  cur.execute("""INSERT INTO condominios(nome,slug) VALUES
+                                 ('Hardware A',%s),('Hardware B',%s) RETURNING id""",
+                              ("hw-a-" + suffix, "hw-b-" + suffix))
+                  tenant_a, tenant_b = [row["id"] for row in cur.fetchall()]
+                  device_id = str(uuid4())
+                  cur.execute("""INSERT INTO hardware_devices
+                                 (id,condominio_id,vendor,external_device_id,nome,tipo)
+                                 VALUES (%s::uuid,%s,'simulator',%s,'CI Gate','simulator')""",
+                              (device_id, tenant_a, "ci-" + suffix))
+                  cur.execute("SAVEPOINT cross_tenant_hw_event")
+                  try:
+                      cur.execute("""INSERT INTO hardware_events
+                                     (condominio_id,device_id,external_event_id,tipo,ocorrido_em)
+                                     VALUES (%s,%s::uuid,%s,'credential_read',CURRENT_TIMESTAMP)""",
+                                  (tenant_b, device_id, "evt-" + suffix))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_event")
+                  else:
+                      raise AssertionError("Cross-tenant hardware event was accepted")
+
+                  cur.execute("SAVEPOINT cross_tenant_hw_command")
+                  try:
+                      cur.execute("""INSERT INTO hardware_commands
+                                     (id,condominio_id,device_id,tipo)
+                                     VALUES (%s::uuid,%s,%s::uuid,'ping')""",
+                                  (str(uuid4()), tenant_b, device_id))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_hw_command")
+                  else:
+                      raise AssertionError("Cross-tenant hardware command was accepted")
+              conn.rollback()
+          finally:
+              conn.close()
+          PY
+
       - name: Authenticated tenant isolation and RBAC smoke on disposable PostgreSQL
         run: python scripts/ci_authenticated_smoke.py
 
