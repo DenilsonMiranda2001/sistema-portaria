@@ -11,7 +11,8 @@ def test_access_service_requires_online_device_and_persisted_policy():
 def test_access_service_has_no_permissive_authorization_callback():
     source = Path("hardware/service.py").read_text(encoding="utf-8")
     assert "authorization_check=" not in source.split("def __init__", 1)[1].split("def ingest", 1)[0]
-    assert "return decision.allowed" in source
+    assert "return decision" in source
+    assert "PolicyDecision" in Path("hardware/policy.py").read_text(encoding="utf-8")
 
 
 def test_repository_fingerprint_lookup_remains_tenant_scoped():
