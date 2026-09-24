@@ -26,6 +26,15 @@ class HardwareRepository:
                            WHERE condominio_id=%s AND identificador_hash=%s""", (tenant_id, fingerprint))
             return cur.fetchone()
 
+    def list_access_policies(self, tenant_id: int, credential_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT id::text, condominio_id, credential_id::text, device_id::text,
+                                  zona, valido_de, valido_ate, dias_semana, hora_inicio, hora_fim, ativo
+                           FROM hardware_access_policies
+                           WHERE condominio_id=%s AND credential_id=%s::uuid AND ativo""",
+                        (tenant_id, credential_id))
+            return cur.fetchall()
+
     def event_exists(self, tenant_id: int, device_id: str, external_event_id: str) -> bool:
         with self.conn.cursor() as cur:
             cur.execute("""SELECT 1 FROM hardware_events
