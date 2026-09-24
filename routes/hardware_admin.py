@@ -162,7 +162,7 @@ def permissoes():
         return render_template("hardware/permissoes.html",
                                policies=repo.list_admin_access_policies(g.tenant_id),
                                credentials=[x for x in repo.list_credentials(g.tenant_id) if x["ativo"]],
-                               devices=[x for x in repo.list_devices(g.tenant_id) if x["ativo"]])
+                               zones=[x for x in repo.list_access_zones(g.tenant_id) if x["ativo"]])
     finally:
         liberar(conn)
 
@@ -171,7 +171,7 @@ def permissoes():
 @roles_required("admin_condominio")
 def criar_permissao():
     credential_id = request.form.get("credential_id", "").strip()
-    device_id = request.form.get("device_id", "").strip()
+    device_id = request.form.get("access_zone_id", "").strip()
     weekdays_raw = request.form.getlist("dias_semana")
     start_time = request.form.get("hora_inicio", "").strip() or None
     end_time = request.form.get("hora_fim", "").strip() or None
@@ -180,7 +180,7 @@ def criar_permissao():
     except ValueError:
         weekdays = []
     if not credential_id or not device_id or not weekdays or any(day < 0 or day > 6 for day in weekdays):
-        flash("Selecione credencial, dispositivo e ao menos um dia válido.", "erro")
+        flash("Selecione credencial, ponto de acesso e ao menos um dia válido.", "erro")
         return redirect(url_for("hardware_admin.permissoes"))
     if bool(start_time) != bool(end_time):
         flash("Informe horário inicial e final juntos.", "erro")
@@ -194,12 +194,12 @@ def criar_permissao():
         )
         if not created:
             conn.rollback()
-            flash("Credencial ou dispositivo não pertence a este condomínio ou está inativo.", "erro")
+            flash("Credencial ou ponto de acesso não pertence a este condomínio ou está inativo.", "erro")
             return redirect(url_for("hardware_admin.permissoes"))
         with conn.cursor() as cur:
             registrar_auditoria_cursor(cur, "hardware_access_policy_created", g.current_user["id"], g.tenant_id,
                                        "hardware_access_policy", policy_id,
-                                       {"device_id": device_id, "credential_id": credential_id, "dias_semana": weekdays},
+                                       {"access_zone_id": device_id, "credential_id": credential_id, "dias_semana": weekdays},
                                        actor_tipo="usuario", actor_id=g.current_user["id"])
         conn.commit()
     except Exception:
