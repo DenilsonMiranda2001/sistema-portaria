@@ -25,9 +25,13 @@ class AdapterRegistry:
         self._adapters = {}
 
     def register(self, adapter: HardwareAdapter):
-        if not adapter.vendor:
+        vendor = getattr(adapter, "vendor", None)
+        if not isinstance(vendor, str) or not vendor.strip():
             raise ValueError("adapter vendor is required")
-        self._adapters[adapter.vendor] = adapter
+        vendor = vendor.strip()
+        if vendor in self._adapters:
+            raise ValueError(f"adapter vendor already registered: {vendor}")
+        self._adapters[vendor] = adapter
 
     def get(self, vendor: str) -> HardwareAdapter:
         try:
