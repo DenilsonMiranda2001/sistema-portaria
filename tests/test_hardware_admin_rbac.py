@@ -5,7 +5,9 @@ ROUTES = Path("routes/hardware_admin.py").read_text(encoding="utf-8")
 
 
 def test_every_hardware_admin_action_requires_condominium_admin():
-    assert ROUTES.count('@roles_required("admin_condominio")') == 4
+    route_count = ROUTES.count("@hardware_admin_bp.")
+    assert route_count >= 1
+    assert ROUTES.count('@roles_required("admin_condominio")') == route_count
 
 
 def test_hardware_admin_operations_use_authenticated_tenant():
