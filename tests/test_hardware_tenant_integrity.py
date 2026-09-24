@@ -6,6 +6,8 @@ SQL = Path("migrations/0022_hardware_integration_foundation.sql").read_text(enco
 
 def test_hardware_device_and_credential_have_composite_tenant_identity():
     assert "UNIQUE (id, condominio_id)" in SQL
+    assert "uq_hw_moradores_id_tenant" in SQL
+    assert "uq_hw_visitantes_id_tenant" in SQL
     assert "REFERENCES moradores(id, condominio_id)" in SQL
     assert "REFERENCES visitantes(id, condominio_id)" in SQL
 
