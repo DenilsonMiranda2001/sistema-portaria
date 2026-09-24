@@ -27,3 +27,11 @@ def test_revalidation_is_bound_to_original_granted_event():
 def test_revalidation_rejects_command_expired_after_claim():
     method=REPO.split("def access_command_still_authorized",1)[1].split("def finish_command",1)[0]
     assert "cmd.expira_em IS NULL OR cmd.expira_em > CURRENT_TIMESTAMP" in method
+
+def test_revalidation_rechecks_policy_validity_weekday_and_time_window():
+    method=REPO.split("def access_command_still_authorized",1)[1].split("def finish_command",1)[0]
+    assert "p.valido_de IS NULL OR p.valido_de <= CURRENT_TIMESTAMP" in method
+    assert "p.valido_ate IS NULL OR p.valido_ate > CURRENT_TIMESTAMP" in method
+    assert "EXTRACT(ISODOW FROM CURRENT_TIMESTAMP AT TIME ZONE p.timezone)" in method
+    assert "p.hora_inicio <= p.hora_fim" in method
+    assert "CURRENT_TIMESTAMP AT TIME ZONE p.timezone" in method
