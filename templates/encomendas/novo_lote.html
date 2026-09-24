@@ -1,6 +1,6 @@
 {% extends "base.html" %}{% from "encomendas/_macros.html" import subnav %}{% block title %}Entrada de entregador · ControleID{% endblock %}{% block content %}
 <section class="pc-module pc-packages"><div class="pc-subnav">{{ subnav('novo') }}</div>
-<header class="pc-pagehead pc-pagehead-compact pc-form-pagehead"><div><span class="pc-eyebrow">RECEBIMENTO</span><h2>Entrada de entregador</h2><p>Localize o cadastro e inicie o lote. Se for a primeira visita, cadastre sem sair desta tela.</p></div></header>
+<header class="pc-pagehead pc-packages-pagehead"><div><span class="pc-eyebrow">RECEBIMENTO</span><h2>Entrada de entregador</h2><p>Localize o cadastro e inicie o lote. Se for a primeira visita, cadastre sem sair desta tela.</p></div></header>
 <form method="post" class="pc-panel pc-delivery-entry"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="pc-delivery-search"><label for="busca_entregador">Nome ou CPF do entregador</label><div class="pc-delivery-searchbox"><input type="search" id="busca_entregador" placeholder="Digite para localizar o entregador" autocomplete="off" autofocus aria-controls="resultados_entregador" aria-expanded="false"><span class="pc-delivery-searchhint">Buscar cadastro</span></div><div id="resultados_entregador" class="pc-deliverer-results" role="listbox" hidden></div></div>
 <input type="hidden" name="entregador_id" id="entregador_id" value="{% if entregador_selecionado %}{{ entregador_selecionado.id }}{% endif %}">
