@@ -21,6 +21,11 @@ def canonical_message(*, key_id: str, timestamp: str, nonce: str, body: bytes) -
     return f"{key_id}\n{timestamp}\n{nonce}\n{body_hash}".encode("utf-8")
 
 
+def secret_verifier(secret: str) -> str:
+    """One-way verifier for provisioned device secrets; plaintext is never persisted."""
+    return hashlib.sha256(secret.encode("utf-8")).hexdigest()
+
+
 def verify_device_request(
     *,
     key_id: str,
@@ -46,8 +51,9 @@ def verify_device_request(
         return DeviceAuthResult(False, "stale_request")
     if not nonce or len(nonce) < 16:
         return DeviceAuthResult(False, "invalid_nonce")
-    secret = device.get("auth_secret")
-    if not secret:
+    secret = device.get("_presented_secret")
+    stored_verifier = device.get("auth_secret_hash")
+    if not secret or not stored_verifier or not hmac.compare_digest(secret_verifier(secret), stored_verifier):
         return DeviceAuthResult(False, "device_secret_unavailable")
     expected = hmac.new(
         secret.encode("utf-8"),
