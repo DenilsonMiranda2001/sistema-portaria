@@ -35,3 +35,21 @@ def test_simulator_never_contacts_physical_hardware():
     result = adapter.send_command(command)
     assert result.accepted
     assert adapter.commands == [command]
+
+
+def test_processor_rejects_revoked_device_even_if_event_bypasses_http_auth():
+    recorded = []
+    processor = HardwareEventProcessor(
+        device_lookup=lambda tenant, device: {
+            "condominio_id": tenant,
+            "ativo": True,
+            "auth_revoked_em": "2026-09-24T00:00:00Z",
+        },
+        event_exists=lambda tenant, device, event: False,
+        persist_event=recorded.append,
+    )
+    event = SimulatorAdapter().normalize_event(3, "gate-revoked", {"event_id": "evt-revoked"})
+    result = processor.process(event)
+    assert result.accepted is False
+    assert result.reason == "unknown_inactive_or_revoked_device"
+    assert recorded == []
