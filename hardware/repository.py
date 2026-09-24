@@ -145,11 +145,12 @@ class HardwareRepository:
         with self.conn.cursor() as cur:
             cur.execute("""SELECT p.id::text, p.credential_id::text, p.device_id::text, p.zona,
                                   p.valido_de, p.valido_ate, p.dias_semana, p.hora_inicio, p.hora_fim,
-                                  p.timezone, p.ativo, d.nome AS device_nome, c.tipo AS credential_tipo,
+                                  p.timezone, p.ativo, d.nome AS device_nome, z.nome AS access_zone_nome, c.tipo AS credential_tipo,
                                   m.nome AS morador_nome
                            FROM hardware_access_policies p
                            JOIN hardware_credentials c ON c.id=p.credential_id AND c.condominio_id=p.condominio_id
                            LEFT JOIN hardware_devices d ON d.id=p.device_id AND d.condominio_id=p.condominio_id
+                           LEFT JOIN hardware_access_zones z ON z.id=p.access_zone_id AND z.condominio_id=p.condominio_id
                            LEFT JOIN moradores m ON m.id=c.morador_id AND m.condominio_id=c.condominio_id
                            WHERE p.condominio_id=%s ORDER BY p.criado_em DESC""", (tenant_id,))
             return cur.fetchall()
@@ -158,10 +159,10 @@ class HardwareRepository:
                              start_time=None, end_time=None, timezone_name="America/Sao_Paulo"):
         with self.conn.cursor() as cur:
             cur.execute("""INSERT INTO hardware_access_policies
-                           (id,condominio_id,credential_id,device_id,dias_semana,hora_inicio,hora_fim,timezone)
-                           SELECT %s::uuid,%s,c.id,d.id,%s::smallint[],%s,%s,%s
+                           (id,condominio_id,credential_id,access_zone_id,dias_semana,hora_inicio,hora_fim,timezone)
+                           SELECT %s::uuid,%s,c.id,z.id,%s::smallint[],%s,%s,%s
                            FROM hardware_credentials c
-                           JOIN hardware_devices d ON d.id=%s::uuid AND d.condominio_id=%s AND d.ativo
+                           JOIN hardware_access_zones z ON z.id=%s::uuid AND z.condominio_id=%s AND z.ativo
                            WHERE c.id=%s::uuid AND c.condominio_id=%s AND c.ativo
                            RETURNING id::text""",
                         (policy_id, tenant_id, weekdays, start_time, end_time, timezone_name,
@@ -178,7 +179,7 @@ class HardwareRepository:
     def list_access_policies(self, tenant_id: int, credential_id: str):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, condominio_id, credential_id::text, device_id::text,
-                                  zona, valido_de, valido_ate, dias_semana, hora_inicio, hora_fim, timezone, ativo
+                                  access_zone_id::text, zona, valido_de, valido_ate, dias_semana, hora_inicio, hora_fim, timezone, ativo
                            FROM hardware_access_policies
                            WHERE condominio_id=%s AND credential_id=%s::uuid AND ativo""",
                         (tenant_id, credential_id))
