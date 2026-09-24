@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS hardware_devices (
     tipo VARCHAR(50) NOT NULL,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     configuracao JSONB NOT NULL DEFAULT '{}'::jsonb,
+    access_zone_id UUID,
     ultimo_heartbeat_em TIMESTAMPTZ,
     auth_key_id VARCHAR(80),
     auth_secret_hash VARCHAR(64),
@@ -111,6 +112,16 @@ CREATE TABLE IF NOT EXISTS hardware_access_zones (
     CHECK (char_length(trim(codigo)) > 0)
 );
 CREATE INDEX IF NOT EXISTS idx_hw_zones_tenant_active ON hardware_access_zones(condominio_id, ativo);
+
+ALTER TABLE hardware_devices
+    ADD CONSTRAINT fk_hw_devices_zone_tenant
+    FOREIGN KEY (access_zone_id, condominio_id)
+    REFERENCES hardware_access_zones(id, condominio_id)
+    ON DELETE RESTRICT;
+
+CREATE INDEX IF NOT EXISTS idx_hw_devices_tenant_zone
+    ON hardware_devices(condominio_id, access_zone_id)
+    WHERE access_zone_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS hardware_access_policies (
     id UUID PRIMARY KEY,
