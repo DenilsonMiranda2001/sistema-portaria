@@ -49,3 +49,5 @@ class CommandResult:
     accepted: bool
     external_id: Optional[str] = None
     detail: Optional[str] = None
+    # Adapters must opt in explicitly when the vendor guarantees a retry is safe/idempotent.
+    safe_to_retry: bool = False
