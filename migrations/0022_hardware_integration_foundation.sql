@@ -123,6 +123,26 @@ CREATE INDEX IF NOT EXISTS idx_hw_devices_tenant_zone
     ON hardware_devices(condominio_id, access_zone_id)
     WHERE access_zone_id IS NOT NULL;
 
+CREATE TABLE IF NOT EXISTS hardware_incidents (
+    id UUID PRIMARY KEY,
+    condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
+    access_zone_id UUID NOT NULL,
+    tipo VARCHAR(60) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open','resolved')),
+    opened_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_observed_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolved_em TIMESTAMPTZ,
+    details JSONB NOT NULL DEFAULT '{}'::jsonb,
+    FOREIGN KEY (access_zone_id, condominio_id)
+        REFERENCES hardware_access_zones(id, condominio_id) ON DELETE RESTRICT,
+    CHECK ((status = 'open' AND resolved_em IS NULL) OR (status = 'resolved' AND resolved_em IS NOT NULL))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_hw_incident_open_zone_type
+    ON hardware_incidents(condominio_id, access_zone_id, tipo)
+    WHERE status = 'open';
+CREATE INDEX IF NOT EXISTS idx_hw_incidents_tenant_status_time
+    ON hardware_incidents(condominio_id, status, opened_em DESC);
+
 CREATE TABLE IF NOT EXISTS hardware_access_policies (
     id UUID PRIMARY KEY,
     condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
