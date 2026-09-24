@@ -30,6 +30,25 @@ class HardwareRepository:
                            WHERE condominio_id=%s AND id=%s::uuid AND ativo""", (tenant_id, zone_id))
             return cur.rowcount == 1
 
+    def list_device_operational_status(self, tenant_id: int, stale_seconds: int = 90):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT d.id::text, d.nome, d.vendor, d.tipo, d.ativo, d.ultimo_heartbeat_em,
+                                  d.access_zone_id::text, z.nome AS access_zone_nome,
+                                  CASE
+                                    WHEN NOT d.ativo THEN 'inactive'
+                                    WHEN d.auth_revoked_em IS NOT NULL THEN 'auth_revoked'
+                                    WHEN d.access_zone_id IS NULL THEN 'unassigned'
+                                    WHEN d.ultimo_heartbeat_em IS NULL THEN 'never_seen'
+                                    WHEN d.ultimo_heartbeat_em < CURRENT_TIMESTAMP - (%s * INTERVAL '1 second') THEN 'offline'
+                                    ELSE 'online'
+                                  END AS operational_status
+                           FROM hardware_devices d
+                           LEFT JOIN hardware_access_zones z
+                             ON z.id=d.access_zone_id AND z.condominio_id=d.condominio_id
+                           WHERE d.condominio_id=%s
+                           ORDER BY d.nome""", (stale_seconds, tenant_id))
+            return cur.fetchall()
+
     def list_devices(self, tenant_id: int):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT d.id::text, d.vendor, d.external_device_id, d.nome, d.tipo, d.ativo,
