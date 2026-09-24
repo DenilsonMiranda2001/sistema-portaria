@@ -106,3 +106,52 @@ def test_unknown_event_envelope_fields_are_rejected_fail_closed():
         assert str(exc) == "unsupported_event_keys"
     else:
         raise AssertionError("unknown event envelope field accepted")
+
+
+
+def test_event_freshness_exact_boundaries_are_accepted():
+    now = datetime(2026, 9, 24, 13, 0, tzinfo=timezone.utc)
+    for event_id, occurred_at in (
+        ("evt-age-boundary", now - timedelta(minutes=5)),
+        ("evt-future-boundary", now + timedelta(minutes=1)),
+    ):
+        event = build_authenticated_event(DEVICE, {
+            "event_id": event_id,
+            "event_type": "credential_read",
+            "occurred_at": occurred_at.isoformat(),
+            "credential": "tag-1",
+        }, now=now)
+        assert event.event_id == event_id
+
+
+def test_event_freshness_just_outside_boundaries_is_rejected():
+    now = datetime(2026, 9, 24, 13, 0, tzinfo=timezone.utc)
+    cases = (
+        ("evt-too-old", now - timedelta(minutes=5, microseconds=1), "stale_event"),
+        ("evt-too-future", now + timedelta(minutes=1, microseconds=1), "future_event"),
+    )
+    for event_id, occurred_at, expected in cases:
+        try:
+            build_authenticated_event(DEVICE, {
+                "event_id": event_id,
+                "event_type": "credential_read",
+                "occurred_at": occurred_at.isoformat(),
+                "credential": "tag-1",
+            }, now=now)
+        except InvalidHardwareEvent as exc:
+            assert str(exc) == expected
+        else:
+            raise AssertionError(f"{event_id} accepted outside freshness boundary")
+
+
+def test_injected_clock_must_be_timezone_aware():
+    try:
+        build_authenticated_event(DEVICE, {
+            "event_id": "evt-clock",
+            "event_type": "device_status",
+            "occurred_at": "2026-09-24T13:00:00+00:00",
+        }, now=datetime(2026, 9, 24, 13, 0))
+    except ValueError as exc:
+        assert str(exc) == "now must be timezone-aware"
+    else:
+        raise AssertionError("naive injected clock accepted")
