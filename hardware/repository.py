@@ -52,11 +52,26 @@ class HardwareRepository:
                 (command.command_id, command.tenant_id, command.device_id, command.command_type.value,
                  json.dumps(dict(command.payload), ensure_ascii=False), datetime.now(timezone.utc)))
 
+    def mark_heartbeat(self, tenant_id: int, device_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_devices SET ultimo_heartbeat_em=CURRENT_TIMESTAMP,
+                           atualizado_em=CURRENT_TIMESTAMP
+                           WHERE condominio_id=%s AND id=%s::uuid AND ativo""", (tenant_id, device_id))
+            return cur.rowcount == 1
+
+    def expire_commands(self):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_commands SET status='expired', atualizado_em=CURRENT_TIMESTAMP
+                           WHERE status IN ('pending','failed')
+                             AND expira_em IS NOT NULL AND expira_em <= CURRENT_TIMESTAMP""")
+            return cur.rowcount
+
     def claim_pending_commands(self, limit: int = 20):
         with self.conn.cursor() as cur:
             cur.execute("""WITH claimed AS (
                     SELECT id FROM hardware_commands
                     WHERE status IN ('pending','failed')
+                      AND (expira_em IS NULL OR expira_em > CURRENT_TIMESTAMP)
                       AND (proxima_tentativa_em IS NULL OR proxima_tentativa_em <= CURRENT_TIMESTAMP)
                     ORDER BY criado_em
                     FOR UPDATE SKIP LOCKED
@@ -68,9 +83,14 @@ class HardwareRepository:
                 RETURNING c.id::text, c.condominio_id, c.device_id::text, c.tipo, c.payload, c.tentativas""", (limit,))
             return cur.fetchall()
 
-    def finish_command(self, command_id: str, *, succeeded: bool, error: str | None = None):
+    def finish_command(self, command_id: str, *, succeeded: bool, error: str | None = None, retry_seconds: int = 5):
         with self.conn.cursor() as cur:
             cur.execute("""UPDATE hardware_commands
-                           SET status=%s, erro=%s, atualizado_em=CURRENT_TIMESTAMP
+                           SET status=%s, erro=%s,
+                               proxima_tentativa_em=CASE WHEN %s THEN NULL ELSE CURRENT_TIMESTAMP + (%s * INTERVAL '1 second') END,
+                               concluido_em=CASE WHEN %s THEN CURRENT_TIMESTAMP ELSE NULL END,
+                               atualizado_em=CURRENT_TIMESTAMP
                            WHERE id=%s::uuid AND status='processing'""",
-                        ("succeeded" if succeeded else "failed", None if succeeded else (error or "adapter_error")[:1000], command_id))
+                        ("succeeded" if succeeded else "failed",
+                         None if succeeded else (error or "adapter_error")[:1000],
+                         succeeded, retry_seconds, succeeded, command_id))
