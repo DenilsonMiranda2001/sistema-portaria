@@ -23,12 +23,12 @@ def claim_command_batch(limit=20):
         liberar(conn)
 
 
-def finish_dispatched_command(command_id, *, succeeded, error=None, retry_seconds=5):
+def finish_dispatched_command(command_id, *, succeeded, error=None, retry_seconds=5, retryable=True):
     """Persist one command outcome in its own short transaction."""
     conn = conectar()
     try:
         HardwareRepository(conn).finish_command(
-            command_id, succeeded=succeeded, error=error, retry_seconds=retry_seconds
+            command_id, succeeded=succeeded, error=error, retry_seconds=retry_seconds, retryable=retryable
         )
         conn.commit()
     except Exception:
@@ -77,7 +77,10 @@ def dispatch_claimed_commands(registry, limit=20):
                 raise RuntimeError("device_unavailable")
             if row["tipo"] == HardwareCommandType.GRANT_ACCESS.value:
                 if not _access_command_still_authorized(row["condominio_id"], row["id"], row["device_id"]):
-                    finish_dispatched_command(row["id"], succeeded=False, error="authorization_revoked", retry_seconds=300)
+                    finish_dispatched_command(
+                        row["id"], succeeded=False, error="authorization_revoked",
+                        retry_seconds=300, retryable=False
+                    )
                     continue
             adapter = registry.get(device["vendor"])
             command = HardwareCommand(
