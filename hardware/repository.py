@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import datetime, timedelta, timezone
 from .access import credential_fingerprint
 from .contracts import HardwareCommand, HardwareEvent
@@ -9,6 +10,41 @@ class HardwareRepository:
 
     def __init__(self, conn):
         self.conn = conn
+
+    def list_incidents(self, tenant_id: int, limit: int = 100):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT i.id::text, i.tipo, i.status, i.opened_em, i.last_observed_em,
+                                  i.resolved_em, i.details, z.nome AS access_zone_nome
+                           FROM hardware_incidents i
+                           JOIN hardware_access_zones z
+                             ON z.id=i.access_zone_id AND z.condominio_id=i.condominio_id
+                           WHERE i.condominio_id=%s
+                           ORDER BY (i.status='open') DESC, i.opened_em DESC LIMIT %s""",
+                        (tenant_id, limit))
+            return cur.fetchall()
+
+    def reconcile_zone_incident(self, *, tenant_id: int, zone_id: str, incident_type: str,
+                                unavailable: bool, details=None):
+        details = details or {}
+        with self.conn.cursor() as cur:
+            if unavailable:
+                cur.execute("""INSERT INTO hardware_incidents
+                               (id,condominio_id,access_zone_id,tipo,details)
+                               VALUES (%s::uuid,%s,%s::uuid,%s,%s::jsonb)
+                               ON CONFLICT (condominio_id,access_zone_id,tipo) WHERE status='open'
+                               DO UPDATE SET last_observed_em=CURRENT_TIMESTAMP, details=EXCLUDED.details
+                               RETURNING id::text,status""",
+                            (str(uuid.uuid4()), tenant_id, zone_id, incident_type,
+                             json.dumps(details, ensure_ascii=False)))
+            else:
+                cur.execute("""UPDATE hardware_incidents
+                               SET status='resolved', resolved_em=CURRENT_TIMESTAMP,
+                                   last_observed_em=CURRENT_TIMESTAMP
+                               WHERE condominio_id=%s AND access_zone_id=%s::uuid
+                                 AND tipo=%s AND status='open'
+                               RETURNING id::text,status""",
+                            (tenant_id, zone_id, incident_type))
+            return cur.fetchone()
 
     def list_access_zone_operational_status(self, tenant_id: int, stale_seconds: int = 90):
         with self.conn.cursor() as cur:
