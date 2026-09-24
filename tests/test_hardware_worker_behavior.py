@@ -109,3 +109,71 @@ def test_authorized_grant_reaches_adapter_and_records_success():
         "command-1", succeeded=True, error=None,
         retry_seconds=5, retryable=True,
     )
+
+
+
+def test_rejected_grant_is_terminal_without_explicit_safe_retry():
+    adapter = Mock()
+    adapter.send_command.return_value = SimpleNamespace(accepted=False, safe_to_retry=False)
+    registry = Mock()
+    registry.get.return_value = adapter
+    finish = Mock()
+    with patch("hardware.worker.claim_command_batch", return_value=[_grant_row()]), \
+         patch("hardware.worker._load_device", return_value={
+             "id": "device-1", "ativo": True, "auth_revoked_em": None,
+             "vendor": "simulator",
+         }), \
+         patch("hardware.worker._access_command_still_authorized", return_value=True), \
+         patch("hardware.worker.finish_dispatched_command", finish):
+        result = dispatch_claimed_commands(registry)
+
+    assert result == {"claimed": 1, "succeeded": 0}
+    adapter.send_command.assert_called_once()
+    finish.assert_called_once_with(
+        "command-1", succeeded=False, error="adapter_rejected",
+        retry_seconds=5, retryable=False,
+    )
+
+
+def test_rejected_grant_retries_only_when_adapter_explicitly_marks_safe():
+    adapter = Mock()
+    adapter.send_command.return_value = SimpleNamespace(accepted=False, safe_to_retry=True)
+    registry = Mock()
+    registry.get.return_value = adapter
+    finish = Mock()
+    with patch("hardware.worker.claim_command_batch", return_value=[_grant_row()]), \
+         patch("hardware.worker._load_device", return_value={
+             "id": "device-1", "ativo": True, "auth_revoked_em": None,
+             "vendor": "simulator",
+         }), \
+         patch("hardware.worker._access_command_still_authorized", return_value=True), \
+         patch("hardware.worker.finish_dispatched_command", finish):
+        result = dispatch_claimed_commands(registry)
+
+    assert result == {"claimed": 1, "succeeded": 0}
+    finish.assert_called_once_with(
+        "command-1", succeeded=False, error="adapter_rejected",
+        retry_seconds=5, retryable=True,
+    )
+
+
+def test_ambiguous_grant_adapter_exception_is_terminal():
+    adapter = Mock()
+    adapter.send_command.side_effect = TimeoutError("ambiguous acknowledgement")
+    registry = Mock()
+    registry.get.return_value = adapter
+    finish = Mock()
+    with patch("hardware.worker.claim_command_batch", return_value=[_grant_row()]), \
+         patch("hardware.worker._load_device", return_value={
+             "id": "device-1", "ativo": True, "auth_revoked_em": None,
+             "vendor": "simulator",
+         }), \
+         patch("hardware.worker._access_command_still_authorized", return_value=True), \
+         patch("hardware.worker.finish_dispatched_command", finish):
+        result = dispatch_claimed_commands(registry)
+
+    assert result == {"claimed": 1, "succeeded": 0}
+    finish.assert_called_once_with(
+        "command-1", succeeded=False, error="TimeoutError",
+        retry_seconds=5, retryable=False,
+    )
