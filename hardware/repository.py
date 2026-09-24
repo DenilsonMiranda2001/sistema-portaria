@@ -103,9 +103,12 @@ class HardwareRepository:
             cur.execute("""INSERT INTO hardware_events
                 (condominio_id, device_id, external_event_id, tipo, credential_hash, payload, ocorrido_em)
                 VALUES (%s,%s::uuid,%s,%s,%s,%s::jsonb,%s)
-                ON CONFLICT (condominio_id, device_id, external_event_id) DO NOTHING""",
+                ON CONFLICT (condominio_id, device_id, external_event_id) DO NOTHING
+                RETURNING id""",
                 (event.tenant_id, event.device_id, event.event_id, event.event_type.value,
                  credential_hash, json.dumps(self._safe_event_payload(event.payload), ensure_ascii=False), event.occurred_at))
+            row = cur.fetchone()
+            return row["id"] if row else None
 
     @staticmethod
     def _command_expiry(command: HardwareCommand, now: datetime):
@@ -132,13 +135,27 @@ class HardwareRepository:
                            WHERE condominio_id=%s AND id=%s::uuid AND ativo""", (tenant_id, device_id))
             return cur.rowcount == 1
 
-    def record_access_decision(self, event: HardwareEvent, *, granted: bool, reason: str):
+    def get_event_id(self, tenant_id: int, device_id: str, external_event_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT id FROM hardware_events
+                           WHERE condominio_id=%s AND device_id=%s::uuid AND external_event_id=%s""",
+                        (tenant_id, device_id, external_event_id))
+            row = cur.fetchone()
+            return row["id"] if row else None
+
+    def record_access_decision(self, event: HardwareEvent, *, granted: bool, reason: str, event_id=None):
         credential_hash = credential_fingerprint(event.credential) if event.credential else None
+        internal_event_id = event_id if event_id is not None else self.get_event_id(
+            event.tenant_id, event.device_id, event.event_id
+        )
+        if internal_event_id is None:
+            raise RuntimeError("hardware_event_missing_for_decision")
         with self.conn.cursor() as cur:
             cur.execute("""INSERT INTO hardware_access_decisions
-                (condominio_id, device_id, external_event_id, granted, reason, credential_hash)
-                VALUES (%s,%s::uuid,%s,%s,%s,%s)""",
-                (event.tenant_id, event.device_id, event.event_id, granted, reason, credential_hash))
+                (condominio_id, device_id, event_id, external_event_id, granted, reason, credential_hash)
+                VALUES (%s,%s::uuid,%s,%s,%s,%s,%s)""",
+                (event.tenant_id, event.device_id, internal_event_id, event.event_id,
+                 granted, reason, credential_hash))
 
     def device_is_online(self, tenant_id: int, device_id: str, stale_seconds: int = 90) -> bool:
         with self.conn.cursor() as cur:
