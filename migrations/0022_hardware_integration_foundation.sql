@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS hardware_commands (
     status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending','processing','succeeded','failed','expired')),
     tentativas INTEGER NOT NULL DEFAULT 0 CHECK (tentativas >= 0),
+    max_tentativas INTEGER NOT NULL DEFAULT 5 CHECK (max_tentativas BETWEEN 1 AND 20),
     proxima_tentativa_em TIMESTAMPTZ,
     erro TEXT,
     expira_em TIMESTAMPTZ,
@@ -62,3 +63,17 @@ CREATE TABLE IF NOT EXISTS hardware_commands (
 CREATE INDEX IF NOT EXISTS idx_hw_devices_tenant_active ON hardware_devices(condominio_id, ativo);
 CREATE INDEX IF NOT EXISTS idx_hw_events_tenant_time ON hardware_events(condominio_id, ocorrido_em DESC);
 CREATE INDEX IF NOT EXISTS idx_hw_commands_pending ON hardware_commands(status, proxima_tentativa_em) WHERE status IN ('pending','failed');
+CREATE INDEX IF NOT EXISTS idx_hw_devices_heartbeat ON hardware_devices(condominio_id, ultimo_heartbeat_em) WHERE ativo;
+
+CREATE TABLE IF NOT EXISTS hardware_access_decisions (
+    id BIGSERIAL PRIMARY KEY,
+    condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
+    device_id UUID NOT NULL REFERENCES hardware_devices(id) ON DELETE RESTRICT,
+    event_id BIGINT REFERENCES hardware_events(id) ON DELETE SET NULL,
+    external_event_id VARCHAR(180) NOT NULL,
+    granted BOOLEAN NOT NULL,
+    reason VARCHAR(80) NOT NULL,
+    credential_hash VARCHAR(64),
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_hw_decisions_tenant_time ON hardware_access_decisions(condominio_id, criado_em DESC);
