@@ -46,3 +46,9 @@ def test_revoked_access_command_is_terminal_not_retried():
 def test_ambiguous_grant_access_io_failure_is_not_retried():
     assert 'retryable = row["tipo"] != HardwareCommandType.GRANT_ACCESS.value' in WORKER
     assert "the physical device may already have acted" in WORKER
+
+def test_rejected_access_command_requires_explicit_safe_retry_opt_in():
+    contracts=Path("hardware/contracts.py").read_text(encoding="utf-8")
+    assert "safe_to_retry: bool = False" in contracts
+    assert 'getattr(result, "safe_to_retry", False)' in WORKER
+    assert "retryable_rejection" in WORKER
