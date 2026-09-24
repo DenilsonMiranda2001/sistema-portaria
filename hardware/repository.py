@@ -32,11 +32,26 @@ class HardwareRepository:
 
     def list_devices(self, tenant_id: int):
         with self.conn.cursor() as cur:
-            cur.execute("""SELECT id::text, vendor, external_device_id, nome, tipo, ativo,
-                                  ultimo_heartbeat_em, auth_key_id, auth_secret_rotated_em, auth_revoked_em
-                           FROM hardware_devices WHERE condominio_id=%s
-                           ORDER BY nome, criado_em""", (tenant_id,))
+            cur.execute("""SELECT d.id::text, d.vendor, d.external_device_id, d.nome, d.tipo, d.ativo,
+                                  d.ultimo_heartbeat_em, d.auth_key_id, d.auth_secret_rotated_em, d.auth_revoked_em,
+                                  d.access_zone_id::text, z.nome AS access_zone_nome, z.codigo AS access_zone_codigo
+                           FROM hardware_devices d
+                           LEFT JOIN hardware_access_zones z
+                             ON z.id=d.access_zone_id AND z.condominio_id=d.condominio_id
+                           WHERE d.condominio_id=%s
+                           ORDER BY d.nome, d.criado_em""", (tenant_id,))
             return cur.fetchall()
+
+    def assign_device_zone(self, tenant_id: int, device_id: str, zone_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_devices d
+                           SET access_zone_id=z.id, atualizado_em=CURRENT_TIMESTAMP
+                           FROM hardware_access_zones z
+                           WHERE d.condominio_id=%s AND d.id=%s::uuid
+                             AND z.condominio_id=d.condominio_id AND z.id=%s::uuid AND z.ativo
+                           RETURNING d.id::text""", (tenant_id, device_id, zone_id))
+            row = cur.fetchone()
+            return row["id"] if row else None
 
     def create_device_identity(self, *, device_id, tenant_id, vendor, external_device_id, name, device_type, key_id, secret_hash):
         with self.conn.cursor() as cur:
