@@ -91,11 +91,16 @@ def dispatch_claimed_commands(registry, limit=20):
                 payload=row["payload"] or {},
             )
             result = adapter.send_command(command)
+            retryable_rejection = (
+                row["tipo"] != HardwareCommandType.GRANT_ACCESS.value
+                or getattr(result, "safe_to_retry", False)
+            )
             finish_dispatched_command(
                 row["id"],
                 succeeded=result.accepted,
                 error=None if result.accepted else "adapter_rejected",
                 retry_seconds=retry_seconds,
+                retryable=True if result.accepted else retryable_rejection,
             )
             completed += int(result.accepted)
         except Exception as exc:
