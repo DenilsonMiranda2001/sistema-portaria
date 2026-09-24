@@ -21,7 +21,7 @@ def test_monitor_opens_for_unavailable_and_resolves_after_recovery():
     assert "conn.commit()" in MONITOR
 
 def test_uncommissioned_zone_is_not_reported_as_outage():
-    assert 'if status == "no_device"' in MONITOR
+    assert 'if status in {"no_device", "commissioning"}' in MONITOR
     no_device=MONITOR.split('if status in {"no_device", "commissioning"}',1)[1].split("continue",1)[0]
     assert "unavailable=False" in no_device
 
