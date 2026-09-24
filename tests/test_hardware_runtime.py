@@ -28,3 +28,8 @@ def test_runtime_retries_failed_cycles_without_logging_sensitive_exception_text(
 def test_monitor_leadership_can_be_reacquired():
     assert "def _acquire_monitor_leader" in RUNTIME
     assert "if leader is None:" in RUNTIME
+
+def test_worker_health_probe_is_database_backed():
+    health=Path("hardware/health.py").read_text(encoding="utf-8")
+    assert "SELECT 1 AS ok" in health
+    assert "SystemExit(0 if database_ready() else 1)" in health
