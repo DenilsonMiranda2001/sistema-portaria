@@ -30,6 +30,6 @@ def test_policy_enforces_validity_and_schedule():
 
 
 def test_overnight_window_is_supported():
-    policies = [{"ativo": True, "dias_semana": [3], "hora_inicio": time(22), "hora_fim": time(6)}]
+    policies = [{"ativo": True, "dias_semana": [3], "hora_inicio": time(22), "hora_fim": time(6), "timezone": "UTC"}]
     at = datetime(2026, 9, 24, 23, 0, tzinfo=timezone.utc)
     assert evaluate_access_policies(policies, device_id="gate-a", at=at).allowed
