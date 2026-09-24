@@ -1,3 +1,4 @@
+import pytest
 from hardware.adapter import AdapterRegistry
 from hardware.contracts import HardwareCommand, HardwareCommandType
 from hardware.processor import HardwareEventProcessor
@@ -53,3 +54,25 @@ def test_processor_rejects_revoked_device_even_if_event_bypasses_http_auth():
     assert result.accepted is False
     assert result.reason == "unknown_inactive_or_revoked_device"
     assert recorded == []
+
+
+def test_registry_rejects_duplicate_vendor_registration():
+    registry = AdapterRegistry()
+    registry.register(SimulatorAdapter())
+    with pytest.raises(ValueError, match="already registered"):
+        registry.register(SimulatorAdapter())
+
+
+def test_registry_rejects_missing_or_blank_vendor():
+    registry = AdapterRegistry()
+
+    class MissingVendor:
+        pass
+
+    class BlankVendor:
+        vendor = "   "
+
+    with pytest.raises(ValueError, match="vendor is required"):
+        registry.register(MissingVendor())
+    with pytest.raises(ValueError, match="vendor is required"):
+        registry.register(BlankVendor())
