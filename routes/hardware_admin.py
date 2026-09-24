@@ -95,6 +95,17 @@ def desativar_credencial(credential_id):
     return redirect(url_for("hardware_admin.credenciais"))
 
 
+@hardware_admin_bp.get("/incidentes")
+@roles_required("admin_condominio")
+def incidentes():
+    conn = conectar()
+    try:
+        return render_template("hardware/incidentes.html",
+                               incidents=HardwareRepository(conn).list_incidents(g.tenant_id))
+    finally:
+        liberar(conn)
+
+
 @hardware_admin_bp.get("/zonas")
 @roles_required("admin_condominio")
 def zonas():
