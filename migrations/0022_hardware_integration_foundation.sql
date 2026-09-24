@@ -187,3 +187,11 @@ CREATE TABLE IF NOT EXISTS hardware_access_decisions (
     FOREIGN KEY (policy_id, condominio_id) REFERENCES hardware_access_policies(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
 );
 CREATE INDEX IF NOT EXISTS idx_hw_decisions_tenant_time ON hardware_access_decisions(condominio_id, criado_em DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_hw_decision_id_tenant ON hardware_access_decisions(id, condominio_id);
+
+ALTER TABLE hardware_commands
+    ADD COLUMN decision_id BIGINT,
+    ADD CONSTRAINT fk_hw_commands_decision_tenant
+      FOREIGN KEY (decision_id, condominio_id)
+      REFERENCES hardware_access_decisions(id, condominio_id)
+      DEFERRABLE INITIALLY IMMEDIATE;
