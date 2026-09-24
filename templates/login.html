@@ -12,7 +12,7 @@
 <section class="login-access">
 <div class="login-access-inner">
 <div class="login-mobile-brand"><img src="{{ url_for('static', filename='controleid-logo.svg', v='brand-1') }}" alt="ControleID"></div>
-<header class="login-access-head"><span class="login-access-index">ACESSO / 01</span><h2>Entrar no ControleID</h2><p>Use as credenciais fornecidas pela administração do condomínio.</p></header>
+<header class="login-access-head"><span class="login-access-index">ACESSO / 01</span><h2>Entre na operação</h2><p class="login-product-name">ControleID · acesso operacional</p><p>Use as credenciais fornecidas pela administração do condomínio.</p></header>
 {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="login-alerts">{% for cat, msg in messages %}<div class="login-alert {{ cat }}" role="alert">{{ msg }}</div>{% endfor %}</div>{% endif %}{% endwith %}
 <form method="POST" class="login-form login-form-premium"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <label class="login-field" for="usuario"><span>Usuário</span><div class="login-control"><input id="usuario" type="text" name="usuario" placeholder="Seu usuário de acesso" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus><i aria-hidden="true">ID</i></div></label>
