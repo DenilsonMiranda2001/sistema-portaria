@@ -16,8 +16,10 @@ hardware_admin_bp = Blueprint("hardware_admin", __name__, url_prefix="/admin/dis
 def dispositivos():
     conn = conectar()
     try:
-        devices = HardwareRepository(conn).list_devices(g.tenant_id)
-        return render_template("hardware/dispositivos.html", devices=devices)
+        repo = HardwareRepository(conn)
+        devices = repo.list_devices(g.tenant_id)
+        zones = [z for z in repo.list_access_zones(g.tenant_id) if z["ativo"]]
+        return render_template("hardware/dispositivos.html", devices=devices, zones=zones)
     finally:
         liberar(conn)
 
@@ -229,6 +231,34 @@ def desativar_permissao(policy_id):
     flash("Permissão desativada." if changed else "Permissão não encontrada ou já inativa.",
           "sucesso" if changed else "aviso")
     return redirect(url_for("hardware_admin.permissoes"))
+
+
+@hardware_admin_bp.post("/<uuid:device_id>/zona")
+@roles_required("admin_condominio")
+def vincular_zona_dispositivo(device_id):
+    zone_id = request.form.get("zone_id", "").strip()
+    if not zone_id:
+        flash("Selecione um ponto de acesso.", "erro")
+        return redirect(url_for("hardware_admin.dispositivos"))
+    conn = conectar()
+    try:
+        assigned = HardwareRepository(conn).assign_device_zone(g.tenant_id, str(device_id), zone_id)
+        if not assigned:
+            conn.rollback()
+            flash("Dispositivo ou ponto de acesso não pertence a este condomínio ou está inativo.", "erro")
+            return redirect(url_for("hardware_admin.dispositivos"))
+        with conn.cursor() as cur:
+            registrar_auditoria_cursor(cur, "hardware_device_zone_assigned", g.current_user["id"], g.tenant_id,
+                                       "hardware_device", device_id, {"access_zone_id": zone_id},
+                                       actor_tipo="usuario", actor_id=g.current_user["id"])
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+    flash("Ponto de acesso vinculado ao dispositivo.", "sucesso")
+    return redirect(url_for("hardware_admin.dispositivos"))
 
 
 @hardware_admin_bp.post("/simulador")
