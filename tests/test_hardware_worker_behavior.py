@@ -1,4 +1,6 @@
 from types import SimpleNamespace
+
+import pytest
 from unittest.mock import Mock, patch
 
 from hardware.contracts import HardwareCommandType
@@ -257,3 +259,31 @@ def test_unknown_vendor_non_access_command_is_retryable():
         "command-1", succeeded=False, error="LookupError",
         retry_seconds=5, retryable=True,
     )
+
+
+
+@pytest.mark.parametrize("limit", [None, 0, -1, True, 101, 1.5, "20"])
+def test_claim_batch_rejects_invalid_limit_before_database_access(limit):
+    from hardware.worker import claim_command_batch
+
+    with patch("hardware.worker.conectar") as connect:
+        with pytest.raises(ValueError, match="limit must be an integer between 1 and 100"):
+            claim_command_batch(limit)
+    connect.assert_not_called()
+
+
+@pytest.mark.parametrize("limit", [1, 20, 100])
+def test_claim_batch_accepts_supported_limits(limit):
+    from hardware.worker import claim_command_batch
+
+    conn = Mock()
+    repo = Mock()
+    repo.claim_pending_commands.return_value = []
+    with patch("hardware.worker.conectar", return_value=conn), \
+         patch("hardware.worker.liberar") as release, \
+         patch("hardware.worker.HardwareRepository", return_value=repo):
+        assert claim_command_batch(limit) == []
+
+    repo.claim_pending_commands.assert_called_once_with(limit)
+    conn.commit.assert_called_once()
+    release.assert_called_once_with(conn)
