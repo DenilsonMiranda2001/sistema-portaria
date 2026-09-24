@@ -214,3 +214,46 @@ def test_retry_backoff_uses_attempt_count_before_cap():
             "command-1", succeeded=False, error="RuntimeError",
             retry_seconds=retry_seconds, retryable=True,
         )
+
+
+
+def test_unknown_vendor_never_attempts_device_io_and_grant_is_terminal():
+    registry = Mock()
+    registry.get.side_effect = LookupError("unsupported hardware vendor")
+    finish = Mock()
+    with patch("hardware.worker.claim_command_batch", return_value=[_grant_row()]), \
+         patch("hardware.worker._load_device", return_value={
+             "id": "device-1", "ativo": True, "auth_revoked_em": None,
+             "vendor": "unknown-vendor",
+         }), \
+         patch("hardware.worker._access_command_still_authorized", return_value=True), \
+         patch("hardware.worker.finish_dispatched_command", finish):
+        result = dispatch_claimed_commands(registry)
+
+    assert result == {"claimed": 1, "succeeded": 0}
+    registry.get.assert_called_once_with("unknown-vendor")
+    finish.assert_called_once_with(
+        "command-1", succeeded=False, error="LookupError",
+        retry_seconds=5, retryable=False,
+    )
+
+
+def test_unknown_vendor_non_access_command_is_retryable():
+    row = _grant_row()
+    row["tipo"] = HardwareCommandType.PING.value
+    registry = Mock()
+    registry.get.side_effect = LookupError("unsupported hardware vendor")
+    finish = Mock()
+    with patch("hardware.worker.claim_command_batch", return_value=[row]), \
+         patch("hardware.worker._load_device", return_value={
+             "id": "device-1", "ativo": True, "auth_revoked_em": None,
+             "vendor": "unknown-vendor",
+         }), \
+         patch("hardware.worker.finish_dispatched_command", finish):
+        result = dispatch_claimed_commands(registry)
+
+    assert result == {"claimed": 1, "succeeded": 0}
+    finish.assert_called_once_with(
+        "command-1", succeeded=False, error="LookupError",
+        retry_seconds=5, retryable=True,
+    )
