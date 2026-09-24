@@ -28,3 +28,13 @@ def test_policy_changes_are_audited_without_raw_credentials():
     assert "hardware_access_policy_created" in segment
     assert "hardware_access_policy_deactivated" in segment
     assert "raw_identifier" not in segment
+
+def test_policy_route_validates_uuid_and_time_before_database():
+    segment = ROUTES.split("def criar_permissao", 1)[1].split("def desativar_permissao", 1)[0]
+    assert "uuid.UUID(credential_id)" in segment
+    assert "uuid.UUID(access_zone_id)" in segment
+    assert "time.fromisoformat(start_time)" in segment
+
+def test_policy_repository_names_logical_zone_explicitly():
+    method = REPO.split("def create_access_policy", 1)[1].split("def deactivate_access_policy", 1)[0]
+    assert "access_zone_id" in method.split("weekdays", 1)[0]
