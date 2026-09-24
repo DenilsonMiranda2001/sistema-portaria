@@ -35,3 +35,10 @@ def test_revalidation_rechecks_policy_validity_weekday_and_time_window():
     assert "EXTRACT(ISODOW FROM CURRENT_TIMESTAMP AT TIME ZONE p.timezone)" in method
     assert "p.hora_inicio <= p.hora_fim" in method
     assert "CURRENT_TIMESTAMP AT TIME ZONE p.timezone" in method
+
+def test_revoked_access_command_is_terminal_not_retried():
+    assert 'error="authorization_revoked"' in WORKER
+    revoked=WORKER.split('error="authorization_revoked"',1)[1][:180]
+    assert "retryable=False" in revoked
+    finish=REPO.split("def finish_command",1)[1]
+    assert 'failure_status = "failed" if retryable else "expired"' in finish
