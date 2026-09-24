@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS hardware_devices (
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     configuracao JSONB NOT NULL DEFAULT '{}'::jsonb,
     ultimo_heartbeat_em TIMESTAMPTZ,
+    auth_key_id VARCHAR(80),
+    auth_secret_hash VARCHAR(64),
+    auth_secret_rotated_em TIMESTAMPTZ,
+    auth_revoked_em TIMESTAMPTZ,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (condominio_id, vendor, external_device_id)
