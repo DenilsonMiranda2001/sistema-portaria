@@ -301,16 +301,16 @@ class HardwareRepository:
             return now + timedelta(seconds=10)
         return now + timedelta(minutes=15)
 
-    def enqueue_command(self, command: HardwareCommand):
+    def enqueue_command(self, command: HardwareCommand, *, decision_id=None):
         now = datetime.now(timezone.utc)
         expires_at = self._command_expiry(command, now)
         with self.conn.cursor() as cur:
             cur.execute("""INSERT INTO hardware_commands
-                (id, condominio_id, device_id, tipo, payload, proxima_tentativa_em, expira_em)
-                VALUES (%s::uuid,%s,%s::uuid,%s,%s::jsonb,%s,%s)
+                (id, condominio_id, device_id, tipo, payload, decision_id, proxima_tentativa_em, expira_em)
+                VALUES (%s::uuid,%s,%s::uuid,%s,%s::jsonb,%s,%s,%s)
                 ON CONFLICT (id) DO NOTHING""",
                 (command.command_id, command.tenant_id, command.device_id, command.command_type.value,
-                 json.dumps(dict(command.payload), ensure_ascii=False), now, expires_at))
+                 json.dumps(dict(command.payload), ensure_ascii=False), decision_id, now, expires_at))
 
     def mark_heartbeat(self, tenant_id: int, device_id: str):
         with self.conn.cursor() as cur:
@@ -337,9 +337,11 @@ class HardwareRepository:
         with self.conn.cursor() as cur:
             cur.execute("""INSERT INTO hardware_access_decisions
                 (condominio_id, device_id, event_id, external_event_id, granted, reason, credential_hash, policy_id)
-                VALUES (%s,%s::uuid,%s,%s,%s,%s,%s,%s::uuid)""",
+                VALUES (%s,%s::uuid,%s,%s,%s,%s,%s,%s::uuid)
+                RETURNING id""",
                 (event.tenant_id, event.device_id, internal_event_id, event.event_id,
                  granted, reason, credential_hash, policy_id))
+            return cur.fetchone()["id"]
 
     def device_is_online(self, tenant_id: int, device_id: str, stale_seconds: int = 90) -> bool:
         with self.conn.cursor() as cur:
@@ -394,7 +396,8 @@ class HardwareRepository:
                            JOIN hardware_devices d
                              ON d.id=cmd.device_id AND d.condominio_id=cmd.condominio_id
                            JOIN hardware_access_decisions dec
-                             ON dec.condominio_id=cmd.condominio_id
+                             ON dec.id=cmd.decision_id
+                            AND dec.condominio_id=cmd.condominio_id
                             AND dec.device_id=cmd.device_id
                             AND dec.external_event_id=cmd.payload->>'source_event_id'
                             AND dec.granted
