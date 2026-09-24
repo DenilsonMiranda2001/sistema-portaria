@@ -45,9 +45,11 @@ class HardwareAccessService:
                 command_id_factory=self.command_id_factory,
             )
             decision = decision_service.decide(event)
-            repo.record_access_decision(event, granted=decision.granted, reason=decision.reason, policy_id=decision.policy_id)
+            decision_id = repo.record_access_decision(
+                event, granted=decision.granted, reason=decision.reason, policy_id=decision.policy_id
+            )
             if decision.command is not None:
-                repo.enqueue_command(decision.command)
+                repo.enqueue_command(decision.command, decision_id=decision_id)
             conn.commit()
             return processed, decision
         except Exception:
