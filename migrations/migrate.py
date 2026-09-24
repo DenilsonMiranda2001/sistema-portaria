@@ -13,10 +13,12 @@ BASE_SCHEMA = MIGRATIONS_DIR.parent / "database" / "schema.sql"
 def migrate():
     conn = conectar_dedicado("sistema-portaria-migrations")
     try:
+        fresh_bootstrap = False
         with conn.cursor() as cur:
             cur.execute("SELECT pg_advisory_lock(%s)", (MIGRATION_LOCK_ID,))
             cur.execute("SELECT to_regclass('public.usuarios') AS usuarios")
             if not cur.fetchone()["usuarios"]:
+                fresh_bootstrap = True
                 cur.execute(BASE_SCHEMA.read_text(encoding="utf-8"))
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -37,7 +39,26 @@ def migrate():
                     if existing["checksum"] != checksum:
                         raise RuntimeError(f"Migration checksum mismatch: {path.name}")
                     continue
-                cur.execute(sql)
+                if path.name == "0019_delivery_people.sql":
+                    # The baseline already includes delivery tables. A failed predeploy
+                    # may have committed migrations 0001-0018 before reaching 0019;
+                    # therefore fresh_bootstrap alone cannot identify this case.
+                    cur.execute("SELECT to_regclass('public.entregadores') AS entregadores")
+                    has_couriers = bool(cur.fetchone()["entregadores"])
+                    cur.execute("""SELECT 1 FROM information_schema.columns
+                                   WHERE table_schema='public' AND table_name='lotes_encomendas'
+                                   AND column_name='entregador_id'""")
+                    has_lot_courier = bool(cur.fetchone())
+                    if has_couriers != has_lot_courier:
+                        raise RuntimeError("Incomplete delivery schema before migration 0019; inspect manually")
+                    if has_couriers:
+                        # Migration 0021 reconciles baseline constraints. Never rewrite
+                        # 0019: deployed databases already record its checksum.
+                        logger.info("Delivery baseline already present; recording migration 0019")
+                    else:
+                        cur.execute(sql)
+                else:
+                    cur.execute(sql)
                 cur.execute(
                     "INSERT INTO schema_migrations(version, checksum) VALUES (%s,%s)",
                     (path.name, checksum),

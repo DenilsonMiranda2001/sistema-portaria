@@ -13,12 +13,11 @@ STATUS_PENDENTES = ("retida_portaria",)
 
 
 def _codigo_retirada(cur):
-    tenant_id = _tenant_id()
     alfabeto = string.ascii_uppercase + string.digits
     ano = datetime.now().year
     for _ in range(20):
         codigo = f"ENC-{ano}-{''.join(secrets.choice(alfabeto) for _ in range(4))}"
-        cur.execute("SELECT 1 FROM encomendas WHERE condominio_id = %s AND codigo_retirada = %s", (tenant_id, codigo))
+        cur.execute("SELECT 1 FROM encomendas WHERE codigo_retirada = %s", (codigo,))
         if not cur.fetchone():
             return codigo
     raise RuntimeError("Não foi possível gerar um código de retirada único.")
@@ -165,7 +164,7 @@ def adicionar_encomenda(lote_id, morador_id, unidade, nome_morador,
                 unidade_id = morador["unidade_id"]
                 telefone = morador["telefone"]
 
-            cur.execute("SELECT 1 FROM lotes_encomendas WHERE id = %s AND condominio_id = %s AND status IN ('aberto','em_triagem')", (lote_id, tenant_id))
+            cur.execute("SELECT 1 FROM lotes_encomendas WHERE id = %s AND condominio_id = %s AND status IN ('aberto','em_triagem') FOR UPDATE", (lote_id, tenant_id))
             if not cur.fetchone():
                 raise ValueError("Lote não encontrado ou já encerrado.")
 

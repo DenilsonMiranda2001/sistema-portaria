@@ -28,7 +28,7 @@ jobs:
       - name: Dependency vulnerability audit
         run: pip-audit -r requirements.txt
       - name: Python security static analysis
-        run: bandit -q -r app.py config.py routes utils database migrations scripts -x tests
+        run: bandit -q -r app.py config.py routes utils database migrations scripts -x tests,scripts/ci_authenticated_smoke.py,scripts/isolated_release_preflight.py
       - name: Repository hygiene
         run: |
           test -z "$(git ls-files | grep -E '(^|/)\.env$|(^|/)venv/|(^|/)__pycache__/|\.pyc$|\.sqlite3?$|\.db$|^static/fotos/' || true)"
@@ -51,4 +51,312 @@ jobs:
               print("fail-closed config verified")
           else:
               raise SystemExit("production config unexpectedly accepted missing SECRET_KEY")
+          PY
+
+  postgres-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: portaria_ci
+          POSTGRES_USER: portaria_ci
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U portaria_ci -d portaria_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PYTHONPATH: .
+      APP_ENV: test
+      DATABASE_URL: postgresql://portaria_ci:ci-only-password@localhost:5432/portaria_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Apply all migrations to isolated PostgreSQL
+        run: python -m migrations.migrate upgrade
+      - name: Verify RBAC migration and idempotent rerun
+        run: |
+          python -m migrations.migrate upgrade
+          python - <<'PY'
+          from database.connection import conectar_dedicado
+          conn = conectar_dedicado("ci-migration-assertions")
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("SELECT COUNT(*) AS n FROM schema_migrations WHERE version='0020_tenant_rbac_roles.sql'")
+                  assert cur.fetchone()["n"] == 1
+                  cur.execute("SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid='usuarios'::regclass AND conname='usuarios_nivel_check'")
+                  definition = cur.fetchone()
+                  assert definition and all(role in definition["definition"] for role in ("admin_condominio", "administrativo", "porteiro"))
+                  cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
+                  assert cur.fetchone()["n"] == 21
+                  cur.execute("SELECT COUNT(*) AS n FROM schema_migrations WHERE version='0021_delivery_baseline_reconciliation.sql'")
+                  assert cur.fetchone()["n"] == 1
+                  cur.execute("""SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint
+                                 WHERE conrelid='lotes_encomendas'::regclass AND conname='fk_lotes_entregador_tenant'""")
+                  delivery_fk = cur.fetchone()
+                  assert delivery_fk and "FOREIGN KEY (entregador_id, condominio_id)" in delivery_fk["definition"]
+                  cur.execute("""SELECT 1 FROM pg_constraint WHERE conrelid='entregadores'::regclass
+                                 AND conname='ck_entregadores_nome'""")
+                  assert cur.fetchone()
+          finally:
+              conn.close()
+          PY
+
+      - name: Resume interrupted fresh-baseline migration on separate PostgreSQL
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+          import psycopg2
+          from psycopg2.extras import RealDictCursor
+          from database.connection import conectar_dedicado
+
+          admin = conectar_dedicado("ci-create-resume-db")
+          admin.autocommit = True
+          try:
+              with admin.cursor() as cur:
+                  cur.execute("CREATE DATABASE portaria_resume_ci")
+          finally:
+              admin.close()
+
+          resume_url = os.environ["DATABASE_URL"].rsplit("/", 1)[0] + "/portaria_resume_ci"
+          conn = psycopg2.connect(resume_url, cursor_factory=RealDictCursor)
+          try:
+              with conn.cursor() as cur:
+                  cur.execute(Path("database/schema.sql").read_text(encoding="utf-8"))
+                  cur.execute("""CREATE TABLE schema_migrations (
+                      version VARCHAR(255) PRIMARY KEY,
+                      checksum VARCHAR(64) NOT NULL,
+                      applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                  )""")
+                  for path in sorted(Path("migrations").glob("[0-9]*.sql")):
+                      if path.name >= "0019_delivery_people.sql":
+                          break
+                      cur.execute("INSERT INTO schema_migrations(version,checksum) VALUES (%s,%s)",
+                                  (path.name, hashlib.sha256(path.read_bytes()).hexdigest()))
+              conn.commit()
+          finally:
+              conn.close()
+
+          env = dict(os.environ, DATABASE_URL=resume_url)
+          subprocess.run([sys.executable, "-m", "migrations.migrate", "upgrade"], env=env, check=True)
+          subprocess.run([sys.executable, "-m", "migrations.migrate", "upgrade"], env=env, check=True)
+          conn = psycopg2.connect(resume_url, cursor_factory=RealDictCursor)
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
+                  assert cur.fetchone()["n"] == 21
+                  cur.execute("SELECT to_regclass('public.entregadores') AS t")
+                  assert cur.fetchone()["t"] == "entregadores"
+          finally:
+              conn.close()
+          PY
+
+      - name: Exercise legacy-role upgrade on a separate PostgreSQL database
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+          import psycopg2
+          from psycopg2.extras import RealDictCursor
+          from database.connection import conectar_dedicado
+
+          admin = conectar_dedicado("ci-create-upgrade-db")
+          admin.autocommit = True
+          try:
+              with admin.cursor() as cur:
+                  cur.execute("CREATE DATABASE portaria_upgrade_ci")
+          finally:
+              admin.close()
+
+          upgrade_url = os.environ["DATABASE_URL"].rsplit("/", 1)[0] + "/portaria_upgrade_ci"
+          conn = psycopg2.connect(upgrade_url, cursor_factory=RealDictCursor)
+          try:
+              with conn.cursor() as cur:
+                  cur.execute(Path("database/schema.sql").read_text(encoding="utf-8"))
+                  cur.execute("""CREATE TABLE schema_migrations (
+                      version VARCHAR(255) PRIMARY KEY,
+                      checksum VARCHAR(64) NOT NULL,
+                      applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                  )""")
+                  for path in sorted(Path("migrations").glob("[0-9]*.sql")):
+                      if path.name >= "0020_tenant_rbac_roles.sql":
+                          break
+                      checksum = hashlib.sha256(path.read_bytes()).hexdigest()
+                      cur.execute("INSERT INTO schema_migrations(version,checksum) VALUES (%s,%s)", (path.name, checksum))
+                  cur.execute("ALTER TABLE usuarios DROP CONSTRAINT usuarios_nivel_check")
+                  cur.execute("ALTER TABLE usuarios ADD CONSTRAINT usuarios_nivel_check CHECK (nivel IN ('admin','funcionario','administrativo'))")
+                  cur.execute("INSERT INTO condominios(nome,slug) VALUES ('Upgrade Test','upgrade-test') RETURNING id")
+                  tenant_id = cur.fetchone()["id"]
+                  cur.execute("""INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel)
+                                 VALUES (%s,'Legacy Admin','legacy-admin','test-only-hash','admin'),
+                                        (%s,'Legacy Operator','legacy-operator','test-only-hash','funcionario')""",
+                              (tenant_id, tenant_id))
+              conn.commit()
+          finally:
+              conn.close()
+
+          env = dict(os.environ, DATABASE_URL=upgrade_url)
+          subprocess.run([sys.executable, "-m", "migrations.migrate", "upgrade"], env=env, check=True)
+          conn = psycopg2.connect(upgrade_url, cursor_factory=RealDictCursor)
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("SELECT usuario,nivel FROM usuarios WHERE usuario IN ('legacy-admin','legacy-operator') ORDER BY usuario")
+                  assert [(row["usuario"],row["nivel"]) for row in cur.fetchall()] == [
+                      ("legacy-admin","admin_condominio"), ("legacy-operator","porteiro")
+                  ]
+                  cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
+                  assert cur.fetchone()["n"] == 21
+              conn.rollback()
+              from psycopg2.errors import CheckViolation
+              try:
+                  with conn.cursor() as cur:
+                      cur.execute("UPDATE usuarios SET nivel='platform_admin' WHERE usuario='legacy-admin'")
+              except CheckViolation:
+                  conn.rollback()
+              else:
+                  raise AssertionError("Tenant user accepted a platform administrator role")
+          finally:
+              conn.close()
+          PY
+
+      - name: Verify cross-tenant delivery association is rejected by PostgreSQL
+        run: |
+          python - <<'PY'
+          from psycopg2.errors import ForeignKeyViolation
+          from database.connection import conectar_dedicado
+          conn = conectar_dedicado("ci-delivery-tenant-fk")
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("""INSERT INTO condominios(nome,slug) VALUES
+                                 ('Tenant A','delivery-ci-a'),('Tenant B','delivery-ci-b') RETURNING id""")
+                  tenant_a, tenant_b = [row["id"] for row in cur.fetchall()]
+                  cur.execute("""INSERT INTO entregadores(condominio_id,nome)
+                                 VALUES (%s,'CI Courier') RETURNING id""", (tenant_a,))
+                  courier_id = cur.fetchone()["id"]
+                  cur.execute("SAVEPOINT cross_tenant_delivery")
+                  try:
+                      cur.execute("""INSERT INTO lotes_encomendas(condominio_id,entregador_id,transportadora)
+                                     VALUES (%s,%s,'CI')""", (tenant_b,courier_id))
+                  except ForeignKeyViolation:
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_delivery")
+                  else:
+                      raise AssertionError("Cross-tenant courier association was accepted")
+                  cur.execute("""INSERT INTO lotes_encomendas(condominio_id,entregador_id,transportadora)
+                                 VALUES (%s,%s,'CI')""", (tenant_a,courier_id))
+              conn.rollback()
+          finally:
+              conn.close()
+          PY
+
+      - name: Authenticated tenant isolation and RBAC smoke on disposable PostgreSQL
+        run: python scripts/ci_authenticated_smoke.py
+
+      - name: Read-only tenant integrity preflight on isolated PostgreSQL
+        env:
+          ALLOW_ISOLATED_PREFLIGHT: 'yes'
+          EXPECTED_ISOLATED_DATABASE: portaria_ci
+        run: python scripts/isolated_release_preflight.py
+      - name: Prove preflight fails closed on wrong database and tenant anomaly
+        env:
+          ALLOW_ISOLATED_PREFLIGHT: 'yes'
+          EXPECTED_ISOLATED_DATABASE: portaria_ci
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          import sys
+          from uuid import uuid4
+          from database.connection import conectar_dedicado
+
+          script = [sys.executable, "scripts/isolated_release_preflight.py"]
+          wrong_db = dict(os.environ, EXPECTED_ISOLATED_DATABASE="not_the_connected_database")
+          result = subprocess.run(script, env=wrong_db, capture_output=True, text=True)
+          assert result.returncode != 0 and "differs from expected" in result.stderr, result.stderr
+
+          conn = conectar_dedicado("ci-preflight-negative-control")
+          tenant_id = None
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("INSERT INTO condominios(nome,slug) VALUES (%s,%s) RETURNING id",
+                              ("CI preflight negative", "preflight-negative-" + uuid4().hex))
+                  tenant_id = cur.fetchone()["id"]
+                  cur.execute("""INSERT INTO usuarios(condominio_id,nome,usuario,senha,nivel)
+                                 VALUES (%s,'CI operator',%s,'ci-only-hash','porteiro')""",
+                              (tenant_id, "preflight-negative-" + uuid4().hex))
+              conn.commit()
+              result = subprocess.run(script, capture_output=True, text=True)
+              assert result.returncode != 0, "Preflight accepted active tenant without active administrator"
+              assert "active_condominiums_without_active_admin: 1" in result.stdout, result.stdout + result.stderr
+          finally:
+              if tenant_id is not None:
+                  with conn.cursor() as cur:
+                      cur.execute("DELETE FROM usuarios WHERE condominio_id=%s", (tenant_id,))
+                      cur.execute("DELETE FROM condominios WHERE id=%s", (tenant_id,))
+                  conn.commit()
+              conn.close()
+          subprocess.run(script, check=True)
+
+          # A modified recorded migration checksum must block release.
+          conn = conectar_dedicado("ci-preflight-checksum-negative-control")
+          original_checksum = None
+          try:
+              with conn.cursor() as cur:
+                  cur.execute("SELECT checksum FROM schema_migrations WHERE version=%s",
+                              ("0020_tenant_rbac_roles.sql",))
+                  original_checksum = cur.fetchone()["checksum"]
+                  cur.execute("UPDATE schema_migrations SET checksum=%s WHERE version=%s",
+                              ("0" * 64, "0020_tenant_rbac_roles.sql"))
+              conn.commit()
+              result = subprocess.run(script, capture_output=True, text=True)
+              assert result.returncode != 0, "Preflight accepted altered migration checksum"
+              assert "migration versions/checksums differ" in result.stderr, result.stdout + result.stderr
+          finally:
+              if original_checksum is not None:
+                  with conn.cursor() as cur:
+                      cur.execute("UPDATE schema_migrations SET checksum=%s WHERE version=%s",
+                                  (original_checksum, "0020_tenant_rbac_roles.sql"))
+                  conn.commit()
+              conn.close()
+          subprocess.run(script, check=True)
+
+          # The composite FK must reject cross-tenant links before preflight.
+          conn = conectar_dedicado("ci-tenant-link-negative-control")
+          ids = []
+          try:
+              with conn.cursor() as cur:
+                  for label in ("a", "b"):
+                      cur.execute("INSERT INTO condominios(nome,slug) VALUES (%s,%s) RETURNING id",
+                                  ("CI link " + label, "ci-link-" + uuid4().hex))
+                      ids.append(cur.fetchone()["id"])
+                  cur.execute("INSERT INTO unidades(condominio_id,codigo) VALUES (%s,'CI') RETURNING id",
+                              (ids[0],))
+                  unit_id = cur.fetchone()["id"]
+                  cur.execute("SAVEPOINT cross_tenant_resident_unit")
+                  try:
+                      cur.execute("INSERT INTO moradores(condominio_id,nome,unidade_id) VALUES (%s,'CI',%s)",
+                                  (ids[1], unit_id))
+                  except Exception as exc:
+                      from psycopg2.errors import ForeignKeyViolation
+                      assert isinstance(exc, ForeignKeyViolation), repr(exc)
+                      cur.execute("ROLLBACK TO SAVEPOINT cross_tenant_resident_unit")
+                  else:
+                      raise AssertionError("Cross-tenant resident unit was accepted")
+              conn.rollback()
+          finally:
+              conn.close()
+          subprocess.run(script, check=True)
           PY

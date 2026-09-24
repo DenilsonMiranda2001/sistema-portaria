@@ -28,7 +28,7 @@ def criar_usuario(nome, usuario, senha, nivel, actor_id=None):
     try:
         with conn.cursor() as cur:
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             login = (usuario or "").strip()
@@ -49,7 +49,7 @@ def criar_usuario(nome, usuario, senha, nivel, actor_id=None):
                 (nome or "").strip().upper(),
                 login,
                 generate_password_hash(senha),
-                (nivel or "funcionario").strip().lower(),
+                (nivel or "porteiro").strip().lower(),
             ))
             novo = cur.fetchone()
             if actor_id:
@@ -159,8 +159,12 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            # Serialize role changes for this tenant to protect the last active admin.
+            cur.execute("SELECT id FROM condominios WHERE id=%s FOR UPDATE", (tenant_id,))
+            if not cur.fetchone():
+                raise ValueError("Condomínio inválido.")
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             login = (usuario or "").strip()
@@ -172,12 +176,22 @@ def atualizar_usuario(usuario_id, nome, usuario, nivel, actor_id=None):
             if cur.fetchone():
                 conn.rollback()
                 return "existe"
+            cur.execute("SELECT nivel, ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE", (usuario_id, tenant_id))
+            alvo = cur.fetchone()
+            if not alvo:
+                conn.rollback()
+                return False
+            novo_nivel = (nivel or "porteiro").strip().lower()
+            if alvo["nivel"] == "admin_condominio" and novo_nivel != "admin_condominio" and alvo["ativo"]:
+                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin_condominio' AND ativo=TRUE", (tenant_id,))
+                if cur.fetchone()["total"] <= 1:
+                    raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
             cur.execute("""
                 UPDATE usuarios SET nome = %s, usuario = %s, nivel = %s WHERE id = %s AND condominio_id = %s
             """, (
                 (nome or "").strip().upper(),
                 login,
-                (nivel or "funcionario").strip().lower(),
+                (nivel or "porteiro").strip().lower(),
                 usuario_id,
                 tenant_id,
             ))
@@ -199,7 +213,7 @@ def atualizar_senha_usuario(usuario_id, nova_senha, actor_id=None):
     try:
         with conn.cursor() as cur:
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             cur.execute(
@@ -223,8 +237,12 @@ def inativar_usuario(usuario_id, actor_id=None):
     conn = conectar()
     try:
         with conn.cursor() as cur:
+            # Serialize role changes for this tenant to protect the last active admin.
+            cur.execute("SELECT id FROM condominios WHERE id=%s FOR UPDATE", (tenant_id,))
+            if not cur.fetchone():
+                raise ValueError("Condomínio inválido.")
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             cur.execute("SELECT nivel,ativo FROM usuarios WHERE id=%s AND condominio_id=%s FOR UPDATE", (usuario_id, tenant_id))
@@ -232,8 +250,8 @@ def inativar_usuario(usuario_id, actor_id=None):
             if not alvo or not alvo["ativo"]:
                 conn.rollback()
                 return False
-            if alvo["nivel"] == "admin":
-                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin' AND ativo=TRUE", (tenant_id,))
+            if alvo["nivel"] == "admin_condominio":
+                cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE condominio_id=%s AND nivel='admin_condominio' AND ativo=TRUE", (tenant_id,))
                 if cur.fetchone()["total"] <= 1:
                     raise ValueError("O condomínio precisa manter pelo menos um administrador ativo.")
             cur.execute("UPDATE usuarios SET ativo = FALSE WHERE id = %s AND condominio_id = %s", (usuario_id, tenant_id))
@@ -254,7 +272,7 @@ def ativar_usuario(usuario_id, actor_id=None):
     try:
         with conn.cursor() as cur:
             if actor_id:
-                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin'", (actor_id, tenant_id))
+                cur.execute("SELECT 1 FROM usuarios WHERE id=%s AND condominio_id=%s AND ativo=TRUE AND nivel='admin_condominio'", (actor_id, tenant_id))
                 if not cur.fetchone():
                     raise ValueError("Administrador inválido para este condomínio.")
             cur.execute("UPDATE usuarios SET ativo = TRUE WHERE id = %s AND condominio_id = %s AND ativo=FALSE", (usuario_id, tenant_id))
@@ -665,21 +683,24 @@ def resumo_unidades():
         liberar(conn)
 
 
-def listar_auditoria_tenant(limite=200):
+def listar_auditoria_tenant(limite=51, pagina=1):
     tenant_id = _tenant_id()
-    limite = max(1, min(int(limite or 200), 500))
+    limite = max(1, min(int(limite or 100), 100))
+    pagina = max(1, min(int(pagina or 1), 1000))
+    # One lookahead row is fetched by the route; page boundaries remain 50 rows.
+    deslocamento = (pagina - 1) * 50
     conn = conectar()
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT a.id, a.acao, a.entidade, a.entidade_id, a.detalhes, a.criado_em,
+                SELECT a.id, a.acao, a.entidade, a.entidade_id, a.criado_em,
                        COALESCE(u.nome, CASE WHEN a.actor_tipo='platform_admin' THEN 'ADMINISTRAÇÃO DA PLATAFORMA' END, 'SISTEMA') AS ator
                 FROM audit_logs a
                 LEFT JOIN usuarios u ON u.id=a.usuario_id AND u.condominio_id=a.condominio_id
                 WHERE a.condominio_id=%s
                 ORDER BY a.criado_em DESC, a.id DESC
-                LIMIT %s
-            """, (tenant_id, limite))
+                LIMIT %s OFFSET %s
+            """, (tenant_id, limite, deslocamento))
             return cur.fetchall()
     finally:
         liberar(conn)

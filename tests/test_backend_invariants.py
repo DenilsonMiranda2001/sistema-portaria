@@ -139,7 +139,7 @@ def test_package_status_mutations_validate_actor_inside_tenant_transaction():
 
 def test_user_mutations_validate_admin_actor_inside_tenant_transaction():
     source = Path("database/models.py").read_text(encoding="utf-8")
-    assert source.count("AND ativo=TRUE AND nivel='admin'") >= 5
+    assert source.count("AND ativo=TRUE AND nivel='admin_condominio'") >= 5
     assert source.count('raise ValueError("Administrador inválido para este condomínio.")') >= 5
 
 
@@ -151,7 +151,7 @@ def test_resident_mutations_validate_actor_inside_tenant_transaction():
 
 def test_dashboard_routes_require_authenticated_roles():
     source = Path("routes/main.py").read_text(encoding="utf-8")
-    assert source.count('@roles_required("admin", "funcionario", "platform_admin")') >= 2
+    assert source.count('@roles_required("admin_condominio", "administrativo", "porteiro", "platform_admin")') >= 2
 
 
 def test_platform_mutations_validate_active_control_plane_actor():
@@ -206,9 +206,9 @@ def test_delivery_people_domain_is_tenant_scoped_and_package_link_is_tenant_safe
 
 def test_delivery_people_routes_enforce_roles_and_admin_only_status():
     source = Path("routes/entregadores.py").read_text(encoding="utf-8")
-    assert source.count('@roles_required("admin", "funcionario")') >= 3
+    assert source.count('@roles_required("admin_condominio", "administrativo", "porteiro")') >= 3
     status = source[source.index('def status(entregador_id)') - 120:]
-    assert '@roles_required("admin")' in status
+    assert '@roles_required("admin_condominio")' in status
 
 
 def test_platform_queries_expose_tenant_health_metrics():
@@ -246,7 +246,8 @@ def test_authenticated_tenant_identity_includes_condominium_name_for_header():
     identity = models[models.index("def buscar_usuario_por_id"):models.index("def buscar_usuario(")]
     assert identity.count("c.nome AS condominio_nome") == 2
     assert 'g.current_user.get("condominio_nome", "Condomínio")' in base
-    assert '"Porteiro" if session.get("usuario_tipo") == "funcionario"' in base
+    assert 'g.current_user.get("nivel") == "admin_condominio"' in base
+    assert 'g.current_user.get("nivel") == "administrativo"' in base
 
 
 def test_visitor_forms_share_layout_and_destination_semantics():

@@ -6,7 +6,7 @@ def test_user_admin_uses_shared_tenant_shell():
     assert "{% extends 'base.html' %}" in source
     assert "<html" not in source.lower()
     assert "auth.logout" not in source
-    assert "Usuários do sistema" in source
+    assert "Usuários do condomínio" in source
     assert "pc-user-create" in source
 
 

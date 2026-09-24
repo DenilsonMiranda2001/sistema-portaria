@@ -1,6 +1,6 @@
 import logging
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 from psycopg2 import errors
 
 from database.entregadores import (
@@ -9,6 +9,7 @@ from database.entregadores import (
     criar_entregador,
     definir_status_entregador,
     listar_entregadores,
+    pesquisar_entregadores,
 )
 TRANSPORTADORAS = ("Shopee", "Mercado Livre", "Correios", "Amazon", "Outra")
 from utils.authz import roles_required
@@ -19,13 +20,13 @@ logger = logging.getLogger(__name__)
 
 
 @entregadores_bp.route("/")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def listar():
     return render_template("entregadores/lista.html", entregadores=listar_entregadores())
 
 
 @entregadores_bp.route("/novo", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def novo():
     if request.method == "POST":
         try:
@@ -34,11 +35,11 @@ def novo():
                 request.form.get("telefone"), request.form.get("transportadora"),
                 session["usuario_id"],
             )
-            flash("Entregador cadastrado com sucesso.", "sucesso")
+            flash("Entregador cadastrado. Você já pode iniciar o recebimento das encomendas.", "sucesso")
             destino = request.form.get("next", "").strip()
             if destino == "novo_lote":
                 return redirect(url_for("encomendas.novo_lote", entregador_id=entregador_id))
-            return redirect(url_for("entregadores.editar", entregador_id=entregador_id))
+            return redirect(url_for("entregadores.editar", entregador_id=entregador_id, cadastrado=1))
         except errors.UniqueViolation:
             flash("Já existe um entregador com esse documento neste condomínio.", "erro")
         except ValueError as exc:
@@ -50,7 +51,7 @@ def novo():
 
 
 @entregadores_bp.route("/<int:entregador_id>/editar", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def editar(entregador_id):
     entregador = buscar_entregador(entregador_id)
     if not entregador:
@@ -73,11 +74,11 @@ def editar(entregador_id):
             logger.exception("Erro ao atualizar entregador")
             flash("Não foi possível atualizar o entregador.", "erro")
         entregador = buscar_entregador(entregador_id)
-    return render_template("entregadores/form.html", entregador=entregador, transportadoras=TRANSPORTADORAS)
+    return render_template("entregadores/form.html", entregador=entregador, transportadoras=TRANSPORTADORAS, cadastrado=request.args.get("cadastrado") == "1")
 
 
 @entregadores_bp.route("/<int:entregador_id>/status", methods=["POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def status(entregador_id):
     entregador = buscar_entregador(entregador_id)
     if not entregador:
@@ -91,3 +92,18 @@ def status(entregador_id):
         logger.exception("Erro ao alterar status do entregador")
         flash("Não foi possível alterar o status do entregador.", "erro")
     return redirect(url_for("entregadores.listar"))
+
+
+@entregadores_bp.route("/pesquisar")
+@roles_required("admin_condominio", "administrativo", "porteiro")
+def pesquisar():
+    termo = request.args.get("q", "").strip()[:100]
+    if len(termo) < 2:
+        return jsonify({"resultados": []})
+    resultados = pesquisar_entregadores(termo)
+    return jsonify({"resultados": [
+        {"id": item["id"], "nome": item["nome"],
+         "documento_final": (item["documento"] or "")[-4:],
+         "transportadora": item["transportadora"] or ""}
+        for item in resultados
+    ]})

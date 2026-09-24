@@ -1,27 +1,30 @@
 {% extends 'base.html' %}
 {% block title %}Moradores · Portaria Control{% endblock %}
 {% block content %}
-<section class="pc-module">
-  <header class="pc-taskbar"><div><strong>Moradores</strong><span>Residentes e unidades</span></div><a class="pc-btn pc-btn-primary" href="{{ url_for('moradores.novo') }}">＋ Novo morador</a></header>
+<section class="pc-module pc-residents-directory">
+  {% set resumo = namespace(ativos=0, vinculados=0) %}
+  {% for morador in moradores %}{% if morador.ativo %}{% set resumo.ativos = resumo.ativos + 1 %}{% endif %}{% if morador.unidade_codigo %}{% set resumo.vinculados = resumo.vinculados + 1 %}{% endif %}{% endfor %}
+  <header class="pc-residents-head"><div><span class="pc-residents-eyebrow">GESTÃO RESIDENCIAL <i></i> DIRETÓRIO</span><h2>Moradores</h2><p>Cadastros, vínculos com unidades e situação dos residentes em um só lugar.</p></div><a class="pc-btn pc-btn-primary pc-residents-add" href="{{ url_for('moradores.novo') }}"><span aria-hidden="true">＋</span> Novo morador</a></header>
+  <div class="pc-residents-overview" aria-label="Resumo dos resultados da consulta"><div><span>Moradores encontrados</span><strong>{{ moradores|length }}</strong><small>{% if termo %}Resultado da busca atual{% else %}Cadastros exibidos{% endif %}</small></div><div><span>Cadastros ativos</span><strong>{{ resumo.ativos }}</strong><small>Entre os resultados exibidos</small></div><div><span>Com unidade vinculada</span><strong>{{ resumo.vinculados }}</strong><small>Entre os resultados exibidos</small></div></div>
   <section class="pc-panel pc-list-panel">
     <form method="GET" class="pc-list-toolbar">
-      <div class="pc-list-title"><strong>{{ moradores|length }} resultado(s)</strong></div>
+      <div class="pc-list-title"><strong>Diretório de moradores</strong><small>{{ moradores|length }} resultado(s) {% if termo %}para “{{ termo }}”{% else %}nesta consulta{% endif %}</small></div>
       <div class="pc-toolbar-search">
-        <div class="pc-search pc-search-compact"><span class="pc-search-icon"></span><input type="text" name="q" value="{{ termo or '' }}" placeholder="Nome, CPF ou unidade..." autofocus></div>
+        <div class="pc-search pc-search-compact"><span class="pc-search-icon"></span><input type="text" name="q" value="{{ termo or '' }}" placeholder="Buscar por nome, CPF ou unidade..." aria-label="Buscar moradores por nome, CPF ou unidade"></div>
         <button class="pc-btn pc-btn-primary" type="submit">Buscar</button>
         {% if termo %}<a class="pc-btn pc-btn-secondary" href="{{ url_for('moradores.listar') }}">Limpar</a>{% endif %}
       </div>
     </form>
     {% if moradores %}
-    <div class="pc-table-wrap"><table class="pc-table">
+    <div class="pc-table-wrap"><table class="pc-table pc-residents-table">
       <thead><tr><th>Morador</th><th>CPF</th><th>Telefone</th><th>Unidade</th><th>Status</th><th>Cadastro</th><th class="pc-align-right">Ações</th></tr></thead>
       <tbody>{% for m in moradores %}<tr class="{% if not m.ativo %}is-muted{% endif %}">
-        <td><a class="pc-person-link" href="{{ url_for('moradores.detalhe', id=m.id) }}"><span class="pc-avatar">{{ m.nome[:1]|upper }}</span><strong>{{ m.nome }}</strong></a></td>
-        <td>{{ m.cpf or '—' }}</td><td>{{ m.telefone or '—' }}</td>
-        <td>{% if m.unidade_codigo %}<span class="pc-unit">{{ m.unidade_codigo }}</span>{% if m.unidade_descricao %}<small>{{ m.unidade_descricao }}</small>{% endif %}{% else %}—{% endif %}</td>
-        <td>{% if m.ativo %}<span class="pc-status is-active">Ativo</span>{% else %}<span class="pc-status">Inativo</span>{% endif %}</td>
-        <td>{{ m.criado_em.strftime('%d/%m/%Y') if m.criado_em else '—' }}</td>
-        <td><div class="pc-row-actions pc-align-right"><a class="pc-icon-action" href="{{ url_for('moradores.detalhe', id=m.id) }}">Ver</a><a class="pc-icon-action" href="{{ url_for('moradores.editar', id=m.id) }}">Editar</a>
+        <td data-label="Morador"><a class="pc-person-link" href="{{ url_for('moradores.detalhe', id=m.id) }}"><span class="pc-avatar">{{ m.nome[:1]|upper }}</span><strong>{{ m.nome }}</strong></a></td>
+        <td data-label="CPF">{{ m.cpf or '—' }}</td><td data-label="Telefone">{{ m.telefone or '—' }}</td>
+        <td data-label="Unidade">{% if m.unidade_codigo %}<span class="pc-unit">{{ m.unidade_codigo }}</span>{% if m.unidade_descricao %}<small>{{ m.unidade_descricao }}</small>{% endif %}{% else %}—{% endif %}</td>
+        <td data-label="Situação">{% if m.ativo %}<span class="pc-status is-active">Ativo</span>{% else %}<span class="pc-status">Inativo</span>{% endif %}</td>
+        <td data-label="Cadastro">{{ m.criado_em.strftime('%d/%m/%Y') if m.criado_em else '—' }}</td>
+        <td data-label="Ações"><div class="pc-row-actions pc-align-right"><a class="pc-icon-action" href="{{ url_for('moradores.detalhe', id=m.id) }}">Ver</a><a class="pc-icon-action" href="{{ url_for('moradores.editar', id=m.id) }}">Editar</a>
         {% if m.ativo %}<form method="POST" action="{{ url_for('moradores.inativar', id=m.id) }}" data-pc-confirm="Inativar {{ m.nome }}? O histórico será preservado." data-pc-confirm-title="Inativar morador?" data-pc-confirm-action="Inativar" data-pc-confirm-tone="danger"><button class="pc-icon-action pc-danger-action" type="submit">Inativar</button></form>{% else %}<form method="POST" action="{{ url_for('moradores.ativar', id=m.id) }}"><button class="pc-icon-action" type="submit">Ativar</button></form>{% endif %}</div></td>
       </tr>{% endfor %}</tbody>
     </table></div>

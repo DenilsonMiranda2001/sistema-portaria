@@ -1,0 +1,130 @@
+from pathlib import Path
+
+
+def test_tenant_rbac_migration_is_explicit_and_forward_only():
+    sql = Path("migrations/0020_tenant_rbac_roles.sql").read_text(encoding="utf-8")
+    assert "admin_condominio" in sql
+    assert "administrativo" in sql
+    assert "porteiro" in sql
+    assert "UPDATE usuarios SET nivel = 'admin_condominio' WHERE nivel = 'admin'" in sql
+    assert "UPDATE usuarios SET nivel = 'porteiro' WHERE nivel = 'funcionario'" in sql
+
+
+def test_authz_canonicalizes_legacy_roles_during_rolling_deploy():
+    source = Path("utils/authz.py").read_text(encoding="utf-8")
+    assert '"admin": "admin_condominio"' in source
+    assert '"funcionario": "porteiro"' in source
+    assert "canonical_role" in source
+
+
+def test_tenant_admin_is_only_role_that_manages_users():
+    source = Path("routes/admin.py").read_text(encoding="utf-8")
+    assert source.count('@roles_required("admin_condominio")') >= 6
+    assert '"administrativo"' in source
+    assert '"porteiro"' in source
+
+
+def test_operational_roles_are_explicit():
+    expected = '@roles_required("admin_condominio", "administrativo", "porteiro")'
+    for path in ("routes/moradores.py", "routes/visitantes.py", "routes/encomendas.py", "routes/entregadores.py"):
+        source = Path(path).read_text(encoding="utf-8")
+        assert expected in source
+
+
+def test_last_active_tenant_admin_cannot_be_demoted():
+    source = Path("database/models.py").read_text(encoding="utf-8")
+    update = source[source.index("def atualizar_usuario("):source.index("def atualizar_senha_usuario(")]
+    assert "FOR UPDATE" in update
+    assert 'novo_nivel != "admin_condominio"' in update
+    assert "O condomínio precisa manter pelo menos um administrador ativo." in update
+    route = Path("routes/admin.py").read_text(encoding="utf-8")
+    assert "except ValueError as exc:" in route
+
+
+def test_new_install_schema_uses_tenant_roles():
+    schema = Path("database/schema.sql").read_text(encoding="utf-8")
+    assert "CHECK (nivel IN ('admin_condominio', 'administrativo', 'porteiro'))" in schema
+
+
+def test_last_admin_mutations_serialize_on_tenant_row():
+    models = Path("database/models.py").read_text(encoding="utf-8")
+    platform = Path("database/platform.py").read_text(encoding="utf-8")
+    for name, following in (("atualizar_usuario", "atualizar_senha_usuario"), ("inativar_usuario", "ativar_usuario")):
+        section = models[models.index(f"def {name}("):models.index(f"def {following}(")]
+        assert 'SELECT id FROM condominios WHERE id=%s FOR UPDATE' in section
+        assert section.index('SELECT id FROM condominios WHERE id=%s FOR UPDATE') < section.index('SELECT COUNT(*) AS total FROM usuarios')
+    section = platform[platform.index("def definir_status_usuario_tenant("):platform.index("def criar_condominio_com_usuario(")]
+    assert 'SELECT id FROM condominios WHERE id=%s FOR UPDATE' in section
+
+
+def test_rbac_migration_does_not_commit_before_checksum_record():
+    sql = Path("migrations/0020_tenant_rbac_roles.sql").read_text(encoding="utf-8")
+    runner = Path("migrations/migrate.py").read_text(encoding="utf-8")
+    assert "BEGIN;" not in sql
+    assert "COMMIT;" not in sql
+    assert "cur.execute(sql)" in runner
+    assert "INSERT INTO schema_migrations(version, checksum)" in runner
+    assert runner.index("cur.execute(sql)") < runner.index("INSERT INTO schema_migrations(version, checksum)")
+    assert runner.index("INSERT INTO schema_migrations(version, checksum)") < runner.index("conn.commit()", runner.index("cur.execute(sql)"))
+
+
+def test_platform_provisioning_requires_first_tenant_admin():
+    platform = Path("database/platform.py").read_text(encoding="utf-8")
+    route = Path("routes/platform_admin.py").read_text(encoding="utf-8")
+    section = platform[platform.index("def criar_usuario_tenant("):]
+    assert 'if nivel not in ("admin_condominio", "administrativo", "porteiro"):' in section
+    assert 'if cur.fetchone()["total"] == 0 and nivel != "admin_condominio":' in section
+    assert "Cadastre primeiro um administrador do condomínio." in section
+    assert "FOR UPDATE" in section
+    assert 'flash("Perfil de usuário inválido.", "erro")' in route
+
+
+def test_tenant_audit_pages_are_bounded_and_scoped():
+    models = Path("database/models.py").read_text(encoding="utf-8")
+    route = Path("routes/admin.py").read_text(encoding="utf-8")
+    template = Path("templates/auditoria.html").read_text(encoding="utf-8")
+    section = models[models.index("def listar_auditoria_tenant("):models.index("# VISITANTES")]
+    assert "WHERE a.condominio_id=%s" in section
+    assert "LIMIT %s OFFSET %s" in section
+    assert "deslocamento = (pagina - 1) * 50" in section
+    assert "listar_auditoria_tenant(51, pagina=pagina)" in route
+    assert "eventos=eventos[:50]" in route
+    assert "tem_proxima" in template
+
+
+def test_platform_tenant_audit_only_exposes_control_plane_events():
+    platform = Path("database/platform.py").read_text(encoding="utf-8")
+    route = Path("routes/platform_admin.py").read_text(encoding="utf-8")
+    template = Path("templates/platform_condominio_detalhe.html").read_text(encoding="utf-8")
+    section = platform[platform.index("def listar_auditoria_plataforma_tenant("):platform.index("def atualizar_condominio(")]
+    assert "a.condominio_id=%s AND a.actor_tipo='platform_admin'" in section
+    assert "a.detalhes" not in section
+    assert "LIMIT %s" in section
+    assert "listar_auditoria_plataforma_tenant(condominio_id)" in route
+    assert "eventos_administrativos" in template
+
+
+def test_platform_mutations_fail_closed_on_invalid_status_and_role():
+    platform_route = Path("routes/platform_admin.py").read_text(encoding="utf-8")
+    tenant_route = Path("routes/admin.py").read_text(encoding="utf-8")
+    assert platform_route.count('request.form.get("ativo") not in ("0", "1")') == 2
+    assert "abort(400)" in platform_route
+    assert "abort(403)" in platform_route
+    assert tenant_route.count('flash("Perfil de usuário inválido.", "erro")') == 2
+    assert 'tipo = "porteiro"' not in tenant_route
+
+
+def test_parcel_insertion_serializes_with_lot_closure():
+    source = Path("database/encomendas.py").read_text(encoding="utf-8")
+    section = source[source.index("def adicionar_encomenda("):source.index("def _select_encomendas(")]
+    assert "status IN ('aberto','em_triagem') FOR UPDATE" in section
+    assert section.index("FOR UPDATE") < section.index("INSERT INTO encomendas")
+
+
+def test_pickup_code_check_matches_global_unique_constraint():
+    source = Path("database/encomendas.py").read_text(encoding="utf-8")
+    schema = Path("database/schema.sql").read_text(encoding="utf-8")
+    section = source[source.index("def _codigo_retirada("):source.index("def criar_lote(")]
+    assert "codigo_retirada   VARCHAR(20)  UNIQUE NOT NULL" in schema
+    assert "WHERE codigo_retirada = %s" in section
+    assert "WHERE condominio_id = %s AND codigo_retirada" not in section

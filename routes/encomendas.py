@@ -2,7 +2,8 @@ import logging
 import re
 from urllib.parse import quote
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
+from psycopg2 import errors
 
 from database.encomendas import (
     adicionar_encomenda,
@@ -17,7 +18,7 @@ from database.encomendas import (
     resumo_painel,
 )
 from database.models import listar_moradores
-from database.entregadores import listar_entregadores
+from database.entregadores import buscar_entregador, criar_entregador
 from utils.audit import registrar_auditoria
 from utils.authz import roles_required
 
@@ -58,7 +59,7 @@ def _adicionar_links_whatsapp(encomendas):
 
 
 @encomendas_bp.route("/")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def painel():
     filtro = request.args.get("filtro", "hoje")
     termo = request.args.get("q", "").strip()
@@ -79,18 +80,44 @@ def painel():
 
 
 @encomendas_bp.route("/lotes")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def lotes():
     return render_template("encomendas/lotes.html", lotes=listar_lotes())
 
 
+@encomendas_bp.route("/entregadores/rapido", methods=["POST"])
+@roles_required("admin_condominio", "administrativo", "porteiro")
+def cadastrar_entregador_rapido():
+    """Cadastro operacional na central; CSRF aplicado pelo middleware global."""
+    nome = (request.form.get("nome") or "").strip()
+    documento = (request.form.get("documento") or "").strip()
+    transportadora = (request.form.get("transportadora") or "").strip()
+    if not nome or len(nome) > 150 or len(documento) > 50:
+        return jsonify({"erro": "Confira o nome e o documento do entregador."}), 400
+    if transportadora not in TRANSPORTADORAS:
+        return jsonify({"erro": "Selecione uma transportadora válida."}), 400
+    try:
+        novo_id = criar_entregador(nome, documento, None, transportadora, session["usuario_id"])
+    except ValueError as exc:
+        return jsonify({"erro": str(exc)}), 400
+    except errors.UniqueViolation:
+        return jsonify({"erro": "Já existe um entregador com esse documento neste condomínio."}), 409
+    except Exception:
+        logger.exception("Falha no cadastro rápido de entregador")
+        return jsonify({"erro": "Não foi possível cadastrar o entregador. Tente novamente."}), 500
+    return jsonify({"id": novo_id, "nome": nome.upper(), "transportadora": transportadora}), 201
+
+
 @encomendas_bp.route("/lotes/novo", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def novo_lote():
     if request.method == "POST":
         transportadora = request.form.get("transportadora", "").strip()
         if transportadora not in TRANSPORTADORAS:
             flash("Selecione uma transportadora válida.", "erro")
+            return redirect(url_for("encomendas.novo_lote"))
+        if not request.form.get("entregador_id", type=int):
+            flash("Identifique ou cadastre o entregador antes de iniciar o recebimento.", "erro")
             return redirect(url_for("encomendas.novo_lote"))
         try:
             lote_id = criar_lote(
@@ -106,17 +133,19 @@ def novo_lote():
             logger.exception("Erro ao criar lote de encomendas")
             flash("Não foi possível criar o lote.", "erro")
             return redirect(url_for("encomendas.novo_lote"))
-    entregador_selecionado = request.args.get("entregador_id", type=int)
+    entregador_id = request.args.get("entregador_id", type=int)
+    entregador_selecionado = buscar_entregador(entregador_id) if entregador_id else None
+    if entregador_selecionado and not entregador_selecionado["ativo"]:
+        entregador_selecionado = None
     return render_template(
         "encomendas/novo_lote.html",
         transportadoras=TRANSPORTADORAS,
-        entregadores=listar_entregadores(apenas_ativos=True),
         entregador_selecionado=entregador_selecionado,
     )
 
 
 @encomendas_bp.route("/lotes/<int:lote_id>", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def lote_detalhe(lote_id):
     lote = buscar_lote(lote_id)
     if not lote:
@@ -154,7 +183,7 @@ def lote_detalhe(lote_id):
 
 
 @encomendas_bp.route("/lotes/<int:lote_id>/status", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def status_lote(lote_id):
     status = request.form.get("status", "")
     try:
@@ -169,7 +198,7 @@ def status_lote(lote_id):
 
 
 @encomendas_bp.route("/<int:encomenda_id>/status", methods=["POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def status_encomenda(encomenda_id):
     encomenda = buscar_encomenda(encomenda_id)
     if not encomenda:
@@ -195,7 +224,7 @@ def status_encomenda(encomenda_id):
 
 
 @encomendas_bp.route("/retidas")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def retidas():
     termo = request.args.get("q", "").strip()
     dados = listar_encomendas("retidas", termo)
@@ -207,7 +236,7 @@ def retidas():
 
 
 @encomendas_bp.route("/historico")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def historico():
     termo = request.args.get("q", "").strip()
     dados = listar_encomendas("historico", termo)

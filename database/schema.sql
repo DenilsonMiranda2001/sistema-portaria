@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome       VARCHAR(150)  NOT NULL,
     usuario    VARCHAR(100)  NOT NULL,
     senha      VARCHAR(255)  NOT NULL,
-    nivel      VARCHAR(20)   NOT NULL CHECK (nivel IN ('admin', 'funcionario')),
+    nivel      VARCHAR(20)   NOT NULL CHECK (nivel IN ('admin_condominio', 'administrativo', 'porteiro')),
     ativo      BOOLEAN       NOT NULL DEFAULT TRUE,
     criado_em  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

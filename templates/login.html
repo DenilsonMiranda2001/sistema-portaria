@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso ao Sistema | Portaria Control</title>
+    <title>Acesso ao Sistema | ControleID</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}">
 </head>
 <body class="login-page">
     <div class="login-container">
         <div class="login-brand">
             <div class="brand-content">
                 <span class="brand-badge">CONTROLE OPERACIONAL</span>
-                <h1>Portaria Control</h1>
+                <img class="controleid-login-logo" src="{{ url_for('static', filename='controleid-logo.svg', v='brand-1') }}" alt="ControleID — Gestão de acessos e portaria" width="355" height="76">
                 <p class="brand-subtitle">
                     Uma central segura para pessoas, acessos e rotina da portaria.
                 </p>
@@ -35,7 +36,7 @@
 
         <div class="login-panel">
             <div class="login-header">
-                <span class="login-kicker">ACESSO RESTRITO</span><h2>Entre na operação</h2>
+                <img class="controleid-login-panel-icon" src="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}" alt="" width="42" height="42"><span class="login-kicker">ACESSO RESTRITO</span><h2>Entre na operação</h2>
                 <p>Acesse sua conta para continuar no sistema.</p>
             </div>
 

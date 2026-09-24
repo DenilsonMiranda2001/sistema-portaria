@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, session
+from flask import Blueprint, render_template, request, redirect, flash, url_for, session, g
 from utils.authz import roles_required
 from utils.audit import registrar_auditoria
 
@@ -17,11 +17,11 @@ from database.models import (
 admin_bp = Blueprint("admin", __name__)
 
 def admin_obrigatorio():
-    return session.get("usuario_tipo") == "admin"
+    return bool(getattr(g, "current_user", None) and g.current_user.get("nivel") == "admin_condominio")
 
 
 @admin_bp.route("/usuarios", methods=["GET", "POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def usuarios():
 
     if request.method == "POST":
@@ -37,8 +37,9 @@ def usuarios():
             flash("A senha deve ter pelo menos 12 caracteres.", "erro")
             return redirect(url_for("admin.usuarios"))
 
-        if tipo not in ["admin", "funcionario"]:
-            tipo = "funcionario"
+        if tipo not in ("admin_condominio", "administrativo", "porteiro"):
+            flash("Perfil de usuário inválido.", "erro")
+            return redirect(url_for("admin.usuarios"))
 
         resultado = criar_usuario(nome, usuario, senha, tipo, session["usuario_id"])
 
@@ -51,11 +52,18 @@ def usuarios():
 
     dados = listar_usuarios()
     residencial = resumo_unidades()
-    return render_template("usuarios.html", usuarios=dados, residencial=residencial)
+    resumo_equipe = {
+        "total": len(dados),
+        "ativos": sum(bool(u["ativo"]) for u in dados),
+        "administradores": sum(bool(u["ativo"]) and u["nivel"] == "admin_condominio" for u in dados),
+        "administrativos": sum(bool(u["ativo"]) and u["nivel"] == "administrativo" for u in dados),
+        "porteiros": sum(bool(u["ativo"]) and u["nivel"] == "porteiro" for u in dados),
+    }
+    return render_template("usuarios.html", usuarios=dados, residencial=residencial, resumo_equipe=resumo_equipe)
 
 
 @admin_bp.route("/usuarios/editar/<int:id>", methods=["GET", "POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def editar_usuario(id):
 
     user = buscar_usuario_por_id(id, exigir_tenant=True)
@@ -73,14 +81,26 @@ def editar_usuario(id):
             flash("Preencha nome e usuário.", "erro")
             return redirect(url_for("admin.editar_usuario", id=id))
 
-        if tipo not in ["admin", "funcionario"]:
-            tipo = "funcionario"
+        if tipo not in ("admin_condominio", "administrativo", "porteiro"):
+            flash("Perfil de usuário inválido.", "erro")
+            return redirect(url_for("admin.editar_usuario", id=id))
 
-        resultado = atualizar_usuario(id, nome, usuario, tipo, session["usuario_id"])
+        if id == session["usuario_id"] and tipo != "admin_condominio":
+            flash("Você não pode remover seu próprio acesso de administrador.", "erro")
+            return redirect(url_for("admin.editar_usuario", id=id))
+
+        try:
+            resultado = atualizar_usuario(id, nome, usuario, tipo, session["usuario_id"])
+        except ValueError as exc:
+            flash(str(exc), "erro")
+            return redirect(url_for("admin.editar_usuario", id=id))
 
         if resultado == "existe":
             flash("Já existe outro usuário com esse login.", "erro")
             return redirect(url_for("admin.editar_usuario", id=id))
+        if not resultado:
+            flash("Usuário não encontrado neste condomínio.", "erro")
+            return redirect(url_for("admin.usuarios"))
 
         flash("Usuário atualizado com sucesso!", "sucesso")
         return redirect(url_for("admin.usuarios"))
@@ -89,7 +109,7 @@ def editar_usuario(id):
 
 
 @admin_bp.route("/usuarios/inativar/<int:id>", methods=["POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def inativar_usuario_rota(id):
 
     if session.get("usuario_id") == id:
@@ -111,7 +131,7 @@ def inativar_usuario_rota(id):
 
 
 @admin_bp.route("/usuarios/ativar/<int:id>", methods=["POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def ativar_usuario_rota(id):
 
     user = buscar_usuario_por_id(id, exigir_tenant=True)
@@ -124,7 +144,7 @@ def ativar_usuario_rota(id):
     return redirect(url_for("admin.usuarios"))
 
 @admin_bp.route("/usuarios/senha/<int:id>", methods=["GET", "POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def alterar_senha_usuario(id):
 
     user = buscar_usuario_por_id(id, exigir_tenant=True)
@@ -158,6 +178,11 @@ def alterar_senha_usuario(id):
     return render_template("alterar_senha_usuario.html", user=user)
 
 @admin_bp.route("/auditoria")
-@roles_required("admin")
+@roles_required("admin_condominio")
 def auditoria():
-    return render_template("auditoria.html", eventos=listar_auditoria_tenant(250))
+    try:
+        pagina = max(1, min(int(request.args.get("pagina", "1")), 1000))
+    except (TypeError, ValueError):
+        pagina = 1
+    eventos = listar_auditoria_tenant(51, pagina=pagina)
+    return render_template("auditoria.html", eventos=eventos[:50], pagina=pagina, tem_proxima=len(eventos) > 50)

@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}Central · Portaria Control{% endblock %}
+{% block title %}Central · ControleID{% endblock %}
 
 {% block content %}
 <section class="pc-dashboard pc-reference-dashboard">
   <header class="pc-pagehead pc-dashboard-head">
-    <div><span class="pc-eyebrow"><i></i> PORTARIA ONLINE · {{ session.get("condominio_nome", "Condomínio") }}</span><h2>Central da portaria</h2></div>
+    <div><span class="pc-eyebrow"><i></i> PORTARIA ONLINE · {{ session.get("condominio_nome", "Condomínio") }}</span><h2>Registrar movimentação</h2><p class="pc-home-head-description">Busque a pessoa cadastrada e registre a entrada com rapidez.</p></div>
     <div class="pc-page-actions"><a class="pc-btn pc-btn-secondary" href="{{ url_for('visitantes.ativos') }}"><span class="pc-live-dot"></span>{{ total_ativos }} ativos</a><a class="pc-btn pc-btn-primary" href="{{ url_for('visitantes.cadastro') }}">＋ Cadastrar visitante</a></div>
   </header>
 
@@ -17,8 +17,8 @@
   <div class="pc-reference-grid">
     <div class="pc-reference-main">
       <main class="pc-access-panel pc-access-hero">
-        <div class="pc-access-hero-copy"><span class="pc-kicker">CONTROLE DE ACESSO</span><h3>Registrar movimentação</h3><p>Localize a pessoa para registrar entrada ou saída.</p></div>
-        <div class="pc-search pc-hero-search"><span class="pc-search-icon"></span><input type="text" id="busca" class="busca-input" placeholder="Digite nome, CPF ou placa..." autofocus autocomplete="off"><kbd>ENTER</kbd></div>
+        <div class="pc-access-hero-copy"><span class="pc-kicker">CONTROLE DE ACESSO</span><h3>Entrada de visitantes cadastrados</h3><p>Busque por nome, CPF ou placa. Enter seleciona o cadastro.</p></div>
+        <div class="pc-search pc-hero-search"><span class="pc-search-icon"></span><input type="text" id="busca" class="busca-input" placeholder="Digite nome, CPF ou placa..." aria-label="Buscar visitante cadastrado" autofocus autocomplete="off"><button type="button" class="pc-search-clear" id="limpar-busca" aria-label="Limpar busca" hidden>×</button><kbd>ENTER</kbd></div>
         <div id="mensagem" class="mensagem-box"></div>
         <div id="lista" class="lista-resultados pc-search-results"><div class="estado-vazio-inicial pc-empty"><span class="pc-empty-icon">⌕</span><div><strong>Pronto para o próximo acesso</strong><small>Pesquise um cadastro para iniciar a movimentação.</small></div></div></div>
         <div class="pc-hero-actions"><a href="{{ url_for('visitantes.cadastro') }}"><b>＋</b><span>Novo visitante</span></a><a href="{{ url_for('visitantes.ativos') }}"><b>→</b><span>Registrar saída</span></a><a href="{{ url_for('encomendas.painel') }}"><b>□</b><span>Encomendas</span></a><a href="{{ url_for('moradores.listar') }}"><b>⌂</b><span>Moradores</span></a></div>
@@ -70,6 +70,8 @@ const MODELOS = [
 const input = document.getElementById("busca");
 const lista = document.getElementById("lista");
 const mensagem = document.getElementById("mensagem");
+const limparBusca = document.getElementById("limpar-busca");
+limparBusca.addEventListener("click",()=>{input.value="";resultadosAtuais=[];ultimoTermoBuscado="";indiceSelecionado=0;limparMensagem();mostrarEstadoInicial();limparBusca.hidden=true;input.focus();});
 
 const busca = document.getElementById("busca");
 
@@ -195,6 +197,7 @@ function criarAutocompleteDinamico(inputId, sugestoesId, listaDados, visitanteId
     function fecharSugestoes() {
         box.style.display = "none";
         box.innerHTML = "";
+        inputEl.setAttribute("aria-expanded","false");
         indiceLocal = -1;
     }
 
@@ -223,6 +226,7 @@ function criarAutocompleteDinamico(inputId, sugestoesId, listaDados, visitanteId
         });
 
         box.style.display = "block";
+        inputEl.setAttribute("aria-expanded","true");
         box.style.position = "absolute";
         box.style.zIndex = "9999";
         box.style.width = "100%";
@@ -324,9 +328,11 @@ function renderizarResultados(data, termo) {
         const estado=obterEstadoVisitante(v),card=node("div","visitor-card"+(index===indiceSelecionado?" selecionado":""));card.dataset.id=v.id;card.dataset.index=index;
         const photoWrap=node("div","visitor-photo-wrap");
         if(v.foto_url){const img=document.createElement("img");img.src=v.foto_url;img.alt="Foto do visitante";img.className="visitor-photo";photoWrap.appendChild(img)}
-        else photoWrap.appendChild(node("div","visitor-photo placeholder","Sem foto"));
+        else photoWrap.appendChild(node("div","visitor-photo placeholder",(v.nome||"V").trim().slice(0,1).toUpperCase()));
         const main=node("div","visitor-main"),details=node("div","card-visitante"),grid=node("div","info-grid");
-        grid.append(labeled("Nome",(v.nome||"").toUpperCase(),"destaque"),labeled("CPF",v.cpf||"—"));details.appendChild(grid);
+        const identity=node("div","pc-home-identity");identity.append(node("strong","pc-home-person-name",(v.nome||"").toUpperCase()),node("span","pc-home-person-subtitle",(v.tipo||"VISITANTE").toUpperCase()+(v.ultimo_endereco?" · "+v.ultimo_endereco.toUpperCase():"")));
+        const cpf=node("div","pc-home-person-cpf");cpf.append(node("small","","CPF"),node("strong","",v.cpf||"—"));
+        grid.append(identity,cpf);details.appendChild(grid);
         const extras=node("div","extras-grid");
         [["Tipo",(v.tipo||"SEM TIPO").toUpperCase()],["Placa",(v.placa||"SEM PLACA").toUpperCase()],["Veículo",([v.marca,v.modelo].filter(Boolean).join(" ")||"SEM VEÍCULO").toUpperCase()]].forEach(([l,val])=>{const x=node("div","extra-card");x.append(node("span","label-ui",l),node("div","badge-ui",val));extras.appendChild(x)});
         const operation=node("div","linha-dupla"),vehicle=node("div","extra-card"),dest=node("div","extra-card");
@@ -337,16 +343,33 @@ function renderizarResultados(data, termo) {
         const plate=document.createElement("input");plate.id="placa_"+v.id;plate.className="input-padrao";plate.placeholder="Placa";plate.value=estado.placa||"";
         const brand=document.createElement("input");brand.id="marca_"+v.id;brand.className="input-padrao";brand.placeholder="Marca";brand.value=estado.marca||"";
         const model=document.createElement("input");model.id="modelo_"+v.id;model.className="input-padrao";model.placeholder="Modelo";model.value=estado.modelo||"";
+        // Vehicle details are operational inputs, not browser autofill fields.
+        [plate,brand,model].forEach(el=>{el.autocomplete="off";el.setAttribute("autocorrect","off");el.spellcheck=false;});
         [[plate,"placa"],[brand,"marca"],[model,"modelo"]].forEach(([input,campo])=>input.addEventListener("input",()=>{input.value=input.value.toUpperCase();atualizarCampoEstado(v.id,campo,input.value)}));
-        vehicleFields.append(plate,brand,model);if(estado.tipoChegada==="PEDESTRE")vehicleFields.hidden=true;
+        function vehicleSuggestionField(field,kind){
+            const wrap=node("div","pc-home-vehicle-autocomplete");
+            const suggestions=node("div","caixa-sugestoes pc-home-vehicle-suggestions");
+            suggestions.id="home_sugestoes_"+kind+"_"+v.id;
+            suggestions.setAttribute("role","listbox");
+            suggestions.setAttribute("aria-label",kind==="marca"?"Sugestões de marcas":"Sugestões de modelos");
+            field.setAttribute("aria-autocomplete","list");
+            field.setAttribute("aria-controls",suggestions.id);
+            wrap.append(field,suggestions);
+            return wrap;
+        }
+        vehicleFields.append(plate,vehicleSuggestionField(brand,"marca"),vehicleSuggestionField(model,"modelo"));
+        if(estado.tipoChegada==="PEDESTRE")vehicleFields.hidden=true;
         arrival.addEventListener("change",()=>{estado.tipoChegada=arrival.value;if(arrival.value==="PEDESTRE"){estado.placa=estado.marca=estado.modelo="";vehicleFields.hidden=true}else vehicleFields.hidden=false});
         vehicle.append(arrival,vehicleFields);
         dest.appendChild(node("span","label-ui","Destino"));
-        const row=node("div","home-entry-destination"),address=document.createElement("input");address.id="endereco_"+v.id;address.className="input-padrao input-destino-compacto";address.placeholder="Unidade ou destino";address.value=estado.endereco||"";
-        address.addEventListener("input",()=>atualizarCampoEstado(v.id,"endereco",address.value));
+        const row=node("div","home-entry-destination"),address=document.createElement("input");address.id="endereco_"+v.id;address.className="input-padrao input-destino-compacto input-endereco";address.dataset.id=v.id;address.placeholder="Unidade ou destino";address.value=estado.endereco||"";
+        address.addEventListener("input",()=>atualizarCampoEstado(v.id,"endereco",address.value));address.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();registrarEntrada(v.id)}});
         const enter=node("button","btn-principal","Registrar entrada");enter.type="button";enter.addEventListener("click",()=>registrarEntrada(v.id));row.append(address,enter);dest.appendChild(row);
-        if(estado.ultimoEndereco){const last=node("button","home-last-destination","Último destino: "+estado.ultimoEndereco);last.type="button";last.addEventListener("click",()=>{address.value=estado.ultimoEndereco;atualizarCampoEstado(v.id,"endereco",estado.ultimoEndereco);address.focus()});dest.appendChild(last)}
+        if(estado.ultimoEndereco){const last=node("button","home-last-destination","Usar último destino: "+estado.ultimoEndereco);last.type="button";last.addEventListener("click",()=>{address.value=estado.ultimoEndereco;atualizarCampoEstado(v.id,"endereco",estado.ultimoEndereco);address.focus()});dest.appendChild(last)}
         operation.append(vehicle,dest);main.append(details,extras,operation);card.append(photoWrap,main);card.addEventListener("click",()=>{indiceSelecionado=index});lista.appendChild(card);
+        // Autocomplete looks up inputs by ID: initialize only after the card is in the DOM.
+        criarAutocompleteDinamico(brand.id,"home_sugestoes_marca_"+v.id,MARCAS,v.id,"marca");
+        criarAutocompleteDinamico(model.id,"home_sugestoes_modelo_"+v.id,MODELOS,v.id,"modelo");
     });
 }
 
@@ -354,6 +377,7 @@ let timeoutBusca;
 
 input.addEventListener("input", function () {
     const termo = input.value.trim();
+    limparBusca.hidden = !termo;
     ultimoTermoBuscado = termo;
     limparMensagem();
 
@@ -447,7 +471,9 @@ document.addEventListener("keydown", function(event) {
     registrarEntrada(id);
 });
 
+const entradasEmAndamento = new Set();
 function registrarEntrada(id) {
+    if (entradasEmAndamento.has(String(id))) return;
     limparMensagem();
 
     const enderecoInput = document.getElementById(`endereco_${id}`);
@@ -484,6 +510,9 @@ function registrarEntrada(id) {
     body.append("observacao", observacao);
     body.append("csrf_token", document.querySelector('meta[name="csrf-token"]').content);
 
+    entradasEmAndamento.add(String(id));
+    const botaoEntrada = document.querySelector(`.visitor-card[data-id="${CSS.escape(String(id))}"] .home-entry-destination .btn-principal`);
+    if (botaoEntrada) { botaoEntrada.disabled = true; botaoEntrada.textContent = "Registrando..."; }
     fetch("/entrada_ajax", {
         method: "POST",
         headers: {
@@ -496,6 +525,7 @@ function registrarEntrada(id) {
         if (data.status === "ok") {
             mostrarMensagem("✅ Entrada registrada com sucesso!", "sucesso");
             input.value = "";
+            limparBusca.hidden = true;
             resultadosAtuais = [];
             ultimoTermoBuscado = "";
             indiceSelecionado = 0;
@@ -510,6 +540,9 @@ function registrarEntrada(id) {
     .catch((erro) => {
         mostrarMensagem(erro.message);
         console.error("Erro:", erro);
+    }).finally(() => {
+        entradasEmAndamento.delete(String(id));
+        if (botaoEntrada?.isConnected) { botaoEntrada.disabled = false; botaoEntrada.textContent = "Registrar entrada"; }
     });
 }
 

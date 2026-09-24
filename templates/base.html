@@ -4,20 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ global_csrf_token() }}">
-    <title>{% block title %}Portaria Control{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
+    <title>{% block title %}ControleID{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css', v='select-v2') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js" defer></script>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}">
 </head>
 <body>
 <div class="app-shell">
 <!-- ── NAVBAR ─────────────────────────────────────── -->
     <header class="navbar-sistema">
         <div class="navbar-brand">
-            <div class="navbar-brand-icon" aria-hidden="true"><span>PC</span><i></i></div>
+            <img class="controleid-header-icon" src="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}" width="42" height="42" alt="" aria-hidden="true">
             <div class="navbar-brand-textos">
-                <h1>Portaria Control</h1>
+                <h1>Controle<span class="controleid-accent">ID</span></h1>
                 <span>Gestão de acesso & portaria</span>
             </div>
         </div>
@@ -42,12 +43,12 @@
                 <a class="btn btn-nav {% if request.endpoint and (request.endpoint.startswith('encomendas') or request.endpoint.startswith('entregadores')) %}btn-nav-ativo{% endif %}"
                    href="{{ url_for('encomendas.painel') }}">Encomendas</a>
 
-                {% if session.get("usuario_tipo") == "admin" %}
+                {% if g.current_user and g.current_user.get("nivel") == "admin_condominio" %}
                     <a class="btn btn-nav {% if request.endpoint == 'visitantes.importar_visitantes' %}btn-nav-ativo{% endif %}"
                        href="{{ url_for('visitantes.importar_visitantes') }}">Importar</a>
 
                     <a class="btn btn-nav {% if request.endpoint and request.endpoint.startswith('admin') %}btn-nav-ativo{% endif %}"
-                       href="{{ url_for('admin.usuarios') }}">Usuários</a>
+                       href="{{ url_for('admin.usuarios') }}">Administração</a>
                 {% endif %}
             </nav>
 
@@ -56,7 +57,7 @@
                     <div class="usuario-avatar" aria-hidden="true">{{ session.get("usuario_nome", "U")[:1]|upper }}</div>
                     <div class="usuario-info">
                         <strong>{{ session.get("usuario_nome", "Usuário") }}</strong>
-                        <span>{{ g.current_user.get("condominio_nome", "Condomínio") }} · {{ "Porteiro" if session.get("usuario_tipo") == "funcionario" else session.get("usuario_tipo", "").capitalize() }}</span>
+                        <span>{{ g.current_user.get("condominio_nome", "Condomínio") }} · {% if g.current_user.get("nivel") == "admin_condominio" %}Administrador do condomínio{% elif g.current_user.get("nivel") == "administrativo" %}Administrativo{% else %}Portaria{% endif %}</span>
                     </div>
                 </div>
                 <form method="post" action="{{ url_for('auth.logout') }}" class="navbar-logout-form"><input type="hidden" name="csrf_token" value="{{ global_csrf_token() }}"><button class="btn btn-sair" type="submit">Sair</button></form>
@@ -102,5 +103,6 @@
     })();
     </script>
 
+<script src="{{ url_for('static', filename='select-system.js', v='select-v2') }}" defer></script>
 </body>
 </html>

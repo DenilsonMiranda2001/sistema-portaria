@@ -164,3 +164,36 @@ def definir_status_entregador(entregador_id, ativo, usuario_id):
         raise
     finally:
         liberar(conn)
+
+
+def pesquisar_entregadores(termo, limite=12):
+    """Busca operacional limitada ao condomínio ativo; não expõe documento completo."""
+    tenant_id = _tenant_id()
+    termo = (termo or "").strip()
+    if len(termo) < 2:
+        return []
+    documento = _normalizar_documento(termo)
+    conn = conectar()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, nome, documento, transportadora
+                FROM entregadores
+                WHERE condominio_id=%s AND ativo=TRUE
+                  AND (
+                      POSITION(LOWER(%s) IN LOWER(nome)) > 0
+                      OR (documento IS NOT NULL AND LEFT(documento, LENGTH(%s)) = %s)
+                  )
+                ORDER BY CASE WHEN documento=%s THEN 0 ELSE 1 END, nome, id
+                LIMIT %s
+            """, (
+                tenant_id,
+                termo,
+                documento or termo,
+                documento or termo,
+                documento,
+                min(max(int(limite), 1), 20),
+            ))
+            return cur.fetchall()
+    finally:
+        liberar(conn)

@@ -1,12 +1,13 @@
 import logging
 from functools import wraps
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, flash, g, redirect, render_template, request, session, url_for
 import re
 from werkzeug.security import generate_password_hash
 from database.platform import (
     listar_condominios_com_metricas, buscar_condominio_detalhe,
     atualizar_condominio, definir_status_condominio, definir_status_usuario_tenant,
     criar_condominio_com_usuario, criar_usuario_tenant, resumo_operacional_plataforma,
+    listar_auditoria_plataforma_tenant,
 )
 
 platform_admin_bp = Blueprint("platform_admin", __name__, url_prefix="/plataforma")
@@ -16,8 +17,10 @@ def platform_admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         user = getattr(g, "current_user", None)
-        if not user or user.get("nivel") != "platform_admin":
+        if not user:
             return redirect(url_for("auth.login"))
+        if user.get("nivel") != "platform_admin":
+            abort(403)
         return view(*args, **kwargs)
     return wrapped
 
@@ -53,12 +56,13 @@ def criar_usuario_condominio(condominio_id):
     nome=request.form.get("nome","").strip()
     usuario=request.form.get("usuario","").strip()
     senha=request.form.get("senha","")
-    nivel=request.form.get("nivel","funcionario").strip().lower()
-    if nivel not in ("admin","funcionario"):
-        nivel="funcionario"
+    nivel=request.form.get("nivel","porteiro").strip().lower()
+    if nivel not in ("admin_condominio","administrativo","porteiro"):
+        flash("Perfil de usuário inválido.", "erro")
+        return redirect(url_for("platform_admin.detalhe_condominio", condominio_id=condominio_id))
     if not nome or not usuario or len(usuario) > 100 or len(senha)<12:
         flash("Preencha os dados do usuário; a senha deve ter pelo menos 12 caracteres.","erro")
-        return redirect(url_for("platform_admin.condominios"))
+        return redirect(url_for("platform_admin.detalhe_condominio", condominio_id=condominio_id))
     try:
         novo_usuario_id = criar_usuario_tenant(condominio_id, nome, usuario, generate_password_hash(senha), nivel, session["usuario_id"])
         flash("Usuário do condomínio criado com sucesso.","sucesso")
@@ -75,7 +79,8 @@ def detalhe_condominio(condominio_id):
     if not condominio:
         flash("Condomínio não encontrado.", "erro")
         return redirect(url_for("platform_admin.condominios"))
-    return render_template("platform_condominio_detalhe.html", condominio=condominio, usuarios=usuarios)
+    eventos_administrativos = listar_auditoria_plataforma_tenant(condominio_id)
+    return render_template("platform_condominio_detalhe.html", condominio=condominio, usuarios=usuarios, eventos_administrativos=eventos_administrativos)
 
 
 @platform_admin_bp.post("/condominios/<int:condominio_id>/editar")
@@ -100,7 +105,9 @@ def editar_condominio(condominio_id):
 @platform_admin_bp.post("/condominios/<int:condominio_id>/status")
 @platform_admin_required
 def status_condominio(condominio_id):
-    ativo=request.form.get("ativo")=="1"
+    if request.form.get("ativo") not in ("0", "1"):
+        abort(400)
+    ativo=request.form["ativo"]=="1"
     try:
         if definir_status_condominio(condominio_id,ativo,session["usuario_id"]):
             flash("Status do condomínio atualizado.","sucesso")
@@ -112,7 +119,9 @@ def status_condominio(condominio_id):
 @platform_admin_bp.post("/condominios/<int:condominio_id>/usuarios/<int:usuario_id>/status")
 @platform_admin_required
 def status_usuario_condominio(condominio_id,usuario_id):
-    ativo=request.form.get("ativo")=="1"
+    if request.form.get("ativo") not in ("0", "1"):
+        abort(400)
+    ativo=request.form["ativo"]=="1"
     try:
         if definir_status_usuario_tenant(condominio_id,usuario_id,ativo,session["usuario_id"]):
             flash("Status do usuário atualizado.","sucesso")

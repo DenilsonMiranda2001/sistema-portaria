@@ -21,11 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 def _admin_ou_funcionario():
-    return session.get("usuario_tipo") in ("admin", "funcionario")
+    return session.get("usuario_tipo") in ("admin_condominio", "administrativo", "porteiro", "admin", "funcionario")
 
 
 @moradores_bp.route("/")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def listar():
     termo = request.args.get("q", "").strip()
     dados = buscar_moradores(termo) if termo else listar_moradores()
@@ -33,7 +33,7 @@ def listar():
 
 
 @moradores_bp.route("/novo", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def novo():
     unidades = listar_unidades()
 
@@ -76,7 +76,7 @@ def novo():
 
 
 @moradores_bp.route("/<int:id>/editar", methods=["GET", "POST"])
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def editar(id):
     morador  = buscar_morador_por_id(id)
     unidades = listar_unidades()
@@ -124,7 +124,7 @@ def editar(id):
 
 
 @moradores_bp.route("/<int:id>")
-@roles_required("admin", "funcionario")
+@roles_required("admin_condominio", "administrativo", "porteiro")
 def detalhe(id):
     morador = buscar_morador_por_id(id)
     if not morador:
@@ -134,7 +134,7 @@ def detalhe(id):
 
 
 @moradores_bp.route("/<int:id>/inativar", methods=["POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def inativar(id):
     morador = buscar_morador_por_id(id)
     if not morador:
@@ -147,7 +147,7 @@ def inativar(id):
 
 
 @moradores_bp.route("/<int:id>/ativar", methods=["POST"])
-@roles_required("admin")
+@roles_required("admin_condominio")
 def ativar(id):
     morador = buscar_morador_por_id(id)
     if not morador:
