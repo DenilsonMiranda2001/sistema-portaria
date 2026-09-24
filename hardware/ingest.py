@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from .contracts import HardwareEvent, HardwareEventType
 
 
+ALLOWED_EVENT_KEYS = {"event_id", "event_type", "occurred_at", "credential", "payload"}
 ALLOWED_PAYLOAD_KEYS = {"reader", "direction", "door", "zone", "signal", "source"}
 MAX_EVENT_AGE = timedelta(minutes=5)
 MAX_EVENT_FUTURE_SKEW = timedelta(minutes=1)
@@ -18,6 +19,9 @@ def build_authenticated_event(device: dict, data: dict) -> HardwareEvent:
     """
     if not isinstance(data, dict):
         raise InvalidHardwareEvent("invalid_json")
+    unknown_event_keys = set(data) - ALLOWED_EVENT_KEYS
+    if unknown_event_keys:
+        raise InvalidHardwareEvent("unsupported_event_keys")
     external_event_id = str(data.get("event_id") or "").strip()
     if not external_event_id or len(external_event_id) > 180:
         raise InvalidHardwareEvent("invalid_event_id")
