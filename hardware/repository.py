@@ -164,7 +164,7 @@ class HardwareRepository:
     def get_device(self, tenant_id: int, device_id: str):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, condominio_id, vendor, external_device_id, nome, tipo, ativo,
-                                  configuracao, ultimo_heartbeat_em
+                                  configuracao, access_zone_id::text, ultimo_heartbeat_em
                            FROM hardware_devices
                            WHERE condominio_id=%s AND id=%s::uuid""", (tenant_id, device_id))
             return cur.fetchone()
