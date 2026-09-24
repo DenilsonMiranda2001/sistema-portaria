@@ -840,3 +840,14 @@ body{font-size:14px}
 .pc-delivery-entry .pc-deliverer-result:hover small,.pc-delivery-entry .pc-deliverer-result:focus-visible small{color:inherit}
 .pc-delivery-entry .pc-deliverer-results>p{margin:0;padding:12px;color:var(--muted,#68768a);font-size:12px}
 @media(max-width:700px){.pc-delivery-entry .pc-deliverer-result{grid-template-columns:1fr;gap:3px}}
+
+
+/* Encomendas workspace header — same hierarchy as primary product screens. */
+.pc-packages .pc-packages-pagehead{min-height:112px;margin:0 0 24px;padding:24px 4px 22px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;border-bottom:1px solid var(--pc-border)}
+.pc-packages .pc-packages-pagehead>div:first-child{display:grid;gap:5px}
+.pc-packages .pc-packages-pagehead .pc-eyebrow{font-size:.68rem;font-weight:900;letter-spacing:.1em;color:var(--pc-accent)}
+.pc-packages .pc-packages-pagehead h2{margin:0;font-size:clamp(1.65rem,2.2vw,2.15rem);line-height:1.05;letter-spacing:-.035em;color:var(--pc-text)}
+.pc-packages .pc-packages-pagehead p{margin:2px 0 0;max-width:680px;font-size:.86rem;line-height:1.5;color:var(--pc-muted)}
+.pc-packages .pc-packages-pagehead .pc-page-actions{display:flex;align-items:center;gap:8px;padding-bottom:2px}
+.pc-packages>.pc-subnav{margin-bottom:0}
+@media(max-width:700px){.pc-packages .pc-packages-pagehead{min-height:auto;padding:20px 0;align-items:flex-start;flex-direction:column}.pc-packages .pc-packages-pagehead .pc-page-actions{width:100%}.pc-packages .pc-packages-pagehead .pc-page-actions .pc-btn{width:100%;justify-content:center}}
