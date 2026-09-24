@@ -15,6 +15,7 @@ from routes.auth import auth_bp
 from routes.moradores import moradores_bp
 from routes.encomendas import encomendas_bp
 from routes.entregadores import entregadores_bp
+from routes.hardware import hardware_bp
 from database.connection import verificar_conexao
 from utils.authz import load_identity
 
@@ -43,6 +44,8 @@ app.register_blueprint(platform_admin_bp)
 app.register_blueprint(moradores_bp)
 app.register_blueprint(encomendas_bp)
 app.register_blueprint(entregadores_bp)
+app.register_blueprint(hardware_bp)
+csrf.exempt(hardware_bp)
 
 ROTAS_PUBLICAS = {"auth.login", "auth.logout", "static", "healthz", "readyz"}
 
@@ -54,6 +57,8 @@ def verificar_login():
     load_identity()
     endpoint = request.endpoint or ""
     if endpoint in ROTAS_PUBLICAS or endpoint.startswith("static"):
+        return
+    if endpoint.startswith("hardware."):
         return
     if not getattr(g, "current_user", None):
         return redirect(url_for("auth.login"))
