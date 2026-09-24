@@ -35,9 +35,14 @@ def build_authenticated_event(device: dict, data: dict) -> HardwareEvent:
         credential = str(credential).strip()
         if not credential or len(credential) > 256:
             raise InvalidHardwareEvent("invalid_credential")
-    raw_payload = data.get("payload") or {}
+    raw_payload = data.get("payload")
+    if raw_payload is None:
+        raw_payload = {}
     if not isinstance(raw_payload, dict):
         raise InvalidHardwareEvent("invalid_payload")
+    unknown_payload_keys = set(raw_payload) - ALLOWED_PAYLOAD_KEYS
+    if unknown_payload_keys:
+        raise InvalidHardwareEvent("unsupported_payload_keys")
     payload = {key: raw_payload[key] for key in ALLOWED_PAYLOAD_KEYS if key in raw_payload}
     return HardwareEvent(
         tenant_id=int(device["condominio_id"]),
