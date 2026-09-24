@@ -22,3 +22,10 @@ def test_one_time_device_secret_responses_are_not_cacheable():
     for method in (provision, rotation):
         assert 'response.headers["Cache-Control"] = "no-store, max-age=0"' in method
         assert 'response.headers["Pragma"] = "no-cache"' in method
+
+
+def test_duplicate_access_policy_is_a_friendly_validation_error():
+    method = SOURCE.split("def criar_permissao", 1)[1].split("def desativar_permissao", 1)[0]
+    assert "except errors.UniqueViolation:" in method
+    assert "Esta permissão de acesso já está cadastrada." in method
+    assert "conn.rollback()" in method
