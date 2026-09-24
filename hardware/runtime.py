@@ -43,14 +43,23 @@ def run_forever(registry, *, poll_seconds=2, monitor_seconds=30):
         monitor_leader = bool(cur.fetchone()["acquired"])
     logger.info("hardware runtime started monitor_leader=%s", monitor_leader)
     next_monitor = 0.0
+    consecutive_failures = 0
     try:
         while not _STOP:
-            dispatch_claimed_commands(registry)
-            now = time.monotonic()
-            if monitor_leader and now >= next_monitor:
-                reconcile_incidents_once()
-                next_monitor = now + monitor_seconds
-            time.sleep(poll_seconds)
+            try:
+                dispatch_claimed_commands(registry)
+                now = time.monotonic()
+                if monitor_leader and now >= next_monitor:
+                    reconcile_incidents_once()
+                    next_monitor = now + monitor_seconds
+                consecutive_failures = 0
+                time.sleep(poll_seconds)
+            except Exception as exc:
+                consecutive_failures += 1
+                delay = min(30, poll_seconds * (2 ** min(consecutive_failures, 4)))
+                logger.error("hardware runtime cycle failed error_type=%s consecutive_failures=%s retry_seconds=%s",
+                             type(exc).__name__, consecutive_failures, delay)
+                time.sleep(delay)
     finally:
         if monitor_leader:
             with leader.cursor() as cur:
