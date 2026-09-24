@@ -24,7 +24,12 @@ def credential_fingerprint(value: str, key: str | bytes | None = None) -> str:
     key_bytes = material.encode("utf-8") if isinstance(material, str) else material
     if len(key_bytes) < 32:
         raise RuntimeError("HARDWARE_CREDENTIAL_HMAC_KEY must be at least 32 bytes.")
-    normalized = value.strip().encode("utf-8")
+    if not isinstance(value, str):
+        raise ValueError("credential must be a string")
+    normalized_value = value.strip()
+    if not normalized_value or len(normalized_value) > 256:
+        raise ValueError("credential must contain between 1 and 256 characters")
+    normalized = normalized_value.encode("utf-8")
     return hmac.new(key_bytes, normalized, hashlib.sha256).hexdigest()
 
 
