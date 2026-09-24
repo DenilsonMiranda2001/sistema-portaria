@@ -51,3 +51,6 @@ class Config:
             audit_salt = os.getenv("AUDIT_IP_SALT", "")
             if len(audit_salt) < 16:
                 raise RuntimeError("AUDIT_IP_SALT must be configured with at least 16 characters in production.")
+            hardware_hmac_key = os.getenv("HARDWARE_CREDENTIAL_HMAC_KEY", "")
+            if len(hardware_hmac_key.encode("utf-8")) < 32:
+                raise RuntimeError("HARDWARE_CREDENTIAL_HMAC_KEY must be configured with at least 32 bytes in production.")
