@@ -34,7 +34,7 @@ class HardwareAccessService:
                 decision = evaluate_access_policies(
                     policies,
                     device_id=device_id,
-                    zone=(device.get("configuracao") or {}).get("zona"),
+                    zone=device.get("access_zone_id") or (device.get("configuracao") or {}).get("zona"),
                     at=event.occurred_at,
                 )
                 return decision.allowed
