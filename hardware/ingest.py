@@ -12,7 +12,7 @@ class InvalidHardwareEvent(ValueError):
     pass
 
 
-def build_authenticated_event(device: dict, data: dict) -> HardwareEvent:
+def build_authenticated_event(device: dict, data: dict, *, now: datetime | None = None) -> HardwareEvent:
     """Build an event only from an authenticated device identity.
 
     Tenant and device identifiers supplied by callers are deliberately ignored.
@@ -37,10 +37,13 @@ def build_authenticated_event(device: dict, data: dict) -> HardwareEvent:
     if occurred_at.tzinfo is None:
         raise InvalidHardwareEvent("timezone_required")
     occurred_at = occurred_at.astimezone(timezone.utc)
-    now = datetime.now(timezone.utc)
-    if occurred_at < now - MAX_EVENT_AGE:
+    reference_now = now or datetime.now(timezone.utc)
+    if reference_now.tzinfo is None:
+        raise ValueError("now must be timezone-aware")
+    reference_now = reference_now.astimezone(timezone.utc)
+    if occurred_at < reference_now - MAX_EVENT_AGE:
         raise InvalidHardwareEvent("stale_event")
-    if occurred_at > now + MAX_EVENT_FUTURE_SKEW:
+    if occurred_at > reference_now + MAX_EVENT_FUTURE_SKEW:
         raise InvalidHardwareEvent("future_event")
     credential = data.get("credential")
     if credential is not None:
