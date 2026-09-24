@@ -1,90 +1,28 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso ao Sistema | ControleID</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}">
-</head>
-<body class="login-page">
-    <div class="login-container">
-        <div class="login-brand">
-            <div class="brand-content">
-                <span class="brand-badge">CONTROLE OPERACIONAL</span>
-                <img class="controleid-login-logo" src="{{ url_for('static', filename='controleid-logo.svg', v='brand-1') }}" alt="ControleID — Gestão de acessos e portaria" width="355" height="76">
-                <p class="brand-subtitle">
-                    Uma central segura para pessoas, acessos e rotina da portaria.
-                </p>
-
-                <div class="brand-features">
-                    <div class="brand-feature">
-                        <span class="feature-icon">✓</span>
-                        <span>Controle de entrada e saída</span>
-                    </div>
-                    <div class="brand-feature">
-                        <span class="feature-icon">✓</span>
-                        <span>Cadastro de visitantes e moradores</span>
-                    </div>
-                    <div class="brand-feature">
-                        <span class="feature-icon">✓</span>
-                        <span>Segurança e rastreabilidade operacional</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="login-panel">
-            <div class="login-header">
-                <img class="controleid-login-panel-icon" src="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}" alt="" width="42" height="42"><span class="login-kicker">ACESSO RESTRITO</span><h2>Entre na operação</h2>
-                <p>Acesse sua conta para continuar no sistema.</p>
-            </div>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="login-alerts">
-                        {% for cat, msg in messages %}
-                            <div class="login-alert {{ cat }}">{{ msg }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-
-            <form method="POST" class="login-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<div class="form-group">
-                    <label for="usuario">Usuário</label>
-                    <input
-                        id="usuario"
-                        class="login-input"
-                        type="text"
-                        name="usuario"
-                        placeholder="Digite seu usuário"
-                        autocomplete="username"
-                        required
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="senha">Senha</label>
-                    <input
-                        id="senha"
-                        class="login-input"
-                        type="password"
-                        name="senha"
-                        placeholder="Digite sua senha"
-                        autocomplete="current-password"
-                        required
-                    >
-                </div>
-
-                <button type="submit" class="login-button">Acessar sistema</button>
-            </form>
-
-            <div class="login-footer">
-                <span>Ambiente seguro · Uso restrito a usuários autorizados</span>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#092f31"><title>Acesso seguro | ControleID</title><link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}"><link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='controleid-icon.svg', v='brand-1') }}"></head>
+<body class="login-page login-premium">
+<main class="login-shell">
+<section class="login-identity" aria-label="ControleID">
+<div class="login-identity-top"><img class="login-wordmark" src="{{ url_for('static', filename='controleid-logo.svg', v='brand-1') }}" alt="ControleID — Gestão de acesso e portaria"><span class="login-edition">OPERAÇÃO CONDOMINIAL</span></div>
+<div class="login-identity-copy"><span class="login-overline">CENTRAL DE OPERAÇÕES</span><h1>A portaria inteira,<br><em>sob controle.</em></h1><p>Uma operação única para acessos, visitantes, moradores e encomendas — com rastreabilidade em cada movimento.</p></div>
+<div class="login-capabilities" aria-label="Recursos da plataforma"><div><span>01</span><strong>Acessos</strong><small>Entrada e saída em tempo real</small></div><div><span>02</span><strong>Operação</strong><small>Rotinas em um único ambiente</small></div><div><span>03</span><strong>Rastreabilidade</strong><small>Histórico e responsabilidade</small></div></div>
+<div class="login-identity-foot"><span class="login-live-dot"></span><span>ControleID · Ambiente operacional protegido</span></div>
+</section>
+<section class="login-access">
+<div class="login-access-inner">
+<div class="login-mobile-brand"><img src="{{ url_for('static', filename='controleid-logo.svg', v='brand-1') }}" alt="ControleID"></div>
+<header class="login-access-head"><span class="login-access-index">ACESSO / 01</span><h2>Entrar no ControleID</h2><p>Use as credenciais fornecidas pela administração do condomínio.</p></header>
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="login-alerts">{% for cat, msg in messages %}<div class="login-alert {{ cat }}" role="alert">{{ msg }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+<form method="POST" class="login-form login-form-premium"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label class="login-field" for="usuario"><span>Usuário</span><div class="login-control"><input id="usuario" type="text" name="usuario" placeholder="Seu usuário de acesso" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus><i aria-hidden="true">ID</i></div></label>
+<label class="login-field" for="senha"><span>Senha</span><div class="login-control"><input id="senha" type="password" name="senha" placeholder="Sua senha" autocomplete="current-password" required><button class="login-password-toggle" type="button" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button></div></label>
+<button type="submit" class="login-submit"><span>Acessar ambiente</span><b aria-hidden="true">→</b></button>
+</form>
+<div class="login-trust"><span><i></i>Sessão protegida</span><span>Acesso exclusivo a usuários autorizados</span></div>
+</div>
+<footer class="login-access-foot">CONTROLEID <span>/</span> GESTÃO DE ACESSO & PORTARIA</footer>
+</section>
+</main>
+<script>(()=>{const b=document.querySelector(".login-password-toggle"),i=document.getElementById("senha");if(!b||!i)return;b.addEventListener("click",()=>{const show=i.type==="password";i.type=show?"text":"password";b.textContent=show?"Ocultar":"Mostrar";b.setAttribute("aria-pressed",String(show));b.setAttribute("aria-label",show?"Ocultar senha":"Mostrar senha")})})();</script>
+</body></html>
