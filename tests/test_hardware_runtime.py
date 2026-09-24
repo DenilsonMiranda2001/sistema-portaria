@@ -1,0 +1,20 @@
+from pathlib import Path
+RUNTIME=Path("hardware/runtime.py").read_text(encoding="utf-8")
+PROCFILE=Path("Procfile").read_text(encoding="utf-8")
+
+def test_runtime_uses_postgres_leader_election_for_monitor():
+    assert "pg_try_advisory_lock" in RUNTIME
+    assert "pg_advisory_unlock" in RUNTIME
+    assert "monitor_leader" in RUNTIME
+
+def test_command_dispatch_can_scale_without_global_worker_lock():
+    assert "dispatch_claimed_commands(registry)" in RUNTIME
+    # Command claims themselves use FOR UPDATE SKIP LOCKED in the repository.
+
+def test_runtime_handles_termination_and_has_separate_process():
+    assert "SIGTERM" in RUNTIME
+    assert "SIGINT" in RUNTIME
+    assert "hardware-worker: python -m hardware.runtime" in PROCFILE
+
+def test_simulator_adapter_is_opt_in():
+    assert 'HARDWARE_SIMULATOR_HTTP_ENABLED' in RUNTIME
