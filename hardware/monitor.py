@@ -18,7 +18,7 @@ def reconcile_hardware_incidents(tenant_id: int, stale_seconds: int = 90):
             status = zone["operational_status"]
             # A configured zone with no assigned device is an onboarding/configuration state,
             # not an operational outage. Incident monitoring starts once hardware is assigned.
-            if status == "no_device":
+            if status in {"no_device", "commissioning"}:
                 repo.reconcile_zone_incident(
                     tenant_id=tenant_id,
                     zone_id=zone["id"],
@@ -36,6 +36,7 @@ def reconcile_hardware_incidents(tenant_id: int, stale_seconds: int = 90):
                     "operational_status": zone["operational_status"],
                     "active_devices": zone["active_devices"],
                     "online_devices": zone["online_devices"],
+                    "commissioning_devices": zone.get("commissioning_devices", 0),
                 },
             )
             if result:
