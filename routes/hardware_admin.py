@@ -92,6 +92,86 @@ def desativar_credencial(credential_id):
     return redirect(url_for("hardware_admin.credenciais"))
 
 
+@hardware_admin_bp.get("/permissoes")
+@roles_required("admin_condominio")
+def permissoes():
+    conn = conectar()
+    try:
+        repo = HardwareRepository(conn)
+        return render_template("hardware/permissoes.html",
+                               policies=repo.list_admin_access_policies(g.tenant_id),
+                               credentials=[x for x in repo.list_credentials(g.tenant_id) if x["ativo"]],
+                               devices=[x for x in repo.list_devices(g.tenant_id) if x["ativo"]])
+    finally:
+        liberar(conn)
+
+
+@hardware_admin_bp.post("/permissoes")
+@roles_required("admin_condominio")
+def criar_permissao():
+    credential_id = request.form.get("credential_id", "").strip()
+    device_id = request.form.get("device_id", "").strip()
+    weekdays_raw = request.form.getlist("dias_semana")
+    start_time = request.form.get("hora_inicio", "").strip() or None
+    end_time = request.form.get("hora_fim", "").strip() or None
+    try:
+        weekdays = sorted({int(day) for day in weekdays_raw})
+    except ValueError:
+        weekdays = []
+    if not credential_id or not device_id or not weekdays or any(day < 0 or day > 6 for day in weekdays):
+        flash("Selecione credencial, dispositivo e ao menos um dia válido.", "erro")
+        return redirect(url_for("hardware_admin.permissoes"))
+    if bool(start_time) != bool(end_time):
+        flash("Informe horário inicial e final juntos.", "erro")
+        return redirect(url_for("hardware_admin.permissoes"))
+    conn = conectar()
+    policy_id = str(uuid.uuid4())
+    try:
+        created = HardwareRepository(conn).create_access_policy(
+            policy_id=policy_id, tenant_id=g.tenant_id, credential_id=credential_id,
+            device_id=device_id, weekdays=weekdays, start_time=start_time, end_time=end_time
+        )
+        if not created:
+            conn.rollback()
+            flash("Credencial ou dispositivo não pertence a este condomínio ou está inativo.", "erro")
+            return redirect(url_for("hardware_admin.permissoes"))
+        with conn.cursor() as cur:
+            registrar_auditoria_cursor(cur, "hardware_access_policy_created", g.current_user["id"], g.tenant_id,
+                                       "hardware_access_policy", policy_id,
+                                       {"device_id": device_id, "credential_id": credential_id, "dias_semana": weekdays},
+                                       actor_tipo="usuario", actor_id=g.current_user["id"])
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+    flash("Permissão de acesso criada.", "sucesso")
+    return redirect(url_for("hardware_admin.permissoes"))
+
+
+@hardware_admin_bp.post("/permissoes/<uuid:policy_id>/desativar")
+@roles_required("admin_condominio")
+def desativar_permissao(policy_id):
+    conn = conectar()
+    try:
+        changed = HardwareRepository(conn).deactivate_access_policy(g.tenant_id, str(policy_id))
+        if changed:
+            with conn.cursor() as cur:
+                registrar_auditoria_cursor(cur, "hardware_access_policy_deactivated", g.current_user["id"], g.tenant_id,
+                                           "hardware_access_policy", policy_id, {},
+                                           actor_tipo="usuario", actor_id=g.current_user["id"])
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+    flash("Permissão desativada." if changed else "Permissão não encontrada ou já inativa.",
+          "sucesso" if changed else "aviso")
+    return redirect(url_for("hardware_admin.permissoes"))
+
+
 @hardware_admin_bp.post("/simulador")
 @roles_required("admin_condominio")
 def criar_simulador():
