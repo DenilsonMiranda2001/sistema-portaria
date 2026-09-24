@@ -14,3 +14,11 @@ def test_duplicate_credential_is_a_friendly_validation_error():
     assert "except errors.UniqueViolation:" in method
     assert "Esta credencial já está cadastrada neste condomínio." in method
     assert "conn.rollback()" in method
+
+
+def test_one_time_device_secret_responses_are_not_cacheable():
+    provision = SOURCE.split("def criar_simulador", 1)[1].split("def rotacionar", 1)[0]
+    rotation = SOURCE.split("def rotacionar", 1)[1].split("def revogar", 1)[0]
+    for method in (provision, rotation):
+        assert 'response.headers["Cache-Control"] = "no-store, max-age=0"' in method
+        assert 'response.headers["Pragma"] = "no-cache"' in method
