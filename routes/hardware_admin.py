@@ -241,6 +241,10 @@ def criar_permissao():
                                        {"access_zone_id": access_zone_id, "credential_id": credential_id, "dias_semana": weekdays},
                                        actor_tipo="usuario", actor_id=g.current_user["id"])
         conn.commit()
+    except errors.UniqueViolation:
+        conn.rollback()
+        flash("Esta permissão de acesso já está cadastrada.", "erro")
+        return redirect(url_for("hardware_admin.permissoes"))
     except Exception:
         conn.rollback()
         raise
