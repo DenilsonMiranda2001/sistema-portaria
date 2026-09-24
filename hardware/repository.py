@@ -79,7 +79,7 @@ class HardwareRepository:
     def list_access_policies(self, tenant_id: int, credential_id: str):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, condominio_id, credential_id::text, device_id::text,
-                                  zona, valido_de, valido_ate, dias_semana, hora_inicio, hora_fim, ativo
+                                  zona, valido_de, valido_ate, dias_semana, hora_inicio, hora_fim, timezone, ativo
                            FROM hardware_access_policies
                            WHERE condominio_id=%s AND credential_id=%s::uuid AND ativo""",
                         (tenant_id, credential_id))
