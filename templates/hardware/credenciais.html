@@ -7,7 +7,7 @@
     <form method="post" action="{{ url_for('hardware_admin.criar_credencial_morador') }}" class="row g-2">
       <input type="hidden" name="csrf_token" value="{{ global_csrf_token }}">
       <div class="col-md-2"><select class="form-select" name="tipo"><option value="rfid">RFID</option><option value="uhf">UHF</option></select></div>
-      <div class="col-md-4"><input class="form-control" name="morador_id" inputmode="numeric" required placeholder="ID do morador"></div>
+      <div class="col-md-4"><select class="form-select" name="morador_id" required><option value="">Selecione o morador</option>{% for r in residents %}<option value="{{ r.id }}">{{ r.nome }}{% if r.unidade_codigo %} · Unidade {{ r.unidade_codigo }}{% endif %}</option>{% endfor %}</select></div>
       <div class="col-md-4"><input class="form-control" name="identificador" maxlength="256" required autocomplete="off" placeholder="Identificador da tag"></div>
       <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Vincular</button></div>
     </form>
