@@ -36,7 +36,7 @@ def test_worker_health_probe_is_database_backed():
 
 
 def test_monitor_leadership_connection_is_health_checked_and_reacquired():
-    assert "def _leader_connection_alive" in SOURCE
-    assert 'cur.execute("SELECT 1 AS ok")' in SOURCE
-    assert "leader is not None and not _leader_connection_alive(leader)" in SOURCE
-    assert 'logger.warning("hardware monitor leadership connection lost")' in SOURCE
+    assert "def _leader_connection_alive" in RUNTIME
+    assert 'cur.execute("SELECT 1 AS ok")' in RUNTIME
+    assert "leader is not None and not _leader_connection_alive(leader)" in RUNTIME
+    assert 'logger.warning("hardware monitor leadership connection lost")' in RUNTIME
