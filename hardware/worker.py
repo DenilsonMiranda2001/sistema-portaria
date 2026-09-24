@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 def dispatch_claimed_commands(conn, registry, limit=20):
     """Dispatch an already durable outbox. Designed for a separate worker process."""
     repo = HardwareRepository(conn)
+    repo.recover_stuck_commands()
     repo.expire_commands()
     commands = repo.claim_pending_commands(limit)
     completed = 0
