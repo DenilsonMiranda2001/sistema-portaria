@@ -1,3 +1,4 @@
+import uuid
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from database.connection import conectar, liberar
 from hardware.provisioning import provision_simulator_device, revoke_device_auth, rotate_simulator_secret
@@ -18,6 +19,75 @@ def dispositivos():
         return render_template("hardware/dispositivos.html", devices=devices)
     finally:
         liberar(conn)
+
+
+@hardware_admin_bp.get("/credenciais")
+@roles_required("admin_condominio")
+def credenciais():
+    conn = conectar()
+    try:
+        credentials = HardwareRepository(conn).list_credentials(g.tenant_id)
+        return render_template("hardware/credenciais.html", credentials=credentials)
+    finally:
+        liberar(conn)
+
+
+@hardware_admin_bp.post("/credenciais/morador")
+@roles_required("admin_condominio")
+def criar_credencial_morador():
+    raw_identifier = request.form.get("identificador", "").strip()
+    resident_id = request.form.get("morador_id", "").strip()
+    credential_type = request.form.get("tipo", "rfid").strip().lower()
+    if credential_type not in {"rfid", "uhf"} or not raw_identifier or len(raw_identifier) > 256 or not resident_id.isdigit():
+        flash("Dados da credencial inválidos.", "erro")
+        return redirect(url_for("hardware_admin.credenciais"))
+    conn = conectar()
+    try:
+        repo = HardwareRepository(conn)
+        credential_id = str(uuid.uuid4())
+        created = repo.create_resident_credential(
+            credential_id=credential_id, tenant_id=g.tenant_id, credential_type=credential_type,
+            raw_identifier=raw_identifier, resident_id=int(resident_id)
+        )
+        if not created:
+            conn.rollback()
+            flash("Morador ativo não encontrado neste condomínio.", "erro")
+            return redirect(url_for("hardware_admin.credenciais"))
+        with conn.cursor() as cur:
+            registrar_auditoria_cursor(cur, "hardware_credential_created", g.current_user["id"], g.tenant_id,
+                                       "hardware_credential", credential_id,
+                                       {"tipo": credential_type, "morador_id": int(resident_id)},
+                                       actor_tipo="usuario", actor_id=g.current_user["id"])
+        conn.commit()
+        flash("Credencial cadastrada.", "sucesso")
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+    return redirect(url_for("hardware_admin.credenciais"))
+
+
+@hardware_admin_bp.post("/credenciais/<uuid:credential_id>/desativar")
+@roles_required("admin_condominio")
+def desativar_credencial(credential_id):
+    conn = conectar()
+    try:
+        changed = HardwareRepository(conn).deactivate_credential(g.tenant_id, str(credential_id))
+        if changed:
+            with conn.cursor() as cur:
+                registrar_auditoria_cursor(cur, "hardware_credential_deactivated", g.current_user["id"], g.tenant_id,
+                                           "hardware_credential", credential_id, {},
+                                           actor_tipo="usuario", actor_id=g.current_user["id"])
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+    flash("Credencial desativada." if changed else "Credencial não encontrada ou já inativa.",
+          "sucesso" if changed else "aviso")
+    return redirect(url_for("hardware_admin.credenciais"))
 
 
 @hardware_admin_bp.post("/simulador")
