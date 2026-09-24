@@ -114,3 +114,58 @@ def test_successful_auth_commits_nonce_before_connection_release():
     assert result == ("processed", "decision")
     assert calls[:2] == ["commit", "release"]
     conn.rollback.assert_not_called()
+
+
+
+def test_physical_vendor_is_blocked_after_auth_without_ingest():
+    conn = SimpleNamespace(
+        rollback=__import__("unittest").mock.Mock(),
+        commit=__import__("unittest").mock.Mock(),
+    )
+    device = {"id": "device-1", "condominio_id": 7, "vendor": "controlid"}
+    repo = SimpleNamespace(
+        get_device_auth_identity=__import__("unittest").mock.Mock(),
+        consume_auth_nonce=__import__("unittest").mock.Mock(),
+    )
+    with patch("hardware.http_boundary.conectar", return_value=conn), \
+         patch("hardware.http_boundary.liberar") as release, \
+         patch("hardware.http_boundary.HardwareRepository", return_value=repo), \
+         patch("hardware.http_boundary.verify_device_request", return_value=SimpleNamespace(authenticated=True, device=device)), \
+         patch("hardware.http_boundary.build_authenticated_event") as build_event, \
+         patch("hardware.http_boundary.HardwareAccessService") as service:
+        try:
+            ingest_simulator_request(headers=_auth_headers(), body=b"{}", presented_secret="secret")
+            assert False, "expected HardwareHttpError"
+        except HardwareHttpError as exc:
+            assert exc.status == 403
+            assert exc.code == "physical_hardware_disabled"
+    conn.commit.assert_called_once()
+    release.assert_called_once_with(conn)
+    build_event.assert_not_called()
+    service.assert_not_called()
+
+
+def test_malformed_json_after_auth_never_reaches_access_service():
+    conn = SimpleNamespace(
+        rollback=__import__("unittest").mock.Mock(),
+        commit=__import__("unittest").mock.Mock(),
+    )
+    device = {"id": "device-1", "condominio_id": 7, "vendor": "simulator"}
+    repo = SimpleNamespace(
+        get_device_auth_identity=__import__("unittest").mock.Mock(),
+        consume_auth_nonce=__import__("unittest").mock.Mock(),
+    )
+    with patch("hardware.http_boundary.conectar", return_value=conn), \
+         patch("hardware.http_boundary.liberar") as release, \
+         patch("hardware.http_boundary.HardwareRepository", return_value=repo), \
+         patch("hardware.http_boundary.verify_device_request", return_value=SimpleNamespace(authenticated=True, device=device)), \
+         patch("hardware.http_boundary.HardwareAccessService") as service:
+        try:
+            ingest_simulator_request(headers=_auth_headers(), body=b"{", presented_secret="secret")
+            assert False, "expected HardwareHttpError"
+        except HardwareHttpError as exc:
+            assert exc.status == 400
+            assert exc.code == "invalid_hardware_event"
+    conn.commit.assert_called_once()
+    release.assert_called_once_with(conn)
+    service.assert_not_called()
