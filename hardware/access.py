@@ -11,6 +11,7 @@ class AccessDecision:
     granted: bool
     reason: str
     command: HardwareCommand | None = None
+    policy_id: str | None = None
 
 
 def credential_fingerprint(value: str, key: str | bytes | None = None) -> str:
@@ -44,7 +45,8 @@ class AccessDecisionService:
             return AccessDecision(False, "credential_unknown_or_inactive")
         if int(credential["condominio_id"]) != int(event.tenant_id):
             return AccessDecision(False, "tenant_mismatch")
-        if not self.authorization_check(event.tenant_id, credential, event.device_id):
+        authorization = self.authorization_check(event.tenant_id, credential, event.device_id)
+        if not authorization.allowed:
             return AccessDecision(False, "access_not_authorized")
         command = HardwareCommand(
             tenant_id=event.tenant_id,
@@ -53,4 +55,4 @@ class AccessDecisionService:
             command_type=HardwareCommandType.GRANT_ACCESS,
             payload={"source_event_id": event.event_id},
         )
-        return AccessDecision(True, "authorized", command)
+        return AccessDecision(True, "authorized", command, authorization.policy_id)
