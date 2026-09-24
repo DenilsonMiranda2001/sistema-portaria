@@ -1,15 +1,16 @@
+import uuid
 from database.connection import conectar, liberar
 from .access import AccessDecisionService
+from .policy import evaluate_access_policies
 from .processor import HardwareEventProcessor
 from .repository import HardwareRepository
 
 
 class HardwareAccessService:
-    """Atomic ingest + decision + outbox enqueue. It performs no device I/O."""
+    """Atomic ingest + policy decision + outbox enqueue. It performs no device I/O."""
 
-    def __init__(self, *, command_id_factory, authorization_check):
-        self.command_id_factory = command_id_factory
-        self.authorization_check = authorization_check
+    def __init__(self, *, command_id_factory=None):
+        self.command_id_factory = command_id_factory or (lambda: str(uuid.uuid4()))
 
     def ingest(self, event):
         conn = conectar()
@@ -25,9 +26,22 @@ class HardwareAccessService:
                 conn.commit()
                 return processed, None
 
+            def authorization_check(tenant_id, credential, device_id):
+                device = repo.get_device(tenant_id, device_id)
+                if not device or not repo.device_is_online(tenant_id, device_id):
+                    return False
+                policies = repo.list_access_policies(tenant_id, credential["id"])
+                decision = evaluate_access_policies(
+                    policies,
+                    device_id=device_id,
+                    zone=(device.get("configuracao") or {}).get("zona"),
+                    at=event.occurred_at,
+                )
+                return decision.allowed
+
             decision_service = AccessDecisionService(
-                credential_lookup=lambda tenant, fingerprint: self._lookup_by_fingerprint(repo, tenant, fingerprint),
-                authorization_check=self.authorization_check,
+                credential_lookup=lambda tenant, fingerprint: repo.get_credential_by_fingerprint(tenant, fingerprint),
+                authorization_check=authorization_check,
                 command_id_factory=self.command_id_factory,
             )
             decision = decision_service.decide(event)
@@ -41,11 +55,3 @@ class HardwareAccessService:
             raise
         finally:
             liberar(conn)
-
-    @staticmethod
-    def _lookup_by_fingerprint(repo, tenant_id, fingerprint):
-        with repo.conn.cursor() as cur:
-            cur.execute("""SELECT id::text, condominio_id, tipo, morador_id, visitante_id, ativo
-                           FROM hardware_credentials
-                           WHERE condominio_id=%s AND identificador_hash=%s""", (tenant_id, fingerprint))
-            return cur.fetchone()
