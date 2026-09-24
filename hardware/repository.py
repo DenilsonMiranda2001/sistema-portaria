@@ -415,6 +415,7 @@ class HardwareRepository:
                            WHERE cmd.id=%s::uuid AND cmd.condominio_id=%s
                              AND cmd.device_id=%s::uuid AND cmd.status='processing'
                              AND cmd.tipo='grant_access'
+                             AND (cmd.expira_em IS NULL OR cmd.expira_em > CURRENT_TIMESTAMP)
                              AND d.ativo AND d.auth_revoked_em IS NULL
                              AND (p.access_zone_id=z.id OR p.device_id=d.id)
                            LIMIT 1""", (command_id, tenant_id, device_id))
