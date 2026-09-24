@@ -1,4 +1,7 @@
 import uuid
+import re
+from datetime import time
+from psycopg2 import errors
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from database.connection import conectar, liberar
 from database.models import listar_moradores
@@ -124,7 +127,9 @@ def criar_zona():
     name = request.form.get("nome", "").strip()
     code = request.form.get("codigo", "").strip().lower().replace(" ", "-")
     description = request.form.get("descricao", "").strip() or None
-    if not name or len(name) > 120 or not code or len(code) > 80:
+    if (not name or len(name) > 120 or not code or len(code) > 80
+            or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", code)
+            or (description is not None and len(description) > 500)):
         flash("Informe nome e código válidos para o ponto de acesso.", "erro")
         return redirect(url_for("hardware_admin.zonas"))
     conn = conectar()
@@ -136,6 +141,10 @@ def criar_zona():
                                        "hardware_access_zone", zone_id, {"nome": name, "codigo": code},
                                        actor_tipo="usuario", actor_id=g.current_user["id"])
         conn.commit()
+    except errors.UniqueViolation:
+        conn.rollback()
+        flash("Já existe um ponto de acesso com esse código neste condomínio.", "erro")
+        return redirect(url_for("hardware_admin.zonas"))
     except Exception:
         conn.rollback()
         raise
@@ -185,7 +194,7 @@ def permissoes():
 @roles_required("admin_condominio")
 def criar_permissao():
     credential_id = request.form.get("credential_id", "").strip()
-    device_id = request.form.get("access_zone_id", "").strip()
+    access_zone_id = request.form.get("access_zone_id", "").strip()
     weekdays_raw = request.form.getlist("dias_semana")
     start_time = request.form.get("hora_inicio", "").strip() or None
     end_time = request.form.get("hora_fim", "").strip() or None
@@ -193,18 +202,31 @@ def criar_permissao():
         weekdays = sorted({int(day) for day in weekdays_raw})
     except ValueError:
         weekdays = []
-    if not credential_id or not device_id or not weekdays or any(day < 0 or day > 6 for day in weekdays):
-        flash("Selecione credencial, ponto de acesso e ao menos um dia válido.", "erro")
+    try:
+        uuid.UUID(credential_id)
+        uuid.UUID(access_zone_id)
+    except (ValueError, AttributeError):
+        flash("Selecione credencial e ponto de acesso válidos.", "erro")
+        return redirect(url_for("hardware_admin.permissoes"))
+    if not weekdays or any(day < 0 or day > 6 for day in weekdays):
+        flash("Selecione ao menos um dia válido.", "erro")
         return redirect(url_for("hardware_admin.permissoes"))
     if bool(start_time) != bool(end_time):
         flash("Informe horário inicial e final juntos.", "erro")
         return redirect(url_for("hardware_admin.permissoes"))
+    if start_time:
+        try:
+            time.fromisoformat(start_time)
+            time.fromisoformat(end_time)
+        except ValueError:
+            flash("Informe horários válidos.", "erro")
+            return redirect(url_for("hardware_admin.permissoes"))
     conn = conectar()
     policy_id = str(uuid.uuid4())
     try:
         created = HardwareRepository(conn).create_access_policy(
             policy_id=policy_id, tenant_id=g.tenant_id, credential_id=credential_id,
-            device_id=device_id, weekdays=weekdays, start_time=start_time, end_time=end_time
+            access_zone_id=access_zone_id, weekdays=weekdays, start_time=start_time, end_time=end_time
         )
         if not created:
             conn.rollback()
@@ -213,7 +235,7 @@ def criar_permissao():
         with conn.cursor() as cur:
             registrar_auditoria_cursor(cur, "hardware_access_policy_created", g.current_user["id"], g.tenant_id,
                                        "hardware_access_policy", policy_id,
-                                       {"access_zone_id": device_id, "credential_id": credential_id, "dias_semana": weekdays},
+                                       {"access_zone_id": access_zone_id, "credential_id": credential_id, "dias_semana": weekdays},
                                        actor_tipo="usuario", actor_id=g.current_user["id"])
         conn.commit()
     except Exception:
