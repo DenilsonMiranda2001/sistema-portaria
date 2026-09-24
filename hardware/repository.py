@@ -437,14 +437,16 @@ class HardwareRepository:
                            LIMIT 1""", (command_id, tenant_id, device_id))
             return cur.fetchone() is not None
 
-    def finish_command(self, command_id: str, *, succeeded: bool, error: str | None = None, retry_seconds: int = 5):
+    def finish_command(self, command_id: str, *, succeeded: bool, error: str | None = None, retry_seconds: int = 5,
+                       retryable: bool = True):
         with self.conn.cursor() as cur:
+            failure_status = "failed" if retryable else "expired"
             cur.execute("""UPDATE hardware_commands
                            SET status=%s, erro=%s,
-                               proxima_tentativa_em=CASE WHEN %s THEN NULL ELSE CURRENT_TIMESTAMP + (%s * INTERVAL '1 second') END,
+                               proxima_tentativa_em=CASE WHEN %s OR NOT %s THEN NULL ELSE CURRENT_TIMESTAMP + (%s * INTERVAL '1 second') END,
                                concluido_em=CASE WHEN %s THEN CURRENT_TIMESTAMP ELSE NULL END,
                                atualizado_em=CURRENT_TIMESTAMP
                            WHERE id=%s::uuid AND status='processing'""",
-                        ("succeeded" if succeeded else "failed",
+                        ("succeeded" if succeeded else failure_status,
                          None if succeeded else (error or "adapter_error")[:1000],
-                         succeeded, retry_seconds, succeeded, command_id))
+                         succeeded, retryable, retry_seconds, succeeded, command_id))
