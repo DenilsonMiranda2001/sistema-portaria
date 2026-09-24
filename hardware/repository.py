@@ -10,6 +10,30 @@ class HardwareRepository:
     def __init__(self, conn):
         self.conn = conn
 
+    def create_device_identity(self, *, device_id, tenant_id, vendor, external_device_id, name, device_type, key_id, secret_hash):
+        with self.conn.cursor() as cur:
+            cur.execute("""INSERT INTO hardware_devices
+                (id, condominio_id, vendor, external_device_id, nome, tipo, auth_key_id, auth_secret_hash, auth_secret_rotated_em)
+                VALUES (%s::uuid,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP)""",
+                (device_id, tenant_id, vendor, external_device_id, name, device_type, key_id, secret_hash))
+
+    def rotate_device_secret(self, tenant_id: int, device_id: str, secret_hash: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_devices
+                           SET auth_secret_hash=%s, auth_secret_rotated_em=CURRENT_TIMESTAMP,
+                               auth_revoked_em=NULL, atualizado_em=CURRENT_TIMESTAMP
+                           WHERE condominio_id=%s AND id=%s::uuid AND ativo AND vendor='simulator'""",
+                        (secret_hash, tenant_id, device_id))
+            return cur.rowcount == 1
+
+    def revoke_device_auth(self, tenant_id: int, device_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_devices
+                           SET auth_revoked_em=CURRENT_TIMESTAMP, atualizado_em=CURRENT_TIMESTAMP
+                           WHERE condominio_id=%s AND id=%s::uuid AND auth_revoked_em IS NULL""",
+                        (tenant_id, device_id))
+            return cur.rowcount == 1
+
     def get_device(self, tenant_id: int, device_id: str):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, condominio_id, vendor, external_device_id, nome, tipo, ativo,
