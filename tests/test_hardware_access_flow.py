@@ -21,6 +21,7 @@ def test_known_authorized_tag_generates_vendor_neutral_grant_command():
     decision = service.decide(_event())
     assert decision.granted
     assert decision.command.command_id == "cmd-1"
+    assert decision.policy_id == "policy-test"
     assert decision.command.payload == {"source_event_id": "evt-1"}
     assert "TAG-001" not in str(decision.command.payload)
 
