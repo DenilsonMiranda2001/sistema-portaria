@@ -37,7 +37,7 @@ class HardwareAccessService:
                     zone=device.get("access_zone_id") or (device.get("configuracao") or {}).get("zona"),
                     at=event.occurred_at,
                 )
-                return decision.allowed
+                return decision
 
             decision_service = AccessDecisionService(
                 credential_lookup=lambda tenant, fingerprint: repo.get_credential_by_fingerprint(tenant, fingerprint),
@@ -45,7 +45,7 @@ class HardwareAccessService:
                 command_id_factory=self.command_id_factory,
             )
             decision = decision_service.decide(event)
-            repo.record_access_decision(event, granted=decision.granted, reason=decision.reason)
+            repo.record_access_decision(event, granted=decision.granted, reason=decision.reason, policy_id=decision.policy_id)
             if decision.command is not None:
                 repo.enqueue_command(decision.command)
             conn.commit()
