@@ -18,3 +18,13 @@ def test_runtime_handles_termination_and_has_separate_process():
 
 def test_simulator_adapter_is_opt_in():
     assert 'HARDWARE_SIMULATOR_HTTP_ENABLED' in RUNTIME
+
+def test_runtime_retries_failed_cycles_without_logging_sensitive_exception_text():
+    assert "consecutive_failures += 1" in RUNTIME
+    assert "min(30," in RUNTIME
+    assert "type(exc).__name__" in RUNTIME
+    assert "str(exc)" not in RUNTIME
+
+def test_monitor_leadership_can_be_reacquired():
+    assert "def _acquire_monitor_leader" in RUNTIME
+    assert "if leader is None:" in RUNTIME
