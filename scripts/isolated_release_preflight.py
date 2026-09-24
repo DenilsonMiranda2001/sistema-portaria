@@ -83,7 +83,7 @@ def main():
             migration_dir = Path(__file__).resolve().parents[1] / "migrations"
             expected = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                         for path in migration_dir.glob("[0-9]*.sql")}
-            if len(expected) != 21 or recorded != expected:
+            if not expected or recorded != expected:
                 raise SystemExit("Preflight refused: migration versions/checksums differ from candidate source")
             failures = {}
             for name, statement in CHECKS.items():
