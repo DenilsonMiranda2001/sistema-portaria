@@ -18,9 +18,22 @@ def test_payload_is_allowlisted():
     event = build_authenticated_event(DEVICE, {
         "event_id": "evt-2", "event_type": "device_status",
         "occurred_at": "2026-09-24T13:00:00Z",
-        "payload": {"reader": "A", "password": "must-not-persist", "token": "must-not-persist"},
+        "payload": {"reader": "A", "direction": "entry"},
     })
-    assert event.payload == {"reader": "A"}
+    assert event.payload == {"reader": "A", "direction": "entry"}
+
+
+def test_unknown_payload_fields_are_rejected_fail_closed():
+    try:
+        build_authenticated_event(DEVICE, {
+            "event_id": "evt-unknown", "event_type": "device_status",
+            "occurred_at": "2026-09-24T13:00:00Z",
+            "payload": {"reader": "A", "unexpected_vendor_field": "value"},
+        })
+    except InvalidHardwareEvent as exc:
+        assert str(exc) == "unsupported_payload_keys"
+    else:
+        raise AssertionError("unknown payload field accepted")
 
 
 def test_naive_timestamp_is_rejected():
