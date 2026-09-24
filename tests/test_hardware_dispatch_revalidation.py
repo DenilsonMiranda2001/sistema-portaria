@@ -42,3 +42,7 @@ def test_revoked_access_command_is_terminal_not_retried():
     assert "retryable=False" in revoked
     finish=REPO.split("def finish_command",1)[1]
     assert 'failure_status = "failed" if retryable else "expired"' in finish
+
+def test_ambiguous_grant_access_io_failure_is_not_retried():
+    assert 'retryable = row["tipo"] != HardwareCommandType.GRANT_ACCESS.value' in WORKER
+    assert "the physical device may already have acted" in WORKER
