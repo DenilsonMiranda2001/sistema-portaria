@@ -10,6 +10,26 @@ class HardwareRepository:
     def __init__(self, conn):
         self.conn = conn
 
+    def list_access_zones(self, tenant_id: int):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT id::text, nome, codigo, descricao, ativo, criado_em
+                           FROM hardware_access_zones WHERE condominio_id=%s
+                           ORDER BY nome""", (tenant_id,))
+            return cur.fetchall()
+
+    def create_access_zone(self, *, zone_id, tenant_id, name, code, description=None):
+        with self.conn.cursor() as cur:
+            cur.execute("""INSERT INTO hardware_access_zones(id,condominio_id,nome,codigo,descricao)
+                           VALUES (%s::uuid,%s,%s,%s,%s) RETURNING id::text""",
+                        (zone_id, tenant_id, name, code, description))
+            return cur.fetchone()["id"]
+
+    def deactivate_access_zone(self, tenant_id: int, zone_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_access_zones SET ativo=FALSE, atualizado_em=CURRENT_TIMESTAMP
+                           WHERE condominio_id=%s AND id=%s::uuid AND ativo""", (tenant_id, zone_id))
+            return cur.rowcount == 1
+
     def list_devices(self, tenant_id: int):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, vendor, external_device_id, nome, tipo, ativo,
