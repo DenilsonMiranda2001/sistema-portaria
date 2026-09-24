@@ -15,6 +15,12 @@ def test_incident_resolution_is_tenant_scoped():
     assert "status='resolved'" in method
 
 def test_monitor_opens_for_unavailable_and_resolves_after_recovery():
-    assert 'unavailable = zone["operational_status"] != "operational"' in MONITOR
+    assert 'if status == "no_device"' in MONITOR
+    assert 'unavailable = status == "unavailable"' in MONITOR
     assert "reconcile_zone_incident(" in MONITOR
     assert "conn.commit()" in MONITOR
+
+def test_uncommissioned_zone_is_not_reported_as_outage():
+    assert 'if status == "no_device"' in MONITOR
+    no_device=MONITOR.split('if status == "no_device"',1)[1].split("continue",1)[0]
+    assert "unavailable=False" in no_device
