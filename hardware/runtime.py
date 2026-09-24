@@ -47,6 +47,20 @@ def _acquire_monitor_leader():
     return None
 
 
+def _leader_connection_alive(conn):
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1 AS ok")
+            row = cur.fetchone()
+            return bool(row and row["ok"] == 1)
+    except Exception:
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return False
+
+
 def run_forever(registry, *, poll_seconds=2, monitor_seconds=30):
     """Run command dispatch continuously; elect one monitor leader via PostgreSQL advisory lock."""
     signal.signal(signal.SIGTERM, _stop)
@@ -64,6 +78,9 @@ def run_forever(registry, *, poll_seconds=2, monitor_seconds=30):
             try:
                 dispatch_claimed_commands(registry)
                 now = time.monotonic()
+                if leader is not None and not _leader_connection_alive(leader):
+                    leader = None
+                    logger.warning("hardware monitor leadership connection lost")
                 if leader is None:
                     try:
                         leader = _acquire_monitor_leader()
