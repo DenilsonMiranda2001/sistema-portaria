@@ -50,6 +50,36 @@ class HardwareRepository:
                            WHERE condominio_id=%s AND id=%s::uuid""", (tenant_id, device_id))
             return cur.fetchone()
 
+    def list_credentials(self, tenant_id: int):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT hc.id::text, hc.tipo, hc.morador_id, hc.visitante_id, hc.ativo,
+                                  hc.criado_em, m.nome AS morador_nome, v.nome AS visitante_nome
+                           FROM hardware_credentials hc
+                           LEFT JOIN moradores m ON m.id=hc.morador_id AND m.condominio_id=hc.condominio_id
+                           LEFT JOIN visitantes v ON v.id=hc.visitante_id AND v.condominio_id=hc.condominio_id
+                           WHERE hc.condominio_id=%s ORDER BY hc.criado_em DESC""", (tenant_id,))
+            return cur.fetchall()
+
+    def create_resident_credential(self, *, credential_id, tenant_id, credential_type, raw_identifier, resident_id):
+        fingerprint = credential_fingerprint(raw_identifier)
+        with self.conn.cursor() as cur:
+            cur.execute("""INSERT INTO hardware_credentials
+                           (id,condominio_id,tipo,identificador_hash,morador_id)
+                           SELECT %s::uuid,%s,%s,%s,m.id
+                           FROM moradores m
+                           WHERE m.id=%s AND m.condominio_id=%s AND m.ativo
+                           RETURNING id::text""",
+                        (credential_id, tenant_id, credential_type, fingerprint, resident_id, tenant_id))
+            row = cur.fetchone()
+            return row["id"] if row else None
+
+    def deactivate_credential(self, tenant_id: int, credential_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_credentials SET ativo=FALSE, atualizado_em=CURRENT_TIMESTAMP
+                           WHERE condominio_id=%s AND id=%s::uuid AND ativo""",
+                        (tenant_id, credential_id))
+            return cur.rowcount == 1
+
     def get_credential(self, tenant_id: int, raw_credential: str):
         return self.get_credential_by_fingerprint(tenant_id, credential_fingerprint(raw_credential))
 
