@@ -23,3 +23,7 @@ def test_revalidation_is_bound_to_original_granted_event():
     assert "dec.external_event_id=cmd.payload->>'source_event_id'" in method
     assert "dec.granted" in method
     assert "cred.identificador_hash=ev.credential_hash" in method
+
+def test_revalidation_rejects_command_expired_after_claim():
+    method=REPO.split("def access_command_still_authorized",1)[1].split("def finish_command",1)[0]
+    assert "cmd.expira_em IS NULL OR cmd.expira_em > CURRENT_TIMESTAMP" in method
