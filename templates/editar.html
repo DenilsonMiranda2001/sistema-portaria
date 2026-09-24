@@ -28,7 +28,7 @@
 <div class="pc-form-heading"><span>03</span><div><strong>Foto de identificação</strong><small>Câmera ou arquivo</small></div></div>
 <div class="pc-photo-stage">
 {% if visitante.foto %}<img class="edit-current-photo" src="{{ url_for('visitantes.foto', id=visitante.id) }}" alt="Foto atual" data-foto-visitante="{{ visitante.id }}">{% else %}<div class="pc-photo-placeholder"><span>Sem foto</span><small>Adicione uma foto do visitante</small></div>{% endif %}
-<div id="camera-container" class="pc-camera-box" hidden><video id="video" autoplay playsinline></video></div><div id="preview-container" class="pc-preview-box" hidden><img id="preview-foto" alt="Prévia da nova foto"></div>
+<div id="camera-container" class="pc-camera-box camera-box" style="display:none"><video id="video" autoplay playsinline></video></div><div id="preview-container" class="pc-preview-box preview-box" style="display:none"><img id="preview-foto" alt="Prévia da nova foto"></div>
 </div>
 <canvas id="canvas" style="display:none"></canvas><input type="hidden" name="foto_webcam" id="foto_webcam">
 <div class="pc-photo-actions"><button type="button" class="pc-btn pc-btn-primary" id="btnAbrirCamera">Atualizar foto</button><button type="button" class="pc-btn pc-btn-secondary" id="btnCapturar" style="display:none">Capturar</button><button type="button" class="pc-btn pc-btn-secondary" id="btnFecharCamera" style="display:none">Fechar</button><button type="button" class="pc-btn pc-btn-secondary" id="btnNovaFoto" style="display:none">Refazer</button></div>
