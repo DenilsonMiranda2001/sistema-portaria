@@ -33,3 +33,10 @@ def test_worker_health_probe_is_database_backed():
     health=Path("hardware/health.py").read_text(encoding="utf-8")
     assert "SELECT 1 AS ok" in health
     assert "SystemExit(0 if database_ready() else 1)" in health
+
+
+def test_monitor_leadership_connection_is_health_checked_and_reacquired():
+    assert "def _leader_connection_alive" in SOURCE
+    assert 'cur.execute("SELECT 1 AS ok")' in SOURCE
+    assert "leader is not None and not _leader_connection_alive(leader)" in SOURCE
+    assert 'logger.warning("hardware monitor leadership connection lost")' in SOURCE
