@@ -13,13 +13,15 @@ class HardwareRepository:
     def get_device(self, tenant_id: int, device_id: str):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, condominio_id, vendor, external_device_id, nome, tipo, ativo,
-                                  ultimo_heartbeat_em
+                                  configuracao, ultimo_heartbeat_em
                            FROM hardware_devices
                            WHERE condominio_id=%s AND id=%s::uuid""", (tenant_id, device_id))
             return cur.fetchone()
 
     def get_credential(self, tenant_id: int, raw_credential: str):
-        fingerprint = credential_fingerprint(raw_credential)
+        return self.get_credential_by_fingerprint(tenant_id, credential_fingerprint(raw_credential))
+
+    def get_credential_by_fingerprint(self, tenant_id: int, fingerprint: str):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, condominio_id, tipo, morador_id, visitante_id, ativo
                            FROM hardware_credentials
