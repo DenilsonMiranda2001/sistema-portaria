@@ -36,7 +36,7 @@ def evaluate_access_policies(
         if not policy.get("ativo"):
             continue
         policy_device = policy.get("device_id")
-        policy_zone = policy.get("zona")
+        policy_zone = policy.get("access_zone_id") or policy.get("zona")
         if policy_device and str(policy_device) != str(device_id):
             continue
         if policy_zone and policy_zone != zone:
