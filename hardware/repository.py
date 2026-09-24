@@ -386,6 +386,40 @@ class HardwareRepository:
                 RETURNING c.id::text, c.condominio_id, c.device_id::text, c.tipo, c.payload, c.tentativas""", (limit,))
             return cur.fetchall()
 
+    def access_command_still_authorized(self, tenant_id: int, command_id: str, device_id: str) -> bool:
+        """Fail closed if the credential/policy/zone/device was revoked after command creation."""
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT 1
+                           FROM hardware_commands cmd
+                           JOIN hardware_devices d
+                             ON d.id=cmd.device_id AND d.condominio_id=cmd.condominio_id
+                           JOIN hardware_access_decisions dec
+                             ON dec.condominio_id=cmd.condominio_id
+                            AND dec.device_id=cmd.device_id
+                            AND dec.external_event_id=cmd.payload->>'source_event_id'
+                            AND dec.granted
+                           JOIN hardware_events ev
+                             ON ev.id=dec.event_id AND ev.condominio_id=dec.condominio_id
+                           JOIN hardware_credentials cred
+                             ON cred.condominio_id=cmd.condominio_id
+                            AND cred.identificador_hash=ev.credential_hash
+                            AND cred.ativo
+                           JOIN hardware_access_policies p
+                             ON p.condominio_id=cmd.condominio_id
+                            AND p.credential_id=cred.id
+                            AND p.ativo
+                           JOIN hardware_access_zones z
+                             ON z.id=d.access_zone_id
+                            AND z.condominio_id=d.condominio_id
+                            AND z.ativo
+                           WHERE cmd.id=%s::uuid AND cmd.condominio_id=%s
+                             AND cmd.device_id=%s::uuid AND cmd.status='processing'
+                             AND cmd.tipo='grant_access'
+                             AND d.ativo AND d.auth_revoked_em IS NULL
+                             AND (p.access_zone_id=z.id OR p.device_id=d.id)
+                           LIMIT 1""", (command_id, tenant_id, device_id))
+            return cur.fetchone() is not None
+
     def finish_command(self, command_id: str, *, succeeded: bool, error: str | None = None, retry_seconds: int = 5):
         with self.conn.cursor() as cur:
             cur.execute("""UPDATE hardware_commands
