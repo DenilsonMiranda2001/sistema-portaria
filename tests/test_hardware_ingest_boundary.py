@@ -6,14 +6,31 @@ from hardware.ingest import build_authenticated_event, InvalidHardwareEvent
 DEVICE = {"id": "00000000-0000-0000-0000-000000000001", "condominio_id": 7}
 
 
-def test_caller_cannot_choose_tenant_or_device():
+def test_tenant_and_device_identity_come_only_from_authenticated_device():
     event = build_authenticated_event(DEVICE, {
-        "tenant_id": 999, "device_id": "attacker-device", "event_id": "evt-1",
-        "event_type": "credential_read", "occurred_at": datetime.now(timezone.utc).isoformat(),
+        "event_id": "evt-1",
+        "event_type": "credential_read",
+        "occurred_at": datetime.now(timezone.utc).isoformat(),
         "credential": "tag-1",
     })
     assert event.tenant_id == 7
     assert event.device_id == DEVICE["id"]
+
+
+def test_caller_supplied_tenant_or_device_identity_is_rejected():
+    for field, value in (("tenant_id", 999), ("device_id", "attacker-device")):
+        try:
+            build_authenticated_event(DEVICE, {
+                "event_id": f"evt-{field}",
+                "event_type": "credential_read",
+                "occurred_at": datetime.now(timezone.utc).isoformat(),
+                "credential": "tag-1",
+                field: value,
+            })
+        except InvalidHardwareEvent as exc:
+            assert str(exc) == "unsupported_event_keys"
+        else:
+            raise AssertionError(f"caller-controlled {field} accepted")
 
 
 def test_payload_is_allowlisted():
