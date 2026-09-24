@@ -1,4 +1,6 @@
 import hashlib
+import hmac
+import os
 from dataclasses import dataclass
 from typing import Callable
 from .contracts import HardwareCommand, HardwareCommandType, HardwareEvent, HardwareEventType
@@ -11,9 +13,18 @@ class AccessDecision:
     command: HardwareCommand | None = None
 
 
-def credential_fingerprint(value: str) -> str:
-    """Stable non-reversible lookup value; raw credentials must not be persisted."""
-    return hashlib.sha256(value.strip().encode("utf-8")).hexdigest()
+def credential_fingerprint(value: str, key: str | bytes | None = None) -> str:
+    """Keyed stable lookup value. Production must provide HARDWARE_CREDENTIAL_HMAC_KEY."""
+    material = key if key is not None else os.getenv("HARDWARE_CREDENTIAL_HMAC_KEY")
+    if material is None:
+        if os.getenv("APP_ENV", "development").lower() == "production":
+            raise RuntimeError("HARDWARE_CREDENTIAL_HMAC_KEY is required in production.")
+        material = "development-only-hardware-credential-key"
+    key_bytes = material.encode("utf-8") if isinstance(material, str) else material
+    if len(key_bytes) < 32:
+        raise RuntimeError("HARDWARE_CREDENTIAL_HMAC_KEY must be at least 32 bytes.")
+    normalized = value.strip().encode("utf-8")
+    return hmac.new(key_bytes, normalized, hashlib.sha256).hexdigest()
 
 
 class AccessDecisionService:
