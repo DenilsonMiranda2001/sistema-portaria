@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS hardware_devices (
     auth_revoked_em TIMESTAMPTZ,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (condominio_id, vendor, external_device_id)
+    UNIQUE (condominio_id, vendor, external_device_id),
+    UNIQUE (id, condominio_id)
 );
 
 CREATE TABLE IF NOT EXISTS hardware_credentials (
@@ -30,7 +31,11 @@ CREATE TABLE IF NOT EXISTS hardware_credentials (
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (condominio_id, tipo, identificador_hash)
+    UNIQUE (condominio_id, tipo, identificador_hash),
+    UNIQUE (id, condominio_id),
+    CHECK (NOT (morador_id IS NOT NULL AND visitante_id IS NOT NULL)),
+    FOREIGN KEY (morador_id, condominio_id) REFERENCES moradores(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
+    FOREIGN KEY (visitante_id, condominio_id) REFERENCES visitantes(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
 );
 
 CREATE TABLE IF NOT EXISTS hardware_events (
@@ -43,7 +48,9 @@ CREATE TABLE IF NOT EXISTS hardware_events (
     payload JSONB NOT NULL DEFAULT '{}'::jsonb,
     ocorrido_em TIMESTAMPTZ NOT NULL,
     recebido_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (condominio_id, device_id, external_event_id)
+    UNIQUE (condominio_id, device_id, external_event_id),
+    UNIQUE (id, condominio_id),
+    FOREIGN KEY (device_id, condominio_id) REFERENCES hardware_devices(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
 );
 
 CREATE TABLE IF NOT EXISTS hardware_commands (
@@ -61,7 +68,8 @@ CREATE TABLE IF NOT EXISTS hardware_commands (
     expira_em TIMESTAMPTZ,
     concluido_em TIMESTAMPTZ,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id, condominio_id) REFERENCES hardware_devices(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
 );
 
 CREATE INDEX IF NOT EXISTS idx_hw_devices_tenant_active ON hardware_devices(condominio_id, ativo);
@@ -91,7 +99,9 @@ CREATE TABLE IF NOT EXISTS hardware_access_policies (
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (valido_ate IS NULL OR valido_de IS NULL OR valido_ate > valido_de),
-    CHECK (hora_fim IS NULL OR hora_inicio IS NOT NULL)
+    CHECK (hora_fim IS NULL OR hora_inicio IS NOT NULL),
+    FOREIGN KEY (credential_id, condominio_id) REFERENCES hardware_credentials(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
+    FOREIGN KEY (device_id, condominio_id) REFERENCES hardware_devices(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
 );
 CREATE INDEX IF NOT EXISTS idx_hw_policy_tenant_credential ON hardware_access_policies(condominio_id, credential_id) WHERE ativo;
 CREATE INDEX IF NOT EXISTS idx_hw_devices_heartbeat ON hardware_devices(condominio_id, ultimo_heartbeat_em) WHERE ativo;
@@ -105,6 +115,8 @@ CREATE TABLE IF NOT EXISTS hardware_access_decisions (
     granted BOOLEAN NOT NULL,
     reason VARCHAR(80) NOT NULL,
     credential_hash VARCHAR(64),
-    criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id, condominio_id) REFERENCES hardware_devices(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
+    FOREIGN KEY (event_id, condominio_id) REFERENCES hardware_events(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
 );
 CREATE INDEX IF NOT EXISTS idx_hw_decisions_tenant_time ON hardware_access_decisions(condominio_id, criado_em DESC);
