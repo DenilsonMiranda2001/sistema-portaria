@@ -28,6 +28,22 @@ class HardwareRepository:
                            WHERE condominio_id=%s AND identificador_hash=%s""", (tenant_id, fingerprint))
             return cur.fetchone()
 
+    def get_device_auth_identity(self, key_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT id::text, condominio_id, ativo, auth_key_id, auth_secret_hash,
+                                  auth_secret_rotated_em, auth_revoked_em
+                           FROM hardware_devices WHERE auth_key_id=%s""", (key_id,))
+            return cur.fetchone()
+
+    def consume_auth_nonce(self, device_id: str, nonce_hash: str, expires_at):
+        with self.conn.cursor() as cur:
+            cur.execute("DELETE FROM hardware_auth_nonces WHERE expira_em <= CURRENT_TIMESTAMP")
+            cur.execute("""INSERT INTO hardware_auth_nonces(device_id, nonce_hash, expira_em)
+                           VALUES (%s::uuid,%s,to_timestamp(%s))
+                           ON CONFLICT (device_id, nonce_hash) DO NOTHING""",
+                        (device_id, nonce_hash, expires_at))
+            return cur.rowcount == 1
+
     def list_access_policies(self, tenant_id: int, credential_id: str):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, condominio_id, credential_id::text, device_id::text,
