@@ -10,6 +10,14 @@ class HardwareRepository:
     def __init__(self, conn):
         self.conn = conn
 
+    def list_devices(self, tenant_id: int):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT id::text, vendor, external_device_id, nome, tipo, ativo,
+                                  ultimo_heartbeat_em, auth_key_id, auth_secret_rotated_em, auth_revoked_em
+                           FROM hardware_devices WHERE condominio_id=%s
+                           ORDER BY nome, criado_em""", (tenant_id,))
+            return cur.fetchall()
+
     def create_device_identity(self, *, device_id, tenant_id, vendor, external_device_id, name, device_type, key_id, secret_hash):
         with self.conn.cursor() as cur:
             cur.execute("""INSERT INTO hardware_devices
