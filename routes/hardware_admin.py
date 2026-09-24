@@ -68,6 +68,9 @@ def criar_credencial_morador():
                                        actor_tipo="usuario", actor_id=g.current_user["id"])
         conn.commit()
         flash("Credencial cadastrada.", "sucesso")
+    except errors.UniqueViolation:
+        conn.rollback()
+        flash("Esta credencial já está cadastrada neste condomínio.", "erro")
     except Exception:
         conn.rollback()
         raise
@@ -275,6 +278,11 @@ def vincular_zona_dispositivo(device_id):
     zone_id = request.form.get("zone_id", "").strip()
     if not zone_id:
         flash("Selecione um ponto de acesso.", "erro")
+        return redirect(url_for("hardware_admin.dispositivos"))
+    try:
+        uuid.UUID(zone_id)
+    except (ValueError, AttributeError):
+        flash("Ponto de acesso inválido.", "erro")
         return redirect(url_for("hardware_admin.dispositivos"))
     conn = conectar()
     try:
