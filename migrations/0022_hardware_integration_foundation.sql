@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS hardware_access_policies (
     condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
     credential_id UUID NOT NULL REFERENCES hardware_credentials(id) ON DELETE CASCADE,
     device_id UUID REFERENCES hardware_devices(id) ON DELETE CASCADE,
+    access_zone_id UUID,
     zona VARCHAR(80),
     valido_de TIMESTAMPTZ,
     valido_ate TIMESTAMPTZ,
@@ -142,7 +143,9 @@ CREATE TABLE IF NOT EXISTS hardware_access_policies (
     CHECK (dias_semana <@ ARRAY[0,1,2,3,4,5,6]::SMALLINT[]),
     CHECK (cardinality(dias_semana) > 0),
     FOREIGN KEY (credential_id, condominio_id) REFERENCES hardware_credentials(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
-    FOREIGN KEY (device_id, condominio_id) REFERENCES hardware_devices(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE
+    FOREIGN KEY (device_id, condominio_id) REFERENCES hardware_devices(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
+    FOREIGN KEY (access_zone_id, condominio_id) REFERENCES hardware_access_zones(id, condominio_id) DEFERRABLE INITIALLY IMMEDIATE,
+    CHECK (device_id IS NOT NULL OR access_zone_id IS NOT NULL)
 );
 CREATE INDEX IF NOT EXISTS idx_hw_policy_tenant_credential ON hardware_access_policies(condominio_id, credential_id) WHERE ativo;
 CREATE INDEX IF NOT EXISTS idx_hw_devices_heartbeat ON hardware_devices(condominio_id, ultimo_heartbeat_em) WHERE ativo;
