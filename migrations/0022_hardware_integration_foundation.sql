@@ -65,6 +65,16 @@ CREATE TABLE IF NOT EXISTS hardware_commands (
 );
 
 CREATE INDEX IF NOT EXISTS idx_hw_devices_tenant_active ON hardware_devices(condominio_id, ativo);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_hw_devices_auth_key ON hardware_devices(auth_key_id) WHERE auth_key_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS hardware_auth_nonces (
+    device_id UUID NOT NULL REFERENCES hardware_devices(id) ON DELETE CASCADE,
+    nonce_hash VARCHAR(64) NOT NULL,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expira_em TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (device_id, nonce_hash)
+);
+CREATE INDEX IF NOT EXISTS idx_hw_auth_nonces_expiry ON hardware_auth_nonces(expira_em);
 CREATE INDEX IF NOT EXISTS idx_hw_events_tenant_time ON hardware_events(condominio_id, ocorrido_em DESC);
 CREATE INDEX IF NOT EXISTS idx_hw_commands_pending ON hardware_commands(status, proxima_tentativa_em) WHERE status IN ('pending','failed');
 CREATE TABLE IF NOT EXISTS hardware_access_policies (
