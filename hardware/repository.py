@@ -10,6 +10,35 @@ class HardwareRepository:
     def __init__(self, conn):
         self.conn = conn
 
+    def list_access_zone_operational_status(self, tenant_id: int, stale_seconds: int = 90):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT z.id::text, z.nome, z.codigo, z.ativo,
+                                  COUNT(d.id) FILTER (WHERE d.ativo) AS active_devices,
+                                  COUNT(d.id) FILTER (
+                                    WHERE d.ativo
+                                      AND d.auth_revoked_em IS NULL
+                                      AND d.ultimo_heartbeat_em IS NOT NULL
+                                      AND d.ultimo_heartbeat_em >= CURRENT_TIMESTAMP - (%s * INTERVAL '1 second')
+                                  ) AS online_devices,
+                                  CASE
+                                    WHEN NOT z.ativo THEN 'inactive'
+                                    WHEN COUNT(d.id) FILTER (WHERE d.ativo) = 0 THEN 'no_device'
+                                    WHEN COUNT(d.id) FILTER (
+                                      WHERE d.ativo
+                                        AND d.auth_revoked_em IS NULL
+                                        AND d.ultimo_heartbeat_em IS NOT NULL
+                                        AND d.ultimo_heartbeat_em >= CURRENT_TIMESTAMP - (%s * INTERVAL '1 second')
+                                    ) = 0 THEN 'unavailable'
+                                    ELSE 'operational'
+                                  END AS operational_status
+                           FROM hardware_access_zones z
+                           LEFT JOIN hardware_devices d
+                             ON d.access_zone_id=z.id AND d.condominio_id=z.condominio_id
+                           WHERE z.condominio_id=%s
+                           GROUP BY z.id,z.nome,z.codigo,z.ativo
+                           ORDER BY z.nome""", (stale_seconds, stale_seconds, tenant_id))
+            return cur.fetchall()
+
     def list_access_zones(self, tenant_id: int):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, nome, codigo, descricao, ativo, criado_em
