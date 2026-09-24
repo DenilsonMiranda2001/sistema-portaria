@@ -30,7 +30,7 @@ class HardwareRepository:
 
     def get_device_auth_identity(self, key_id: str):
         with self.conn.cursor() as cur:
-            cur.execute("""SELECT id::text, condominio_id, ativo, auth_key_id, auth_secret_hash,
+            cur.execute("""SELECT id::text, condominio_id, vendor, ativo, auth_key_id, auth_secret_hash,
                                   auth_secret_rotated_em, auth_revoked_em
                            FROM hardware_devices WHERE auth_key_id=%s""", (key_id,))
             return cur.fetchone()
