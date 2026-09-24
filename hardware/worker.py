@@ -73,7 +73,7 @@ def dispatch_claimed_commands(registry, limit=20):
         retry_seconds = min(300, 5 * (2 ** max(0, row["tentativas"] - 1)))
         try:
             device = _load_device(row["condominio_id"], row["device_id"])
-            if not device or not device["ativo"]:
+            if not device or not device["ativo"] or device.get("auth_revoked_em"):
                 raise RuntimeError("device_unavailable")
             if row["tipo"] == HardwareCommandType.GRANT_ACCESS.value:
                 if not _access_command_still_authorized(row["condominio_id"], row["id"], row["device_id"]):
