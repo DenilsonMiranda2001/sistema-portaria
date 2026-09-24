@@ -239,7 +239,7 @@ class HardwareRepository:
                            WHERE p.condominio_id=%s ORDER BY p.criado_em DESC""", (tenant_id,))
             return cur.fetchall()
 
-    def create_access_policy(self, *, policy_id, tenant_id, credential_id, device_id, weekdays,
+    def create_access_policy(self, *, policy_id, tenant_id, credential_id, access_zone_id, weekdays,
                              start_time=None, end_time=None, timezone_name="America/Sao_Paulo"):
         with self.conn.cursor() as cur:
             cur.execute("""INSERT INTO hardware_access_policies
@@ -250,7 +250,7 @@ class HardwareRepository:
                            WHERE c.id=%s::uuid AND c.condominio_id=%s AND c.ativo
                            RETURNING id::text""",
                         (policy_id, tenant_id, weekdays, start_time, end_time, timezone_name,
-                         device_id, tenant_id, credential_id, tenant_id))
+                         access_zone_id, tenant_id, credential_id, tenant_id))
             row = cur.fetchone()
             return row["id"] if row else None
 
