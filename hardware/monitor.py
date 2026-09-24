@@ -7,6 +7,10 @@ INCIDENT_TYPE = "access_zone_unavailable"
 
 def reconcile_hardware_incidents(tenant_id: int, stale_seconds: int = 90):
     """Open/update one incident per unavailable zone and resolve it after recovery."""
+    if not isinstance(tenant_id, int) or isinstance(tenant_id, bool) or tenant_id <= 0:
+        raise ValueError("tenant_id must be a positive integer")
+    if not isinstance(stale_seconds, int) or isinstance(stale_seconds, bool) or stale_seconds <= 0:
+        raise ValueError("stale_seconds must be a positive integer")
     conn = conectar()
     try:
         repo = HardwareRepository(conn)
