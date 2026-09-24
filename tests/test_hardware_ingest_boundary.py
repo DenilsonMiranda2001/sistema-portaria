@@ -74,3 +74,18 @@ def test_event_too_far_in_future_is_rejected():
         assert str(exc) == "future_event"
     else:
         raise AssertionError("future event accepted")
+
+
+def test_unknown_event_envelope_fields_are_rejected_fail_closed():
+    try:
+        build_authenticated_event(DEVICE, {
+            "event_id": "evt-envelope",
+            "event_type": "device_status",
+            "occurred_at": datetime.now(timezone.utc).isoformat(),
+            "payload": {"reader": "A"},
+            "unexpected_top_level_field": "value",
+        })
+    except InvalidHardwareEvent as exc:
+        assert str(exc) == "unsupported_event_keys"
+    else:
+        raise AssertionError("unknown event envelope field accepted")
