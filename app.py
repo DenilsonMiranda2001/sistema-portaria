@@ -16,6 +16,7 @@ from routes.moradores import moradores_bp
 from routes.encomendas import encomendas_bp
 from routes.entregadores import entregadores_bp
 from routes.hardware import hardware_bp
+from routes.hardware_admin import hardware_admin_bp
 from database.connection import verificar_conexao
 from utils.authz import load_identity
 
@@ -45,6 +46,7 @@ app.register_blueprint(moradores_bp)
 app.register_blueprint(encomendas_bp)
 app.register_blueprint(entregadores_bp)
 app.register_blueprint(hardware_bp)
+app.register_blueprint(hardware_admin_bp)
 csrf.exempt(hardware_bp)
 
 ROTAS_PUBLICAS = {"auth.login", "auth.logout", "static", "healthz", "readyz"}
