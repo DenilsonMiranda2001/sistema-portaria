@@ -59,11 +59,39 @@ class HardwareRepository:
                            WHERE condominio_id=%s AND id=%s::uuid AND ativo""", (tenant_id, device_id))
             return cur.rowcount == 1
 
+    def record_access_decision(self, event: HardwareEvent, *, granted: bool, reason: str):
+        credential_hash = credential_fingerprint(event.credential) if event.credential else None
+        with self.conn.cursor() as cur:
+            cur.execute("""INSERT INTO hardware_access_decisions
+                (condominio_id, device_id, external_event_id, granted, reason, credential_hash)
+                VALUES (%s,%s::uuid,%s,%s,%s,%s)""",
+                (event.tenant_id, event.device_id, event.event_id, granted, reason, credential_hash))
+
+    def device_is_online(self, tenant_id: int, device_id: str, stale_seconds: int = 90) -> bool:
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT COALESCE(ultimo_heartbeat_em >= CURRENT_TIMESTAMP - (%s * INTERVAL '1 second'), FALSE) AS online
+                           FROM hardware_devices WHERE condominio_id=%s AND id=%s::uuid AND ativo""",
+                        (stale_seconds, tenant_id, device_id))
+            row = cur.fetchone()
+            return bool(row and row["online"])
+
+    def recover_stuck_commands(self, stale_seconds: int = 120):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_commands
+                           SET status=CASE WHEN tentativas >= max_tentativas THEN 'expired' ELSE 'failed' END,
+                               erro='processing_timeout',
+                               proxima_tentativa_em=CASE WHEN tentativas >= max_tentativas THEN NULL ELSE CURRENT_TIMESTAMP END,
+                               atualizado_em=CURRENT_TIMESTAMP
+                           WHERE status='processing'
+                             AND atualizado_em < CURRENT_TIMESTAMP - (%s * INTERVAL '1 second')""", (stale_seconds,))
+            return cur.rowcount
+
     def expire_commands(self):
         with self.conn.cursor() as cur:
             cur.execute("""UPDATE hardware_commands SET status='expired', atualizado_em=CURRENT_TIMESTAMP
                            WHERE status IN ('pending','failed')
-                             AND expira_em IS NOT NULL AND expira_em <= CURRENT_TIMESTAMP""")
+                             AND ((expira_em IS NOT NULL AND expira_em <= CURRENT_TIMESTAMP)
+                                  OR tentativas >= max_tentativas)""")
             return cur.rowcount
 
     def claim_pending_commands(self, limit: int = 20):
@@ -71,6 +99,7 @@ class HardwareRepository:
             cur.execute("""WITH claimed AS (
                     SELECT id FROM hardware_commands
                     WHERE status IN ('pending','failed')
+                      AND tentativas < max_tentativas
                       AND (expira_em IS NULL OR expira_em > CURRENT_TIMESTAMP)
                       AND (proxima_tentativa_em IS NULL OR proxima_tentativa_em <= CURRENT_TIMESTAMP)
                     ORDER BY criado_em
