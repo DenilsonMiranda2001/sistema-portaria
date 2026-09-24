@@ -52,3 +52,11 @@ def test_rejected_access_command_requires_explicit_safe_retry_opt_in():
     assert "safe_to_retry: bool = False" in contracts
     assert 'getattr(result, "safe_to_retry", False)' in WORKER
     assert "retryable_rejection" in WORKER
+
+
+def test_dispatch_rejects_revoked_device_before_adapter_io():
+    load=WORKER.index('device = _load_device')
+    revoked=WORKER.index('device.get("auth_revoked_em")', load)
+    adapter=WORKER.index("registry.get", revoked)
+    send=WORKER.index("adapter.send_command", adapter)
+    assert load < revoked < adapter < send
