@@ -177,3 +177,40 @@ def test_ambiguous_grant_adapter_exception_is_terminal():
         "command-1", succeeded=False, error="TimeoutError",
         retry_seconds=5, retryable=False,
     )
+
+
+
+def test_retry_backoff_is_capped_at_five_minutes():
+    row = _grant_row()
+    row["tipo"] = HardwareCommandType.PING.value
+    row["tentativas"] = 20
+    registry = Mock()
+    finish = Mock()
+    with patch("hardware.worker.claim_command_batch", return_value=[row]), \
+         patch("hardware.worker._load_device", return_value=None), \
+         patch("hardware.worker.finish_dispatched_command", finish):
+        result = dispatch_claimed_commands(registry)
+
+    assert result == {"claimed": 1, "succeeded": 0}
+    registry.get.assert_not_called()
+    finish.assert_called_once_with(
+        "command-1", succeeded=False, error="RuntimeError",
+        retry_seconds=300, retryable=True,
+    )
+
+
+def test_retry_backoff_uses_attempt_count_before_cap():
+    expected = ((1, 5), (2, 10), (3, 20), (4, 40))
+    for attempts, retry_seconds in expected:
+        row = _grant_row()
+        row["tipo"] = HardwareCommandType.PING.value
+        row["tentativas"] = attempts
+        finish = Mock()
+        with patch("hardware.worker.claim_command_batch", return_value=[row]), \
+             patch("hardware.worker._load_device", return_value=None), \
+             patch("hardware.worker.finish_dispatched_command", finish):
+            dispatch_claimed_commands(Mock())
+        finish.assert_called_once_with(
+            "command-1", succeeded=False, error="RuntimeError",
+            retry_seconds=retry_seconds, retryable=True,
+        )
