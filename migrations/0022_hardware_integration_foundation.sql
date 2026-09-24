@@ -96,6 +96,22 @@ CREATE TABLE IF NOT EXISTS hardware_auth_nonces (
 CREATE INDEX IF NOT EXISTS idx_hw_auth_nonces_expiry ON hardware_auth_nonces(expira_em);
 CREATE INDEX IF NOT EXISTS idx_hw_events_tenant_time ON hardware_events(condominio_id, ocorrido_em DESC);
 CREATE INDEX IF NOT EXISTS idx_hw_commands_pending ON hardware_commands(status, proxima_tentativa_em) WHERE status IN ('pending','failed');
+CREATE TABLE IF NOT EXISTS hardware_access_zones (
+    id UUID PRIMARY KEY,
+    condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
+    nome VARCHAR(120) NOT NULL,
+    codigo VARCHAR(80) NOT NULL,
+    descricao VARCHAR(255),
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (condominio_id, codigo),
+    UNIQUE (id, condominio_id),
+    CHECK (char_length(trim(nome)) > 0),
+    CHECK (char_length(trim(codigo)) > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_hw_zones_tenant_active ON hardware_access_zones(condominio_id, ativo);
+
 CREATE TABLE IF NOT EXISTS hardware_access_policies (
     id UUID PRIMARY KEY,
     condominio_id INTEGER NOT NULL REFERENCES condominios(id) ON DELETE RESTRICT,
