@@ -327,7 +327,7 @@ class HardwareRepository:
             row = cur.fetchone()
             return row["id"] if row else None
 
-    def record_access_decision(self, event: HardwareEvent, *, granted: bool, reason: str, event_id=None):
+    def record_access_decision(self, event: HardwareEvent, *, granted: bool, reason: str, event_id=None, policy_id=None):
         credential_hash = credential_fingerprint(event.credential) if event.credential else None
         internal_event_id = event_id if event_id is not None else self.get_event_id(
             event.tenant_id, event.device_id, event.event_id
@@ -336,10 +336,10 @@ class HardwareRepository:
             raise RuntimeError("hardware_event_missing_for_decision")
         with self.conn.cursor() as cur:
             cur.execute("""INSERT INTO hardware_access_decisions
-                (condominio_id, device_id, event_id, external_event_id, granted, reason, credential_hash)
-                VALUES (%s,%s::uuid,%s,%s,%s,%s,%s)""",
+                (condominio_id, device_id, event_id, external_event_id, granted, reason, credential_hash, policy_id)
+                VALUES (%s,%s::uuid,%s,%s,%s,%s,%s,%s::uuid)""",
                 (event.tenant_id, event.device_id, internal_event_id, event.event_id,
-                 granted, reason, credential_hash))
+                 granted, reason, credential_hash, policy_id))
 
     def device_is_online(self, tenant_id: int, device_id: str, stale_seconds: int = 90) -> bool:
         with self.conn.cursor() as cur:
@@ -407,6 +407,7 @@ class HardwareRepository:
                            JOIN hardware_access_policies p
                              ON p.condominio_id=cmd.condominio_id
                             AND p.credential_id=cred.id
+                            AND p.id=dec.policy_id
                             AND p.ativo
                            JOIN hardware_access_zones z
                              ON z.id=d.access_zone_id
