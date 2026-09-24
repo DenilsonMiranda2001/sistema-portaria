@@ -20,8 +20,8 @@ class HardwareEventProcessor:
 
     def process(self, event: HardwareEvent) -> ProcessResult:
         device = self.device_lookup(event.tenant_id, event.device_id)
-        if not device or not device.get("ativo"):
-            return ProcessResult(False, reason="unknown_or_inactive_device")
+        if not device or not device.get("ativo") or device.get("auth_revoked_em"):
+            return ProcessResult(False, reason="unknown_inactive_or_revoked_device")
         if int(device["condominio_id"]) != int(event.tenant_id):
             return ProcessResult(False, reason="tenant_mismatch")
         if self.event_exists(event.tenant_id, event.device_id, event.event_id):
