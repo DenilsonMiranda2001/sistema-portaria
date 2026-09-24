@@ -95,7 +95,7 @@ jobs:
                   definition = cur.fetchone()
                   assert definition and all(role in definition["definition"] for role in ("admin_condominio", "administrativo", "porteiro"))
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
-                  assert cur.fetchone()["n"] == 21
+                  assert cur.fetchone()["n"] == len(list(__import__("pathlib").Path("migrations").glob("[0-9]*.sql")))
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations WHERE version='0021_delivery_baseline_reconciliation.sql'")
                   assert cur.fetchone()["n"] == 1
                   cur.execute("""SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint
