@@ -106,6 +106,40 @@ class HardwareRepository:
                         (device_id, nonce_hash, expires_at))
             return cur.rowcount == 1
 
+    def list_admin_access_policies(self, tenant_id: int):
+        with self.conn.cursor() as cur:
+            cur.execute("""SELECT p.id::text, p.credential_id::text, p.device_id::text, p.zona,
+                                  p.valido_de, p.valido_ate, p.dias_semana, p.hora_inicio, p.hora_fim,
+                                  p.timezone, p.ativo, d.nome AS device_nome, c.tipo AS credential_tipo,
+                                  m.nome AS morador_nome
+                           FROM hardware_access_policies p
+                           JOIN hardware_credentials c ON c.id=p.credential_id AND c.condominio_id=p.condominio_id
+                           LEFT JOIN hardware_devices d ON d.id=p.device_id AND d.condominio_id=p.condominio_id
+                           LEFT JOIN moradores m ON m.id=c.morador_id AND m.condominio_id=c.condominio_id
+                           WHERE p.condominio_id=%s ORDER BY p.criado_em DESC""", (tenant_id,))
+            return cur.fetchall()
+
+    def create_access_policy(self, *, policy_id, tenant_id, credential_id, device_id, weekdays,
+                             start_time=None, end_time=None, timezone_name="America/Sao_Paulo"):
+        with self.conn.cursor() as cur:
+            cur.execute("""INSERT INTO hardware_access_policies
+                           (id,condominio_id,credential_id,device_id,dias_semana,hora_inicio,hora_fim,timezone)
+                           SELECT %s::uuid,%s,c.id,d.id,%s::smallint[],%s,%s,%s
+                           FROM hardware_credentials c
+                           JOIN hardware_devices d ON d.id=%s::uuid AND d.condominio_id=%s AND d.ativo
+                           WHERE c.id=%s::uuid AND c.condominio_id=%s AND c.ativo
+                           RETURNING id::text""",
+                        (policy_id, tenant_id, weekdays, start_time, end_time, timezone_name,
+                         device_id, tenant_id, credential_id, tenant_id))
+            row = cur.fetchone()
+            return row["id"] if row else None
+
+    def deactivate_access_policy(self, tenant_id: int, policy_id: str):
+        with self.conn.cursor() as cur:
+            cur.execute("""UPDATE hardware_access_policies SET ativo=FALSE
+                           WHERE condominio_id=%s AND id=%s::uuid AND ativo""", (tenant_id, policy_id))
+            return cur.rowcount == 1
+
     def list_access_policies(self, tenant_id: int, credential_id: str):
         with self.conn.cursor() as cur:
             cur.execute("""SELECT id::text, condominio_id, credential_id::text, device_id::text,
