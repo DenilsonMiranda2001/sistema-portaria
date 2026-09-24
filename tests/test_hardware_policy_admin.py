@@ -6,7 +6,7 @@ REPO = Path("hardware/repository.py").read_text(encoding="utf-8")
 
 
 def test_policy_admin_routes_require_condominium_admin():
-    segment = ROUTES.split('@hardware_admin_bp.get("/permissoes")', 1)[1].split('@hardware_admin_bp.post("/simulador")', 1)[0]
+    segment = ROUTES.split('@hardware_admin_bp.get("/permissoes")', 1)[1].split('@hardware_admin_bp.post("/<uuid:device_id>/zona")', 1)[0]
     assert segment.count('@roles_required("admin_condominio")') == 3
 
 
