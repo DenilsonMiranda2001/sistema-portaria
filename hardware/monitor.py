@@ -15,7 +15,18 @@ def reconcile_hardware_incidents(tenant_id: int, stale_seconds: int = 90):
         for zone in zones:
             if not zone["ativo"]:
                 continue
-            unavailable = zone["operational_status"] != "operational"
+            status = zone["operational_status"]
+            # A configured zone with no assigned device is an onboarding/configuration state,
+            # not an operational outage. Incident monitoring starts once hardware is assigned.
+            if status == "no_device":
+                repo.reconcile_zone_incident(
+                    tenant_id=tenant_id,
+                    zone_id=zone["id"],
+                    incident_type=INCIDENT_TYPE,
+                    unavailable=False,
+                )
+                continue
+            unavailable = status == "unavailable"
             result = repo.reconcile_zone_incident(
                 tenant_id=tenant_id,
                 zone_id=zone["id"],
