@@ -7,7 +7,7 @@ REPO = Path("hardware/repository.py").read_text(encoding="utf-8")
 
 def test_credential_admin_is_condominium_admin_only():
     start = ROUTES.index('@hardware_admin_bp.get("/credenciais")')
-    end = ROUTES.index('@hardware_admin_bp.get("/permissoes")')
+    end = ROUTES.index('@hardware_admin_bp.get("/zonas")')
     segment = ROUTES[start:end]
     assert segment.count('@roles_required("admin_condominio")') == 3
 
