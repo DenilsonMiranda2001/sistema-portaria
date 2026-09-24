@@ -100,7 +100,9 @@ def desativar_credencial(credential_id):
 def zonas():
     conn = conectar()
     try:
-        return render_template("hardware/zonas.html", zones=HardwareRepository(conn).list_access_zones(g.tenant_id))
+        zones = HardwareRepository(conn).list_access_zone_operational_status(g.tenant_id)
+        alerts = [z for z in zones if z["ativo"] and z["operational_status"] != "operational"]
+        return render_template("hardware/zonas.html", zones=zones, alerts=alerts)
     finally:
         liberar(conn)
 
