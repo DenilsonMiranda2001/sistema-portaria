@@ -92,6 +92,65 @@ def desativar_credencial(credential_id):
     return redirect(url_for("hardware_admin.credenciais"))
 
 
+@hardware_admin_bp.get("/zonas")
+@roles_required("admin_condominio")
+def zonas():
+    conn = conectar()
+    try:
+        return render_template("hardware/zonas.html", zones=HardwareRepository(conn).list_access_zones(g.tenant_id))
+    finally:
+        liberar(conn)
+
+
+@hardware_admin_bp.post("/zonas")
+@roles_required("admin_condominio")
+def criar_zona():
+    name = request.form.get("nome", "").strip()
+    code = request.form.get("codigo", "").strip().lower().replace(" ", "-")
+    description = request.form.get("descricao", "").strip() or None
+    if not name or len(name) > 120 or not code or len(code) > 80:
+        flash("Informe nome e código válidos para o ponto de acesso.", "erro")
+        return redirect(url_for("hardware_admin.zonas"))
+    conn = conectar()
+    zone_id = str(uuid.uuid4())
+    try:
+        HardwareRepository(conn).create_access_zone(zone_id=zone_id, tenant_id=g.tenant_id, name=name, code=code, description=description)
+        with conn.cursor() as cur:
+            registrar_auditoria_cursor(cur, "hardware_access_zone_created", g.current_user["id"], g.tenant_id,
+                                       "hardware_access_zone", zone_id, {"nome": name, "codigo": code},
+                                       actor_tipo="usuario", actor_id=g.current_user["id"])
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+    flash("Ponto de acesso criado.", "sucesso")
+    return redirect(url_for("hardware_admin.zonas"))
+
+
+@hardware_admin_bp.post("/zonas/<uuid:zone_id>/desativar")
+@roles_required("admin_condominio")
+def desativar_zona(zone_id):
+    conn = conectar()
+    try:
+        changed = HardwareRepository(conn).deactivate_access_zone(g.tenant_id, str(zone_id))
+        if changed:
+            with conn.cursor() as cur:
+                registrar_auditoria_cursor(cur, "hardware_access_zone_deactivated", g.current_user["id"], g.tenant_id,
+                                           "hardware_access_zone", zone_id, {},
+                                           actor_tipo="usuario", actor_id=g.current_user["id"])
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        liberar(conn)
+    flash("Ponto de acesso desativado." if changed else "Ponto de acesso não encontrado ou já inativo.",
+          "sucesso" if changed else "aviso")
+    return redirect(url_for("hardware_admin.zonas"))
+
+
 @hardware_admin_bp.get("/permissoes")
 @roles_required("admin_condominio")
 def permissoes():
