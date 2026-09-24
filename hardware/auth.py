@@ -53,8 +53,10 @@ def verify_device_request(
         return DeviceAuthResult(False, "invalid_nonce")
     secret = device.get("_presented_secret")
     stored_verifier = device.get("auth_secret_hash")
-    if not secret or not stored_verifier or not hmac.compare_digest(secret_verifier(secret), stored_verifier):
+    if not secret or not stored_verifier:
         return DeviceAuthResult(False, "device_secret_unavailable")
+    if not hmac.compare_digest(secret_verifier(secret), stored_verifier):
+        return DeviceAuthResult(False, "invalid_secret")
     expected = hmac.new(
         secret.encode("utf-8"),
         canonical_message(key_id=key_id, timestamp=timestamp, nonce=nonce, body=body),
