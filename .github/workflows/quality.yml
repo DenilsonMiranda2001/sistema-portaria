@@ -155,7 +155,7 @@ jobs:
           try:
               with conn.cursor() as cur:
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
-                  assert cur.fetchone()["n"] == 21
+                  assert cur.fetchone()["n"] == len(list(__import__("pathlib").Path("migrations").glob("[0-9]*.sql")))
                   cur.execute("SELECT to_regclass('public.entregadores') AS t")
                   assert cur.fetchone()["t"] == "entregadores"
           finally:
@@ -219,7 +219,7 @@ jobs:
                       ("legacy-admin","admin_condominio"), ("legacy-operator","porteiro")
                   ]
                   cur.execute("SELECT COUNT(*) AS n FROM schema_migrations")
-                  assert cur.fetchone()["n"] == 21
+                  assert cur.fetchone()["n"] == len(list(__import__("pathlib").Path("migrations").glob("[0-9]*.sql")))
               conn.rollback()
               from psycopg2.errors import CheckViolation
               try:
